@@ -43,7 +43,24 @@ func main() {
 	// webserver
 	log.Printf("starting webserver on %s", os.Getenv("PORT"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Welcome to new server!")
+		var (
+			created_at string
+			nick       string
+			text       string
+		)
+
+		rows, err := db.Query(`select * from notes order by created_at desc`)
+		if err != nil {
+			fmt.Fprintf(w, "there was an error")
+		}
+		for rows.Next() {
+			err := rows.Scan(&created_at, &nick, &text)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintf(w, "%s\n\n", text)
+		}
 	})
 	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
