@@ -34,7 +34,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	conn, err := ircmain(db, "annie", "#embx", "irc.libera.chat:6697")
+	conn, err := ircmain(db, "annie", "#emb", "irc.libera.chat:6697")
 	if err != nil {
 		log.Fatal(err)
 	}
