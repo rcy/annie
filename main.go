@@ -77,7 +77,7 @@ func main() {
 
 func ircmain(db *sql.DB, nick, channel, server string) (*irc.Connection, error) {
 	ircnick1 := nick
-	irccon := irc.IRC(ircnick1, "IRCTestSSL")
+	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
 	irccon.VerboseCallbackHandler = true
 	irccon.Debug = true
 	irccon.UseTLS = true
