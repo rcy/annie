@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	"fmt"
 	"crypto/tls"
 	"database/sql"
 	"github.com/thoj/go-ircevent"
@@ -33,12 +35,20 @@ func main() {
 	}
 
 	conn, err := ircmain(db, "annie", "#embx", "irc.libera.chat:6697")
-
 	if err != nil {
 		log.Fatal(err)
 	}
+	go conn.Loop()
 
-	conn.Loop()
+	// webserver
+	log.Printf("starting webserver on %s", os.Getenv("PORT"))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Welcome to new server!")
+	})
+	err = http.ListenAndServe(":" + os.Getenv("PORT"), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func ircmain(db *sql.DB, nick, channel, server string) (*irc.Connection, error) {
