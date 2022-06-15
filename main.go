@@ -1,13 +1,13 @@
 package main
 
 import (
-	"net/http"
-	"fmt"
 	"crypto/tls"
 	"database/sql"
+	"fmt"
 	"github.com/thoj/go-ircevent"
 	"log"
 	_ "modernc.org/sqlite"
+	"net/http"
 	"os"
 	"regexp"
 )
@@ -45,7 +45,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Welcome to new server!")
 	})
-	err = http.ListenAndServe(":" + os.Getenv("PORT"), nil)
+	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
 		log.Fatal(err)
 	}

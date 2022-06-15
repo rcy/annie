@@ -3,5 +3,6 @@ mkShell {
   buildInputs = [
     go
     sqlite
+    flyctl
   ];
 }
