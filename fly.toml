@@ -10,12 +10,16 @@ processes = []
   builder = "paketobuildpacks/builder:base"
   buildpacks = ["gcr.io/paketo-buildpacks/go"]
 
+[mounts]
+  source = "annie_data"
+  destination = "/data"
+
 [env]
   PORT = "8080"
   IRC_NICK = "annie"
   IRC_CHANNEL = "#emb"
   IRC_SERVER = "irc.libera.chat:6697"
-  SQLITE_DB = "emb-notes.db"
+  SQLITE_DB = "/data/emb-notes.db"
 
 [experimental]
   allowed_public_ports = []
