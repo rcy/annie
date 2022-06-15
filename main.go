@@ -12,12 +12,19 @@ import (
 	"regexp"
 )
 
-func main() {
-	dbfile := os.Getenv("ANNIE_DB")
-
-	if dbfile == "" {
-		log.Fatal("ANNIE_DB not set")
+func getenv(key string) string {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		log.Fatalf("%s not set!", key)
+	} else {
+		log.Printf("%s=%s\n", key, val)
 	}
+
+	return val
+}
+
+func main() {
+	dbfile := getenv("SQLITE_DB")
 
 	log.Printf("Opening db: %s", dbfile)
 
@@ -34,7 +41,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	conn, err := ircmain(db, "annie", "#emb", "irc.libera.chat:6697")
+	conn, err := ircmain(db, getenv("IRC_NICK"), getenv("IRC_CHANNEL"), getenv("IRC_SERVER"))
 	if err != nil {
 		log.Fatal(err)
 	}
