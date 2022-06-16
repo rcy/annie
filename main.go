@@ -140,7 +140,7 @@ func matchNote(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
 }
 
 func matchLink(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
-	re := regexp.MustCompile(`^.*(http://\S+)$`)
+	re := regexp.MustCompile(`^.*(https?://\S+)$`)
 	matches := re.FindSubmatch([]byte(msg))
 
 	if len(matches) > 0 {
