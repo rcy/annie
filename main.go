@@ -85,22 +85,30 @@ func ircmain(db *sql.DB, nick, channel, server string) (*irc.Connection, error) 
 	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
 	irccon.AddCallback("366", func(e *irc.Event) {})
 	irccon.AddCallback("PRIVMSG", func(e *irc.Event) {
+		channel := e.Arguments[0]
 		msg := e.Arguments[1]
-		re := regexp.MustCompile(`^,(.+)$`)
-		matches := re.FindSubmatch([]byte(msg))
+		nick := e.Nick
 
-		if len(matches) > 0 {
-			note := string(matches[1])
-			_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?)`, e.Nick, note)
-			if err != nil {
-				log.Print(err)
-				irccon.Privmsg(e.Arguments[0], err.Error())
-			} else {
-				irccon.Privmsg(e.Arguments[0], "recorded note")
-			}
-		}
+		matchNote(irccon, db, msg, nick, channel)
+		//matchUrl(irccon, db, msg)
 	})
 	err := irccon.Connect(server)
 
 	return irccon, err
+}
+
+func matchNote(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
+	re := regexp.MustCompile(`^,(.+)$`)
+	matches := re.FindSubmatch([]byte(msg))
+
+	if len(matches) > 0 {
+		note := string(matches[1])
+		_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?)`, nick, note)
+		if err != nil {
+			log.Print(err)
+			irccon.Privmsg(channel, err.Error())
+		} else {
+			irccon.Privmsg(channel, "recorded note")
+		}
+	}
 }
