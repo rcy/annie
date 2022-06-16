@@ -41,6 +41,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	_, err = db.Exec(`create table if not exists links(created_at text, nick text, text text);`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
 	conn, err := ircmain(db, getenv("IRC_NICK"), getenv("IRC_CHANNEL"), getenv("IRC_SERVER"))
 	if err != nil {
 		log.Fatal(err)
@@ -57,6 +63,26 @@ func main() {
 		)
 
 		rows, err := db.Query(`select * from notes order by created_at desc`)
+		if err != nil {
+			fmt.Fprintf(w, "there was an error")
+		}
+		for rows.Next() {
+			err := rows.Scan(&created_at, &nick, &text)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintf(w, "%s\n", text)
+		}
+	})
+	http.HandleFunc("/links", func(w http.ResponseWriter, r *http.Request) {
+		var (
+			created_at string
+			nick       string
+			text       string
+		)
+
+		rows, err := db.Query(`select * from links order by created_at desc`)
 		if err != nil {
 			fmt.Fprintf(w, "there was an error")
 		}
@@ -90,7 +116,7 @@ func ircmain(db *sql.DB, nick, channel, server string) (*irc.Connection, error) 
 		nick := e.Nick
 
 		matchNote(irccon, db, msg, nick, channel)
-		//matchUrl(irccon, db, msg)
+		matchLink(irccon, db, msg, nick, channel)
 	})
 	err := irccon.Connect(server)
 
@@ -109,6 +135,22 @@ func matchNote(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
 			irccon.Privmsg(channel, err.Error())
 		} else {
 			irccon.Privmsg(channel, "recorded note")
+		}
+	}
+}
+
+func matchLink(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
+	re := regexp.MustCompile(`^.*(http://\S+)$`)
+	matches := re.FindSubmatch([]byte(msg))
+
+	if len(matches) > 0 {
+		url := string(matches[1])
+		_, err := db.Exec(`insert into links values(datetime('now'), ?, ?)`, nick, url)
+		if err != nil {
+			log.Print(err)
+			irccon.Privmsg(channel, err.Error())
+		} else {
+			log.Printf("recorded url %s", url)
 		}
 	}
 }
