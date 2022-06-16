@@ -66,7 +66,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Fprintf(w, "%s\n\n", text)
+			fmt.Fprintf(w, "%s\n", text)
 		}
 	})
 	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
