@@ -24,9 +24,7 @@ func getenv(key string) string {
 	return val
 }
 
-func main() {
-	dbfile := getenv("SQLITE_DB")
-
+func openDb(dbfile string) (*sql.DB, error) {
 	log.Printf("Opening db: %s", dbfile)
 
 	migrations := []migration.Migrator{
@@ -38,14 +36,21 @@ func main() {
 			_, err := tx.Exec(`create table if not exists links(created_at text, nick text, text text)`)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: adding kind column to notes")
+			_, err := tx.Exec(`alter table notes add column kind string not null default "note"`)
+			return err
+		},
 	}
 
-	db, err := migration.Open("sqlite", dbfile, migrations)
+	return migration.Open("sqlite", dbfile, migrations)
+}
 
+func main() {
+	db, err := openDb(getenv("SQLITE_DB"))
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer db.Close()
 
 	conn, err := ircmain(db, getenv("IRC_NICK"), getenv("IRC_CHANNEL"), getenv("IRC_SERVER"))
@@ -61,14 +66,43 @@ func main() {
 			created_at string
 			nick       string
 			text       string
+			kind       string
 		)
 
-		rows, err := db.Query(`select * from notes order by created_at desc`)
+		rows, err := db.Query(`select created_at, nick, text, kind from notes order by created_at desc`)
+		if err != nil {
+			fmt.Fprintf(w, "there was an error")
+		}
+		fmt.Fprintf(w, "<html><ul>")
+		for rows.Next() {
+			err := rows.Scan(&created_at, &nick, &text, &kind)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+			if kind == "note" {
+				fmt.Fprintf(w, "<li>%s</li>", text)
+			}
+			if kind == "link" {
+				fmt.Fprintf(w, `<li><a href="%s">%s</a><li>`, text, text)
+			}
+		}
+		fmt.Fprintf(w, "</ul></html>")
+	})
+	http.HandleFunc("/links", func(w http.ResponseWriter, r *http.Request) {
+		var (
+			created_at string
+			nick       string
+			text       string
+			kind       string
+		)
+
+		rows, err := db.Query(`select * from notes where kind = 'link' order by created_at desc`)
 		if err != nil {
 			fmt.Fprintf(w, "there was an error")
 		}
 		for rows.Next() {
-			err := rows.Scan(&created_at, &nick, &text)
+			err := rows.Scan(&created_at, &nick, &text, &kind)
 
 			if err != nil {
 				log.Fatal(err)
@@ -76,24 +110,25 @@ func main() {
 			fmt.Fprintf(w, "%s\n", text)
 		}
 	})
-	http.HandleFunc("/links", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/notes", func(w http.ResponseWriter, r *http.Request) {
 		var (
 			created_at string
 			nick       string
 			text       string
+			kind       string
 		)
 
-		rows, err := db.Query(`select * from links order by created_at desc`)
+		rows, err := db.Query(`select * from notes where kind = 'note' order by created_at desc`)
 		if err != nil {
 			fmt.Fprintf(w, "there was an error")
 		}
 		for rows.Next() {
-			err := rows.Scan(&created_at, &nick, &text)
+			err := rows.Scan(&created_at, &nick, &text, &kind)
 
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Fprintf(w, `<a href="%s">%s</a><br> `, text, text)
+			fmt.Fprintf(w, "%s\n", text)
 		}
 	})
 	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
@@ -130,7 +165,7 @@ func matchNote(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
 
 	if len(matches) > 0 {
 		note := string(matches[1])
-		_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?)`, nick, note)
+		_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'note')`, nick, note)
 		if err != nil {
 			log.Print(err)
 			irccon.Privmsg(channel, err.Error())
@@ -146,7 +181,7 @@ func matchLink(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
 
 	if len(matches) > 0 {
 		url := string(matches[1])
-		_, err := db.Exec(`insert into links values(datetime('now'), ?, ?)`, nick, url)
+		_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'link')`, nick, url)
 		if err != nil {
 			log.Print(err)
 			irccon.Privmsg(channel, err.Error())
