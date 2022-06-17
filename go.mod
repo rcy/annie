@@ -3,6 +3,7 @@ module goirc
 go 1.17
 
 require (
+	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect

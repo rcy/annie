@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/BurntSushi/migration"
 	"crypto/tls"
 	"database/sql"
 	"fmt"
@@ -28,24 +29,24 @@ func main() {
 
 	log.Printf("Opening db: %s", dbfile)
 
-	db, err := sql.Open("sqlite", dbfile)
+	migrations := []migration.Migrator{
+		func(tx migration.LimitedTx) error {
+			_, err := tx.Exec(`create table if not exists notes(created_at text, nick text, text text)`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			_, err := tx.Exec(`create table if not exists links(created_at text, nick text, text text)`)
+			return err
+		},
+	}
+
+	db, err := migration.Open("sqlite", dbfile, migrations)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer db.Close()
-
-	_, err = db.Exec(`create table if not exists notes(created_at text, nick text, text text);`)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = db.Exec(`create table if not exists links(created_at text, nick text, text text);`)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 
 	conn, err := ircmain(db, getenv("IRC_NICK"), getenv("IRC_CHANNEL"), getenv("IRC_SERVER"))
 	if err != nil {
