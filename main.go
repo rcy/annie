@@ -82,9 +82,8 @@ func main() {
 			}
 			if kind == "note" {
 				fmt.Fprintf(w, "<li>%s</li>", text)
-			}
-			if kind == "link" {
-				fmt.Fprintf(w, `<li><a href="%s">%s</a><li>`, text, text)
+			} else if kind == "link" {
+				fmt.Fprintf(w, `<li><a href="%s">%s</a></li>`, text, text)
 			}
 		}
 		fmt.Fprintf(w, "</ul></html>")
