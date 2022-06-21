@@ -179,7 +179,7 @@ func webserver(db *sqlx.DB) {
 
 		notes, err := getNotes(db, nick)
 		if err != nil {
-			log.Fatal(http.StatusInternalServerError)
+			log.Fatal(err)
 		}
 
 		nicks, err := getNicks(db)
