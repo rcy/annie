@@ -1,17 +1,26 @@
 package main
 
 import (
-	"github.com/BurntSushi/migration"
 	"crypto/tls"
-	"database/sql"
 	"fmt"
+	//	"database/sql"
+	"github.com/BurntSushi/migration"
+	"github.com/gin-gonic/gin"
 	"github.com/thoj/go-ircevent"
 	"log"
 	_ "modernc.org/sqlite"
 	"net/http"
 	"os"
 	"regexp"
+	"github.com/jmoiron/sqlx"
 )
+
+type Note struct {
+	CreatedAt string `db:"created_at"`
+	Text string
+	Nick string
+	Kind string
+}
 
 func getenv(key string) string {
 	val, ok := os.LookupEnv(key)
@@ -24,7 +33,7 @@ func getenv(key string) string {
 	return val
 }
 
-func openDb(dbfile string) (*sql.DB, error) {
+func openDb(dbfile string) (*sqlx.DB) {
 	log.Printf("Opening db: %s", dbfile)
 
 	migrations := []migration.Migrator{
@@ -43,14 +52,15 @@ func openDb(dbfile string) (*sql.DB, error) {
 		},
 	}
 
-	return migration.Open("sqlite", dbfile, migrations)
+	db, err := migration.Open("sqlite", dbfile, migrations)
+	if err != nil {
+		log.Fatal("Failed to open with migration")
+	}
+	return sqlx.NewDb(db, "sqlite"	)
 }
 
 func main() {
-	db, err := openDb(getenv("SQLITE_DB"))
-	if err != nil {
-		log.Fatal(err)
-	}
+	db := openDb(getenv("SQLITE_DB"))
 	defer db.Close()
 
 	conn, err := ircmain(db, getenv("IRC_NICK"), getenv("IRC_CHANNEL"), getenv("IRC_SERVER"))
@@ -59,84 +69,117 @@ func main() {
 	}
 	go conn.Loop()
 
-	// webserver
-	log.Printf("starting webserver on %s", os.Getenv("PORT"))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		var (
-			created_at string
-			nick       string
-			text       string
-			kind       string
-		)
+	// // webserver
+	// log.Printf("starting webserver on %s", os.Getenv("PORT"))
+	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	var (
+	// 		created_at string
+	// 		nick       string
+	// 		text       string
+	// 		kind       string
+	// 	)
 
-		rows, err := db.Query(`select created_at, nick, text, kind from notes order by created_at desc`)
-		if err != nil {
-			fmt.Fprintf(w, "there was an error")
-		}
-		fmt.Fprintf(w, "<html><ul>")
-		for rows.Next() {
-			err := rows.Scan(&created_at, &nick, &text, &kind)
+	// 	rows, err := db.Query(`select created_at, nick, text, kind from notes order by created_at desc`)
+	// 	if err != nil {
+	// 		fmt.Fprintf(w, "there was an error")
+	// 	}
+	// 	fmt.Fprintf(w, "<html><ul>")
+	// 	for rows.Next() {
+	// 		err := rows.Scan(&created_at, &nick, &text, &kind)
 
-			if err != nil {
-				log.Fatal(err)
-			}
-			if kind == "note" {
-				fmt.Fprintf(w, "<li>%s</li>", text)
-			} else if kind == "link" {
-				fmt.Fprintf(w, `<li><a href="%s">%s</a></li>`, text, text)
-			}
-		}
-		fmt.Fprintf(w, "</ul></html>")
-	})
-	http.HandleFunc("/links", func(w http.ResponseWriter, r *http.Request) {
-		var (
-			created_at string
-			nick       string
-			text       string
-			kind       string
-		)
+	// 		if err != nil {
+	// 			log.Fatal(err)
+	// 		}
+	// 		if kind == "note" {
+	// 			fmt.Fprintf(w, "<li>%s</li>", text)
+	// 		} else if kind == "link" {
+	// 			fmt.Fprintf(w, `<li><a href="%s">%s</a></li>`, text, text)
+	// 		}
+	// 	}
+	// 	fmt.Fprintf(w, "</ul></html>")
+	// })
+	// http.HandleFunc("/links", func(w http.ResponseWriter, r *http.Request) {
+	// 	var (
+	// 		created_at string
+	// 		nick       string
+	// 		text       string
+	// 		kind       string
+	// 	)
 
-		rows, err := db.Query(`select * from notes where kind = 'link' order by created_at desc`)
-		if err != nil {
-			fmt.Fprintf(w, "there was an error")
-		}
-		for rows.Next() {
-			err := rows.Scan(&created_at, &nick, &text, &kind)
+	// 	rows, err := db.Query(`select * from notes where kind = 'link' order by created_at desc`)
+	// 	if err != nil {
+	// 		fmt.Fprintf(w, "there was an error")
+	// 	}
+	// 	for rows.Next() {
+	// 		err := rows.Scan(&created_at, &nick, &text, &kind)
 
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Fprintf(w, "%s\n", text)
-		}
-	})
-	http.HandleFunc("/notes", func(w http.ResponseWriter, r *http.Request) {
-		var (
-			created_at string
-			nick       string
-			text       string
-			kind       string
-		)
+	// 		if err != nil {
+	// 			log.Fatal(err)
+	// 		}
+	// 		fmt.Fprintf(w, "%s\n", text)
+	// 	}
+	// })
+	// http.HandleFunc("/notes", func(w http.ResponseWriter, r *http.Request) {
+	// 	var (
+	// 		created_at string
+	// 		nick       string
+	// 		text       string
+	// 		kind       string
+	// 	)
 
-		rows, err := db.Query(`select * from notes where kind = 'note' order by created_at desc`)
-		if err != nil {
-			fmt.Fprintf(w, "there was an error")
-		}
-		for rows.Next() {
-			err := rows.Scan(&created_at, &nick, &text, &kind)
+	// 	rows, err := db.Query(`select * from notes where kind = 'note' order by created_at desc`)
+	// 	if err != nil {
+	// 		fmt.Fprintf(w, "there was an error")
+	// 	}
+	// 	for rows.Next() {
+	// 		err := rows.Scan(&created_at, &nick, &text, &kind)
 
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Fprintf(w, "%s\n", text)
-		}
-	})
-	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// 		if err != nil {
+	// 			log.Fatal(err)
+	// 		}
+	// 		fmt.Fprintf(w, "%s\n", text)
+	// 	}
+	// })
+	// err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// new gin webserver
+	webserver(db)
 }
 
-func ircmain(db *sql.DB, nick, channel, server string) (*irc.Connection, error) {
+func webserver(db *sqlx.DB) {
+	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
+
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
+	r.GET("/test/:name", func(c *gin.Context) {
+		name := c.Param("name")
+		c.String(http.StatusOK, "Hello %s", name)
+	})
+	r.GET("/", func(c *gin.Context) {
+		notes := []Note{}
+		err := db.Select(&notes, `select created_at, text, nick, kind from notes order by created_at desc limit 1000`)
+		if err != nil {
+			log.Fatal(http.StatusInternalServerError)
+		}
+		c.HTML(http.StatusOK, "index.gohtml", gin.H{
+			"title": "Main website",
+			"notes": notes,
+			"count": len(notes),
+		})
+		fmt.Printf("%v\n", len(notes))
+		//c.String(http.StatusOK, "pending...")
+	})
+	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+}
+
+func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error) {
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
 	irccon.VerboseCallbackHandler = true
@@ -158,7 +201,7 @@ func ircmain(db *sql.DB, nick, channel, server string) (*irc.Connection, error) 
 	return irccon, err
 }
 
-func matchNote(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
+func matchNote(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
 	re := regexp.MustCompile(`^,(.+)$`)
 	matches := re.FindSubmatch([]byte(msg))
 
@@ -174,7 +217,7 @@ func matchNote(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
 	}
 }
 
-func matchLink(irccon *irc.Connection, db *sql.DB, msg, nick, channel string) {
+func matchLink(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
 	re := regexp.MustCompile(`^.*(https?://\S+)$`)
 	matches := re.FindSubmatch([]byte(msg))
 

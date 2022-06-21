@@ -1,0 +1,15 @@
+<table>
+{{range .notes}}
+  <tr>
+    <td>{{.CreatedAt}}</td>
+    <td>{{.Nick}}</td>
+    <td>
+      {{if eq .Kind "link"}}
+        <a href="{{.Text}}">{{.Text}}</a>
+      {{else}}
+        {{.Text}}
+      {{end}}
+    </td>
+  </tr>
+{{end}}
+</table>
