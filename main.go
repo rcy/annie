@@ -1,25 +1,28 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
-	"fmt"
+	_ "embed"
+	"text/template"
+	//"fmt"
 	//	"database/sql"
 	"github.com/BurntSushi/migration"
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
 	"github.com/thoj/go-ircevent"
 	"log"
 	_ "modernc.org/sqlite"
 	"net/http"
 	"os"
 	"regexp"
-	"github.com/jmoiron/sqlx"
 )
 
 type Note struct {
 	CreatedAt string `db:"created_at"`
-	Text string
-	Nick string
-	Kind string
+	Text      string
+	Nick      string
+	Kind      string
 }
 
 func getenv(key string) string {
@@ -33,7 +36,7 @@ func getenv(key string) string {
 	return val
 }
 
-func openDb(dbfile string) (*sqlx.DB) {
+func openDb(dbfile string) *sqlx.DB {
 	log.Printf("Opening db: %s", dbfile)
 
 	migrations := []migration.Migrator{
@@ -56,7 +59,7 @@ func openDb(dbfile string) (*sqlx.DB) {
 	if err != nil {
 		log.Fatal("Failed to open with migration")
 	}
-	return sqlx.NewDb(db, "sqlite"	)
+	return sqlx.NewDb(db, "sqlite")
 }
 
 func main() {
@@ -149,9 +152,12 @@ func main() {
 	webserver(db)
 }
 
+//go:embed "templates/index.gohtml"
+var indexTemplate string
+
 func webserver(db *sqlx.DB) {
 	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
+	//r.LoadHTMLGlob("templates/*")
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -168,12 +174,22 @@ func webserver(db *sqlx.DB) {
 		if err != nil {
 			log.Fatal(http.StatusInternalServerError)
 		}
-		c.HTML(http.StatusOK, "index.gohtml", gin.H{
+		data := gin.H{
 			"title": "Main website",
 			"notes": notes,
 			"count": len(notes),
-		})
-		fmt.Printf("%v\n", len(notes))
+		}
+		tmpl, err := template.New("name").Parse(indexTemplate)
+		if err != nil {
+			log.Fatal("error parsing template")
+		}
+		out := new(bytes.Buffer)
+		err = tmpl.Execute(out, data)
+		if err != nil {
+			log.Fatal("error executing template on data")
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
+
 		//c.String(http.StatusOK, "pending...")
 	})
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
