@@ -7,6 +7,13 @@
     </style>
   </head>
   <body>
+    <div>
+      <a href="/">all</a>
+      {{range .nicks}}
+        <a href="?nick={{.Nick}}">{{.Nick}}</a>
+      {{end}}
+    </div>
+
     <table>
       {{range .notes}}
         <tr>

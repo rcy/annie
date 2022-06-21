@@ -1,11 +1,11 @@
 package main
 
 import (
-	"time"
 	"bytes"
 	"crypto/tls"
 	_ "embed"
 	"text/template"
+	"time"
 	//"fmt"
 	//	"database/sql"
 	"github.com/BurntSushi/migration"
@@ -24,6 +24,11 @@ type Note struct {
 	Text      string
 	Nick      string
 	Kind      string
+}
+
+type NickWithNoteCount struct {
+	Nick  string
+	Count int
 }
 
 func getenv(key string) string {
@@ -170,30 +175,52 @@ func webserver(db *sqlx.DB) {
 		c.String(http.StatusOK, "Hello %s", name)
 	})
 	r.GET("/", func(c *gin.Context) {
-		notes := []Note{}
-		err := db.Select(&notes, `select created_at, text, nick, kind from notes order by created_at desc limit 1000`)
+		nick := c.Query("nick")
+
+		notes, err := getNotes(db, nick)
 		if err != nil {
 			log.Fatal(http.StatusInternalServerError)
 		}
-		data := gin.H{
-			"title": "Main website",
-			"notes": notes,
-			"count": len(notes),
+
+		nicks, err := getNicks(db)
+		if err != nil {
+			log.Fatal(err)
 		}
+
 		tmpl, err := template.New("name").Parse(indexTemplate)
 		if err != nil {
 			log.Fatal("error parsing template")
 		}
+
 		out := new(bytes.Buffer)
-		err = tmpl.Execute(out, data)
+		err = tmpl.Execute(out, gin.H{
+			"nicks": nicks,
+			"notes": notes,
+		})
 		if err != nil {
 			log.Fatal("error executing template on data")
 		}
-		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
 
-		//c.String(http.StatusOK, "pending...")
+		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
 	})
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+}
+
+func getNicks(db *sqlx.DB) ([]NickWithNoteCount, error) {
+	nicks := []NickWithNoteCount{}
+	err := db.Select(&nicks, `select nick, count(nick) as count from notes group by nick`)
+	return nicks, err
+}
+
+func getNotes(db *sqlx.DB, nick string) ([]Note, error) {
+	notes := []Note{}
+	var err error
+	if nick == "" {
+		err = db.Select(&notes, `select created_at, text, nick, kind from notes order by created_at desc limit 1000`)
+	} else {
+		err = db.Select(&notes, `select created_at, text, nick, kind from notes where nick = ? order by created_at desc limit 1000`, nick)
+	}
+	return notes, err
 }
 
 func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error) {
