@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"bytes"
 	"crypto/tls"
 	_ "embed"
@@ -211,6 +212,12 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 
 		matchNote(irccon, db, msg, nick, channel)
 		matchLink(irccon, db, msg, nick, channel)
+	})
+	irccon.AddCallback("JOIN", func(e *irc.Event) {
+		if e.Nick == nick {
+			time.Sleep(10 * time.Second)
+			irccon.Privmsg(channel, "don't worry devlan, I'm ok")
+		}
 	})
 	err := irccon.Connect(server)
 

@@ -1,15 +1,30 @@
-<table>
-{{range .notes}}
-  <tr>
-    <td>{{.CreatedAt}}</td>
-    <td>{{.Nick}}</td>
-    <td>
-      {{if eq .Kind "link"}}
-        <a href="{{.Text}}">{{.Text}}</a>
-      {{else}}
-        {{.Text}}
+<html>
+  <head>
+    <style>
+     .nowrap {
+         white-space: nowrap;
+     }
+    </style>
+  </head>
+  <body>
+    <table>
+      {{range .notes}}
+        <tr>
+          <td class="nowrap">
+            {{.CreatedAt}}
+          </td>
+          <td>
+            {{.Nick}}
+          </td>
+          <td>
+            {{if eq .Kind "link"}}
+              <a href="{{.Text}}">{{.Text}}</a>
+            {{else}}
+              {{.Text}}
+            {{end}}
+          </td>
+        </tr>
       {{end}}
-    </td>
-  </tr>
-{{end}}
-</table>
+    </table>
+  </body>
+</html>
