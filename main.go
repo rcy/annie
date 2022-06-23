@@ -292,10 +292,7 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 		matchLater(irccon, db, msg, nick, channel)
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
-		if e.Nick == nick {
-			time.Sleep(10 * time.Second)
-			irccon.Privmsg(channel, "don't worry devlan, I'm ok")
-		} else {
+		if e.Nick != nick {
 			// trigger NAMES to update the list of joined nicks
 			irccon.SendRawf("NAMES %s", channel)
 			sendLaters(irccon, db, channel, e.Nick)
