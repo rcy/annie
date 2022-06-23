@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"crypto/tls"
 	_ "embed"
+	"fmt"
 	"strings"
 	"text/template"
 	"time"
-	//"fmt"
 	//	"database/sql"
 	"github.com/BurntSushi/migration"
 	"github.com/gin-gonic/gin"
@@ -114,6 +114,14 @@ func webserver(db *sqlx.DB) {
 	r := gin.Default()
 	//r.LoadHTMLGlob("templates/*")
 
+	r.GET("/snapshot.db", func(c *gin.Context) {
+		os.Remove("/tmp/snapshot.db")
+		if _, err := db.Exec(`vacuum into '/tmp/snapshot.db'`); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("%v", err))
+			return
+		}
+		c.File("/tmp/snapshot.db")
+	})
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
