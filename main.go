@@ -266,7 +266,7 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 	irccon.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
 		_, err := db.Exec(`update channel_nicks set present = false`)
-		if err != nill {
+		if err != nil {
 			log.Fatal(err)
 		}
 
