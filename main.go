@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	_ "embed"
+	"strings"
 	"text/template"
 	"time"
 	//"fmt"
@@ -29,6 +30,15 @@ type Note struct {
 type NickWithNoteCount struct {
 	Nick  string
 	Count int
+}
+
+type Later struct {
+	RowId     int    `db:"rowid"`
+	CreatedAt string `db:"created_at"`
+	Nick      string
+	Target    string
+	Message   string
+	Sent      bool
 }
 
 func getenv(key string) string {
@@ -59,11 +69,16 @@ func openDb(dbfile string) *sqlx.DB {
 			_, err := tx.Exec(`alter table notes add column kind string not null default "note"`)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: adding laters table")
+			_, err := tx.Exec(`create table laters(created_at text, nick text, target text, message text, sent boolean default false)`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
 	if err != nil {
-		log.Fatal("Failed to open with migration")
+		log.Fatalf("MIGRATION: %v", err)
 	}
 	return sqlx.NewDb(db, "sqlite")
 }
@@ -206,6 +221,12 @@ func webserver(db *sqlx.DB) {
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
+func getLaters(db *sqlx.DB) ([]Later, error) {
+	laters := []Later{}
+	err := db.Select(&laters, `select rowid, created_at, nick, target, message, sent from laters limit 100`)
+	return laters, err
+}
+
 func getNicks(db *sqlx.DB) ([]NickWithNoteCount, error) {
 	nicks := []NickWithNoteCount{}
 	err := db.Select(&nicks, `select nick, count(nick) as count from notes group by nick`)
@@ -223,6 +244,9 @@ func getNotes(db *sqlx.DB, nick string) ([]Note, error) {
 	return notes, err
 }
 
+// nicks that are joined now (FIXME: global)
+var nicks []string
+
 func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error) {
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
@@ -231,6 +255,10 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 	irccon.UseTLS = true
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
+	irccon.AddCallback("353", func(e *irc.Event) {
+		nickStr := strings.ReplaceAll(e.Arguments[len(e.Arguments)-1], "@", "")
+		nicks = strings.Split(nickStr, " ")
+	})
 	irccon.AddCallback("366", func(e *irc.Event) {})
 	irccon.AddCallback("PRIVMSG", func(e *irc.Event) {
 		channel := e.Arguments[0]
@@ -239,16 +267,75 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 
 		matchNote(irccon, db, msg, nick, channel)
 		matchLink(irccon, db, msg, nick, channel)
+		matchLater(irccon, db, msg, nick, channel)
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick == nick {
 			time.Sleep(10 * time.Second)
 			irccon.Privmsg(channel, "don't worry devlan, I'm ok")
+		} else {
+			// trigger NAMES to update the list of joined nicks
+			irccon.SendRawf("NAMES %s", channel)
+			sendLaters(irccon, db, channel, e.Nick)
+		}
+	})
+	irccon.AddCallback("PART", func(e *irc.Event) {
+		if e.Nick != nick {
+			// trigger NAMES to update the list of joined nicks
+			irccon.SendRawf("NAMES %s", channel)
 		}
 	})
 	err := irccon.Connect(server)
 
 	return irccon, err
+}
+
+func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string) {
+	// loop through each later message and see if the target matches this nick
+	laters, err := getLaters(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, later := range laters {
+		createdAt, err := time.Parse("2006-01-02 15:04:05", later.CreatedAt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		duration := time.Now().Sub(createdAt).Round(time.Second)
+
+		if strings.Contains(nick, later.Target) {
+			_, err := db.Exec(`delete from laters where rowid = ?`, later.RowId)
+			if err != nil {
+				log.Fatal(err)
+			}
+			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, later.Message, later.Nick, duration)
+		}
+	}
+}
+
+func matchLater(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
+	re := regexp.MustCompile(`^([^\s:]+): (.+)$`)
+	matches := re.FindSubmatch([]byte(msg))
+
+	if len(matches) > 0 {
+		target := matches[1]
+		message := matches[2]
+
+		// if the target matches a currently joined nick, we do nothing
+		for _, nick := range nicks {
+			if strings.HasPrefix(nick, string(target)) {
+				irccon.Privmsgf(channel, "%s matches %s who is already here", nick, target)
+				return
+			}
+		}
+
+		_, err := db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, nick, target, message, false)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		irccon.Privmsgf(channel, "%s: will send to %s* later", nick, target)
+	}
 }
 
 func matchNote(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
