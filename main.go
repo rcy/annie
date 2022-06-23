@@ -324,7 +324,6 @@ func matchLater(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) 
 		// if the target matches a currently joined nick, we do nothing
 		for _, nick := range nicks {
 			if strings.HasPrefix(nick, string(target)) {
-				irccon.Privmsgf(channel, "%s matches %s who is already here", nick, target)
 				return
 			}
 		}
