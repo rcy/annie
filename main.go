@@ -20,6 +20,12 @@ import (
 	"regexp"
 )
 
+type ChannelNick struct {
+	Channel string
+	Nick    string
+	Present string
+}
+
 type Note struct {
 	CreatedAt string `db:"created_at"`
 	Text      string
@@ -72,6 +78,11 @@ func openDb(dbfile string) *sqlx.DB {
 		func(tx migration.LimitedTx) error {
 			log.Println("MIGRATE: adding laters table")
 			_, err := tx.Exec(`create table laters(created_at text, nick text, target text, message text, sent boolean default false)`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: adding channel_nicks table")
+			_, err := tx.Exec(`create table channel_nicks(channel text not null, nick text not null, present bool not null default false)`)
 			return err
 		},
 	}
@@ -244,9 +255,6 @@ func getNotes(db *sqlx.DB, nick string) ([]Note, error) {
 	return notes, err
 }
 
-// nicks that are joined now (FIXME: global)
-var nicks []string
-
 func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error) {
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
@@ -256,8 +264,22 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
 	irccon.AddCallback("353", func(e *irc.Event) {
+		// clear the presence of all channel nicks
+		_, err := db.Exec(`update channel_nicks set present = false`)
+		if err != nill {
+			log.Fatal(err)
+		}
+
+		// remove @ op markers from nick argument
 		nickStr := strings.ReplaceAll(e.Arguments[len(e.Arguments)-1], "@", "")
-		nicks = strings.Split(nickStr, " ")
+
+		// mark nicks as present
+		for _, nick := range strings.Split(nickStr, " ") {
+			_, err := db.Exec(`insert into channel_nicks(channel, nick, present) values(?, ?, ?)`, channel, nick, true)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 	})
 	irccon.AddCallback("366", func(e *irc.Event) {})
 	irccon.AddCallback("PRIVMSG", func(e *irc.Event) {
@@ -291,7 +313,7 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 }
 
 func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string) {
-	// loop through each later message and see if the target matches this nick
+	// loop through each later message and see if the prefix matches this nick
 	laters, err := getLaters(db)
 	if err != nil {
 		log.Fatal(err)
@@ -318,23 +340,53 @@ func matchLater(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) 
 	matches := re.FindSubmatch([]byte(msg))
 
 	if len(matches) > 0 {
-		target := matches[1]
-		message := matches[2]
+		prefix := string(matches[1])
+		message := string(matches[2])
 
-		// if the target matches a currently joined nick, we do nothing
-		for _, nick := range nicks {
-			if strings.HasPrefix(nick, string(target)) {
-				return
+		// if the prefix matches a currently joined nick, we do nothing
+		if prefixMatchesJoinedNick(db, channel, prefix) {
+			return
+		}
+
+		if prefixMatchesKnownNick(db, channel, prefix) {
+			_, err := db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, nick, prefix, message, false)
+			if err != nil {
+				log.Fatal(err)
 			}
-		}
 
-		_, err := db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, nick, target, message, false)
-		if err != nil {
-			log.Fatal(err)
+			irccon.Privmsgf(channel, "%s: will send to %s* later", nick, prefix)
+		} else {
+			irccon.Privmsgf(channel, "%s: %s* doesn't match any known nick", nick, prefix)
 		}
-
-		irccon.Privmsgf(channel, "%s: will send to %s* later", nick, target)
 	}
+}
+
+func prefixMatchesJoinedNick(db *sqlx.DB, channel, prefix string) bool {
+	channel_nicks := []ChannelNick{}
+	err := db.Select(&channel_nicks, `select channel, nick, present from channel_nicks where present = true`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, row := range channel_nicks {
+		if strings.HasPrefix(row.Nick, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func prefixMatchesKnownNick(db *sqlx.DB, channel, prefix string) bool {
+	channel_nicks := []ChannelNick{}
+	err := db.Select(&channel_nicks, `select channel, nick, present from channel_nicks`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, row := range channel_nicks {
+		if strings.HasPrefix(row.Nick, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func matchNote(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
