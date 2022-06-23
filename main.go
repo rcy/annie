@@ -304,6 +304,18 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 			irccon.SendRawf("NAMES %s", channel)
 		}
 	})
+	irccon.AddCallback("QUIT", func(e *irc.Event) {
+		if e.Nick != nick {
+			// trigger NAMES to update the list of joined nicks
+			irccon.SendRawf("NAMES %s", channel)
+		}
+	})
+	irccon.AddCallback("NICK", func(e *irc.Event) {
+		if e.Nick != nick {
+			// trigger NAMES to update the list of joined nicks
+			irccon.SendRawf("NAMES %s", channel)
+		}
+	})
 	err := irccon.Connect(server)
 
 	return irccon, err
