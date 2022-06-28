@@ -15,6 +15,7 @@ import (
 	"github.com/thoj/go-ircevent"
 	"log"
 	_ "modernc.org/sqlite"
+	"math"
 	"net/http"
 	"os"
 	"regexp"
@@ -263,14 +264,14 @@ func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string
 		if err != nil {
 			log.Fatal(err)
 		}
-		duration := time.Now().Sub(createdAt).Round(time.Second)
-
 		if strings.Contains(nick, later.Target) {
+			duration := time.Now().Sub(createdAt).Round(time.Second)
+
 			_, err := db.Exec(`delete from laters where rowid = ?`, later.RowId)
 			if err != nil {
 				log.Fatal(err)
 			}
-			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, later.Message, later.Nick, duration)
+			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, later.Message, later.Nick, ago(duration))
 		}
 	}
 }
@@ -358,5 +359,13 @@ func matchLink(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
 		} else {
 			log.Printf("recorded url %s", url)
 		}
+	}
+}
+
+func ago(d time.Duration) string {
+	if d.Hours() >= 48.0 {
+		return fmt.Sprintf("%dd", int(math.Round(d.Hours() / 24)))
+	} else {
+		return d.String()
 	}
 }
