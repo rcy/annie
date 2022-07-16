@@ -8,17 +8,19 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
 	//	"database/sql"
-	"github.com/BurntSushi/migration"
-	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
-	"github.com/thoj/go-ircevent"
 	"log"
-	_ "modernc.org/sqlite"
 	"math"
 	"net/http"
 	"os"
 	"regexp"
+
+	"github.com/BurntSushi/migration"
+	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
+	irc "github.com/thoj/go-ircevent"
+	_ "modernc.org/sqlite"
 )
 
 type ChannelNick struct {
@@ -364,7 +366,7 @@ func matchLink(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
 
 func ago(d time.Duration) string {
 	if d.Hours() >= 48.0 {
-		return fmt.Sprintf("%dd", int(math.Round(d.Hours() / 24)))
+		return fmt.Sprintf("%dd", int(math.Round(d.Hours()/24)))
 	} else {
 		return d.String()
 	}
