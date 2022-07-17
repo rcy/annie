@@ -193,7 +193,7 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
 	irccon.VerboseCallbackHandler = true
-	irccon.Debug = true
+	irccon.Debug = false
 	irccon.UseTLS = true
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
