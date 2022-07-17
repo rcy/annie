@@ -361,6 +361,15 @@ func matchLink(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
 		} else {
 			log.Printf("recorded url %s", url)
 		}
+
+		// post to twitter
+		nvurl := os.Getenv("NICHE_VOMIT_URL")
+		if nvurl != "" {
+			res, err := http.Post(nvurl, "text/plain", strings.NewReader(url))
+			if res.StatusCode >= 300 || err != nil {
+				log.Printf("error posting to twitter %d %v\n", res.StatusCode, err)
+			}
+		}
 	}
 }
 
