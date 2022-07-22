@@ -1,9 +1,11 @@
-
 start:
-	PORT=8080 SQLITE_DB=/tmp/annie.db IRC_NICK=PvxqcjQxgd4C9 IRC_CHANNEL=#embx IRC_SERVER=irc.libera.chat:6697 go run main.go
+	foreman start
 
 fmt:
 	go fmt main.go
 
 deploy:
 	flyctl deploy
+
+lint:
+	golangci-lint run

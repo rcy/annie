@@ -7,5 +7,6 @@ mkShell {
     sqlite
     flyctl
     golangci-lint
+    foreman
   ];
 }
