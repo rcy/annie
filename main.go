@@ -224,6 +224,7 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 		matchNote(irccon, db, msg, nick, channel)
 		matchLink(irccon, db, msg, nick, channel)
 		matchLater(irccon, db, msg, nick, channel)
+		matchCommand(irccon, db, msg, nick, channel)
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
@@ -262,18 +263,12 @@ func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string
 		log.Fatal(err)
 	}
 	for _, later := range laters {
-		createdAt, err := time.Parse("2006-01-02 15:04:05", later.CreatedAt)
-		if err != nil {
-			log.Fatal(err)
-		}
 		if strings.Contains(nick, later.Target) {
-			duration := time.Now().Sub(createdAt).Round(time.Second)
-
 			_, err := db.Exec(`delete from laters where rowid = ?`, later.RowId)
 			if err != nil {
 				log.Fatal(err)
 			}
-			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, later.Message, later.Nick, ago(duration))
+			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, later.Message, later.Nick, since(later.CreatedAt))
 		}
 	}
 }
@@ -373,10 +368,39 @@ func matchLink(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
 	}
 }
 
+func since(tstr string) string {
+	t, err := time.Parse("2006-01-02 15:04:05", tstr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return ago(time.Now().Sub(t).Round(time.Second))
+}
+
 func ago(d time.Duration) string {
 	if d.Hours() >= 48.0 {
 		return fmt.Sprintf("%dd", int(math.Round(d.Hours()/24)))
 	} else {
 		return d.String()
+	}
+}
+
+func matchCommand(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
+	re := regexp.MustCompile(`^!feedme`)
+	match := re.Find([]byte(msg))
+
+	if len(match) == 0 {
+		return
+	}
+
+	notes := []Note{}
+
+	err := db.Select(&notes, `select created_at, nick, text, kind from notes order by random() limit 1`)
+	if err != nil {
+		irccon.Privmsgf(channel, "%v", err)
+		return
+	}
+	if len(notes) >= 1 {
+		note := notes[0]
+		irccon.Privmsgf(channel, "%s (from %s %s ago)", note.Text, note.Nick, since(note.CreatedAt))
 	}
 }
