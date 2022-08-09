@@ -221,10 +221,11 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 		msg := e.Arguments[1]
 		nick := e.Nick
 
-		matchNote(irccon, db, msg, nick, channel)
-		matchLink(irccon, db, msg, nick, channel)
-		matchLater(irccon, db, msg, nick, channel)
-		matchCommand(irccon, db, msg, nick, channel)
+		for _, f := range matchHandlers {
+			if f.Function(irccon, db, msg, nick, channel) {
+				break
+			}
+		}
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
@@ -273,30 +274,117 @@ func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string
 	}
 }
 
-func matchLater(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
-	re := regexp.MustCompile(`^([^\s:]+): (.+)$`)
-	matches := re.FindSubmatch([]byte(msg))
+type MatchHandler struct {
+	Name     string
+	Function func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool
+}
 
-	if len(matches) > 0 {
-		prefix := string(matches[1])
-		message := string(matches[2])
+var matchHandlers = []MatchHandler{
+	{
+		Name: "Match Create Note",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool {
+			re := regexp.MustCompile(`^,(.+)$`)
+			matches := re.FindSubmatch([]byte(msg))
 
-		// if the prefix matches a currently joined nick, we do nothing
-		if prefixMatchesJoinedNick(db, channel, prefix) {
-			return
-		}
+			if len(matches) > 0 {
+				note := string(matches[1])
+				_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'note')`, nick, note)
+				if err != nil {
+					log.Print(err)
+					irccon.Privmsg(channel, err.Error())
+				} else {
+					irccon.Privmsg(channel, "recorded note")
+				}
+				return true
+			}
+			return false
+		},
+	},
+	{
+		Name: "Match Deferred Delivery",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool {
+			re := regexp.MustCompile(`^([^\s:]+): (.+)$`)
+			matches := re.FindSubmatch([]byte(msg))
 
-		if prefixMatchesKnownNick(db, channel, prefix) {
-			_, err := db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, nick, prefix, message, false)
-			if err != nil {
-				log.Fatal(err)
+			if len(matches) > 0 {
+				prefix := string(matches[1])
+				message := string(matches[2])
+
+				// if the prefix matches a currently joined nick, we do nothing
+				if prefixMatchesJoinedNick(db, channel, prefix) {
+					return false
+				}
+
+				if prefixMatchesKnownNick(db, channel, prefix) {
+					_, err := db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, nick, prefix, message, false)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					irccon.Privmsgf(channel, "%s: will send to %s* later", nick, prefix)
+				} else {
+					irccon.Privmsgf(channel, "%s: %s* doesn't match any known nick", nick, prefix)
+				}
+				return true
+			}
+			return false
+		},
+	},
+	{
+		Name: "Match Link",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool {
+			re := regexp.MustCompile(`(https?://\S+)`)
+			matches := re.FindSubmatch([]byte(msg))
+
+			if len(matches) > 0 {
+				url := string(matches[1])
+				_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'link')`, nick, url)
+				if err != nil {
+					log.Print(err)
+					irccon.Privmsg(channel, err.Error())
+				} else {
+					log.Printf("recorded url %s", url)
+				}
+
+				// post to twitter
+				nvurl := os.Getenv("NICHE_VOMIT_URL")
+				if nvurl != "" {
+					res, err := http.Post(nvurl, "text/plain", strings.NewReader(url))
+					if res.StatusCode >= 300 || err != nil {
+						log.Printf("error posting to twitter %d %v\n", res.StatusCode, err)
+					}
+				}
+
+				return true
+			}
+			return false
+		},
+	},
+	{
+		Name: "Match Command",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool {
+			re := regexp.MustCompile(`^!feedme`)
+			match := re.Find([]byte(msg))
+
+			if len(match) == 0 {
+				return false
 			}
 
-			irccon.Privmsgf(channel, "%s: will send to %s* later", nick, prefix)
-		} else {
-			irccon.Privmsgf(channel, "%s: %s* doesn't match any known nick", nick, prefix)
-		}
-	}
+			notes := []Note{}
+
+			err := db.Select(&notes, `select created_at, nick, text, kind from notes order by random() limit 1`)
+			if err != nil {
+				irccon.Privmsgf(channel, "%v", err)
+				return false
+			}
+			if len(notes) >= 1 {
+				note := notes[0]
+				irccon.Privmsgf(channel, "%s (from %s %s ago)", note.Text, note.Nick, since(note.CreatedAt))
+				return true
+			}
+			return false
+		},
+	},
 }
 
 func prefixMatchesJoinedNick(db *sqlx.DB, channel, prefix string) bool {
@@ -327,47 +415,6 @@ func prefixMatchesKnownNick(db *sqlx.DB, channel, prefix string) bool {
 	return false
 }
 
-func matchNote(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
-	re := regexp.MustCompile(`^,(.+)$`)
-	matches := re.FindSubmatch([]byte(msg))
-
-	if len(matches) > 0 {
-		note := string(matches[1])
-		_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'note')`, nick, note)
-		if err != nil {
-			log.Print(err)
-			irccon.Privmsg(channel, err.Error())
-		} else {
-			irccon.Privmsg(channel, "recorded note")
-		}
-	}
-}
-
-func matchLink(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
-	re := regexp.MustCompile(`(https?://\S+)`)
-	matches := re.FindSubmatch([]byte(msg))
-
-	if len(matches) > 0 {
-		url := string(matches[1])
-		_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'link')`, nick, url)
-		if err != nil {
-			log.Print(err)
-			irccon.Privmsg(channel, err.Error())
-		} else {
-			log.Printf("recorded url %s", url)
-		}
-
-		// post to twitter
-		nvurl := os.Getenv("NICHE_VOMIT_URL")
-		if nvurl != "" {
-			res, err := http.Post(nvurl, "text/plain", strings.NewReader(url))
-			if res.StatusCode >= 300 || err != nil {
-				log.Printf("error posting to twitter %d %v\n", res.StatusCode, err)
-			}
-		}
-	}
-}
-
 func since(tstr string) string {
 	t, err := time.Parse("2006-01-02 15:04:05", tstr)
 	if err != nil {
@@ -381,26 +428,5 @@ func ago(d time.Duration) string {
 		return fmt.Sprintf("%dd", int(math.Round(d.Hours()/24)))
 	} else {
 		return d.String()
-	}
-}
-
-func matchCommand(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) {
-	re := regexp.MustCompile(`^!feedme`)
-	match := re.Find([]byte(msg))
-
-	if len(match) == 0 {
-		return
-	}
-
-	notes := []Note{}
-
-	err := db.Select(&notes, `select created_at, nick, text, kind from notes order by random() limit 1`)
-	if err != nil {
-		irccon.Privmsgf(channel, "%v", err)
-		return
-	}
-	if len(notes) >= 1 {
-		note := notes[0]
-		irccon.Privmsgf(channel, "%s (from %s %s ago)", note.Text, note.Nick, since(note.CreatedAt))
 	}
 }
