@@ -105,9 +105,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go conn.Loop()
 
-	webserver(db)
+	go webserver(db)
+
+	conn.Loop()
 }
 
 //go:embed "templates/index.gohtml"
