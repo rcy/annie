@@ -218,23 +218,7 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 	})
 	irccon.AddCallback("366", func(e *irc.Event) {})
 	irccon.AddCallback("PRIVMSG", func(e *irc.Event) {
-		channel := e.Arguments[0]
-		msg := e.Arguments[1]
-		nick := e.Nick
-
-		for _, f := range matchHandlers {
-			var target string
-
-			if channel == irccon.GetNick() {
-				target = nick
-			} else {
-				target = channel
-			}
-
-			if f.Function(irccon, db, msg, nick, target) {
-				break
-			}
-		}
+		go handlePrivmsg(irccon, db, e)
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
@@ -264,6 +248,26 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 	err := irccon.Connect(server)
 
 	return irccon, err
+}
+
+func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
+	channel := e.Arguments[0]
+	msg := e.Arguments[1]
+	nick := e.Nick
+
+	for _, f := range matchHandlers {
+		var target string
+
+		if channel == irccon.GetNick() {
+			target = nick
+		} else {
+			target = channel
+		}
+
+		if f.Function(irccon, db, msg, nick, target) {
+			break
+		}
+	}
 }
 
 func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string) {
@@ -386,7 +390,7 @@ var matchHandlers = []MatchHandler{
 		},
 	},
 	{
-		Name: "Match Command",
+		Name: "Match Feedme Command",
 		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
 			re := regexp.MustCompile(`^!feedme`)
 			match := re.Find([]byte(msg))
@@ -408,6 +412,32 @@ var matchHandlers = []MatchHandler{
 				return true
 			}
 			return false
+		},
+	},
+	{
+		Name: "Match Recent Command",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+			re := regexp.MustCompile(`^!recent`)
+			match := re.Find([]byte(msg))
+
+			if len(match) == 0 {
+				return false
+			}
+
+			notes := []Note{}
+
+			err := db.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at desc`)
+			if err != nil {
+				irccon.Privmsgf(target, "%v", err)
+				return false
+			}
+			if len(notes) >= 1 {
+				for _, note := range notes {
+					irccon.Privmsgf(nick, "%s (from %s %s ago)", note.Text, note.Nick, since(note.CreatedAt))
+					time.Sleep(1 * time.Second)
+				}
+			}
+			return true
 		},
 	},
 }
