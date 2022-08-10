@@ -223,7 +223,15 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 		nick := e.Nick
 
 		for _, f := range matchHandlers {
-			if f.Function(irccon, db, msg, nick, channel) {
+			var target string
+
+			if channel == irccon.GetNick() {
+				target = nick
+			} else {
+				target = channel
+			}
+
+			if f.Function(irccon, db, msg, nick, target) {
 				break
 			}
 		}
@@ -283,18 +291,24 @@ type MatchHandler struct {
 var matchHandlers = []MatchHandler{
 	{
 		Name: "Match Create Note",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool {
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
 			re := regexp.MustCompile(`^,(.+)$`)
 			matches := re.FindSubmatch([]byte(msg))
 
 			if len(matches) > 0 {
+				if target == nick {
+					irccon.Privmsg(target, "not your personal secretary")
+					return false
+				}
+
 				note := string(matches[1])
+
 				_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'note')`, nick, note)
 				if err != nil {
 					log.Print(err)
-					irccon.Privmsg(channel, err.Error())
+					irccon.Privmsg(target, err.Error())
 				} else {
-					irccon.Privmsg(channel, "recorded note")
+					irccon.Privmsg(target, "recorded note")
 				}
 				return true
 			}
@@ -303,28 +317,33 @@ var matchHandlers = []MatchHandler{
 	},
 	{
 		Name: "Match Deferred Delivery",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool {
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
 			re := regexp.MustCompile(`^([^\s:]+): (.+)$`)
 			matches := re.FindSubmatch([]byte(msg))
 
 			if len(matches) > 0 {
+				if target == nick {
+					irccon.Privmsg(target, "not your personal secretary")
+					return false
+				}
+
 				prefix := string(matches[1])
 				message := string(matches[2])
 
 				// if the prefix matches a currently joined nick, we do nothing
-				if prefixMatchesJoinedNick(db, channel, prefix) {
+				if prefixMatchesJoinedNick(db, target, prefix) {
 					return false
 				}
 
-				if prefixMatchesKnownNick(db, channel, prefix) {
+				if prefixMatchesKnownNick(db, target, prefix) {
 					_, err := db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, nick, prefix, message, false)
 					if err != nil {
 						log.Fatal(err)
 					}
 
-					irccon.Privmsgf(channel, "%s: will send to %s* later", nick, prefix)
+					irccon.Privmsgf(target, "%s: will send to %s* later", nick, prefix)
 				} else {
-					irccon.Privmsgf(channel, "%s: %s* doesn't match any known nick", nick, prefix)
+					irccon.Privmsgf(target, "%s: %s* doesn't match any known nick", nick, prefix)
 				}
 				return true
 			}
@@ -333,16 +352,21 @@ var matchHandlers = []MatchHandler{
 	},
 	{
 		Name: "Match Link",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool {
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
 			re := regexp.MustCompile(`(https?://\S+)`)
 			matches := re.FindSubmatch([]byte(msg))
 
 			if len(matches) > 0 {
+				if target == nick {
+					irccon.Privmsg(target, "not your personal secretary")
+					return false
+				}
+
 				url := string(matches[1])
 				_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'link')`, nick, url)
 				if err != nil {
 					log.Print(err)
-					irccon.Privmsg(channel, err.Error())
+					irccon.Privmsg(target, err.Error())
 				} else {
 					log.Printf("recorded url %s", url)
 				}
@@ -363,7 +387,7 @@ var matchHandlers = []MatchHandler{
 	},
 	{
 		Name: "Match Command",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool {
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
 			re := regexp.MustCompile(`^!feedme`)
 			match := re.Find([]byte(msg))
 
@@ -375,12 +399,12 @@ var matchHandlers = []MatchHandler{
 
 			err := db.Select(&notes, `select created_at, nick, text, kind from notes order by random() limit 1`)
 			if err != nil {
-				irccon.Privmsgf(channel, "%v", err)
+				irccon.Privmsgf(target, "%v", err)
 				return false
 			}
 			if len(notes) >= 1 {
 				note := notes[0]
-				irccon.Privmsgf(channel, "%s (from %s %s ago)", note.Text, note.Nick, since(note.CreatedAt))
+				irccon.Privmsgf(target, "%s (from %s %s ago)", note.Text, note.Nick, since(note.CreatedAt))
 				return true
 			}
 			return false
