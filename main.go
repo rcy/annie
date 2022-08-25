@@ -88,6 +88,19 @@ func openDb(dbfile string) *sqlx.DB {
 			_, err := tx.Exec(`create table channel_nicks(channel text not null, nick text not null, present bool not null default false)`)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add unique constrant to channel_nicks table")
+
+			// delete duplicates, keeping oldest records
+			_, err := tx.Exec(`delete from channel_nicks where rowid not in (select min(rowid) from channel_nicks group by nick, channel)`)
+			if err != nil {
+				return err
+			}
+
+			// add unique constraint
+			_, err = tx.Exec(`create unique index channel_nick_unique_index on channel_nicks(channel, nick)`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
@@ -114,6 +127,9 @@ func main() {
 //go:embed "templates/index.gohtml"
 var indexTemplate string
 
+//go:embed "templates/feed.gohtml"
+var feedTemplate string
+
 func webserver(db *sqlx.DB) {
 	r := gin.Default()
 	//r.LoadHTMLGlob("templates/*")
@@ -125,15 +141,6 @@ func webserver(db *sqlx.DB) {
 			return
 		}
 		c.File("/tmp/snapshot.db")
-	})
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-	r.GET("/test/:name", func(c *gin.Context) {
-		name := c.Param("name")
-		c.String(http.StatusOK, "Hello %s", name)
 	})
 	r.GET("/", func(c *gin.Context) {
 		nick := c.Query("nick")
@@ -164,6 +171,37 @@ func webserver(db *sqlx.DB) {
 
 		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
 	})
+
+	r.GET("/feed", func(c *gin.Context) {
+		nick := c.Query("nick")
+
+		notes, err := getNotes(db, nick)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		nicks, err := getNicks(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		tmpl, err := template.New("name").Parse(feedTemplate)
+		if err != nil {
+			log.Fatal("error parsing template")
+		}
+
+		out := new(bytes.Buffer)
+		err = tmpl.Execute(out, gin.H{
+			"nicks": nicks,
+			"notes": notes,
+		})
+		if err != nil {
+			log.Fatal("error executing template on data")
+		}
+
+		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
+	})
+
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
@@ -210,7 +248,10 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 
 		// mark nicks as present
 		for _, nick := range strings.Split(nickStr, " ") {
-			_, err := db.Exec(`insert into channel_nicks(channel, nick, present) values(?, ?, ?)`, channel, nick, true)
+			_, err = db.Exec(`
+insert into channel_nicks(channel, nick, present) values(?, ?, ?)
+on conflict(channel, nick) do update set present=excluded.present`,
+				channel, nick, true)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -415,9 +456,9 @@ var matchHandlers = []MatchHandler{
 		},
 	},
 	{
-		Name: "Match Recent Command",
+		Name: "Match Catchup Command",
 		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
-			re := regexp.MustCompile(`^!recent`)
+			re := regexp.MustCompile(`^!catchup`)
 			match := re.Find([]byte(msg))
 
 			if len(match) == 0 {
@@ -426,7 +467,7 @@ var matchHandlers = []MatchHandler{
 
 			notes := []Note{}
 
-			err := db.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at desc`)
+			err := db.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc`)
 			if err != nil {
 				irccon.Privmsgf(target, "%v", err)
 				return false
@@ -437,6 +478,7 @@ var matchHandlers = []MatchHandler{
 					time.Sleep(1 * time.Second)
 				}
 			}
+			irccon.Privmsgf(nick, "--- %d total from last 24 hours", len(notes))
 			return true
 		},
 	},
