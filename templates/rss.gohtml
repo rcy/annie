@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>emb links</title>
+    <link>https://muddy-river-988.fly.dev/</link>
+    <description>links from #emb on libera.net</description>
+    {{range .notes}}
+      <item>
+        <pubDate>{{.CreatedAt}}</pubDate>
+        <author>{{.Nick}}@example.com</author>
+        <title>{{.Text}}</title>
+        {{if eq .Kind "link"}}
+          <link>{{.Text}}</link>
+        {{else}}
+          <description>{{.Text}}</description>
+        {{end}}
+      </item>
+    {{end}}
+  </channel>
+</rss>

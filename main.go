@@ -127,8 +127,8 @@ func main() {
 //go:embed "templates/index.gohtml"
 var indexTemplate string
 
-//go:embed "templates/feed.gohtml"
-var feedTemplate string
+//go:embed "templates/rss.gohtml"
+var rssTemplate string
 
 func webserver(db *sqlx.DB) {
 	r := gin.Default()
@@ -172,7 +172,7 @@ func webserver(db *sqlx.DB) {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
 	})
 
-	r.GET("/feed", func(c *gin.Context) {
+	r.GET("/rss.xml", func(c *gin.Context) {
 		nick := c.Query("nick")
 
 		notes, err := getNotes(db, nick)
@@ -185,7 +185,7 @@ func webserver(db *sqlx.DB) {
 			log.Fatal(err)
 		}
 
-		tmpl, err := template.New("name").Parse(feedTemplate)
+		tmpl, err := template.New("name").Parse(rssTemplate)
 		if err != nil {
 			log.Fatal("error parsing template")
 		}
@@ -199,7 +199,7 @@ func webserver(db *sqlx.DB) {
 			log.Fatal("error executing template on data")
 		}
 
-		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
+		c.Data(http.StatusOK, "text/xml; charset=utf-8", out.Bytes())
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
