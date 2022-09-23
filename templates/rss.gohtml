@@ -7,12 +7,12 @@
     {{range .notes}}
       <item>
         <pubDate>{{.CreatedAt}}</pubDate>
-        <author>{{.Nick}}@example.com</author>
-        <title>{{.Text}}</title>
+        <author>{{.Nick}}@example.com ({{.Nick}})</author>
+        <title><![CDATA[{{.Text}}]]></title>
         {{if eq .Kind "link"}}
-          <link>{{.Text}}</link>
+          <link><![CDATA[{{.Text}}]]></link>
         {{else}}
-          <description>{{.Text}}</description>
+          <description><![CDATA[{{.Text}}]]></description>
         {{end}}
       </item>
     {{end}}

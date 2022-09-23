@@ -180,20 +180,19 @@ func webserver(db *sqlx.DB) {
 			log.Fatal(err)
 		}
 
-		nicks, err := getNicks(db)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		tmpl, err := template.New("name").Parse(rssTemplate)
 		if err != nil {
 			log.Fatal("error parsing template")
 		}
 
+		fnotes, err := formatNotesDates(notes)
+		if err != nil {
+			log.Fatalf("error formatting notes: %v", err)
+		}
+
 		out := new(bytes.Buffer)
 		err = tmpl.Execute(out, gin.H{
-			"nicks": nicks,
-			"notes": notes,
+			"notes": fnotes,
 		})
 		if err != nil {
 			log.Fatal("error executing template on data")
@@ -203,6 +202,20 @@ func webserver(db *sqlx.DB) {
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+}
+
+func formatNotesDates(notes []Note) ([]Note, error) {
+	result := []Note{}
+	for _, n := range notes {
+		newNote := n
+		createdAt, err := time.Parse("2006-01-02 15:04:05", n.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		newNote.CreatedAt = createdAt.Format("Mon, 02 Jan 2006 15:04:05 -0700")
+		result = append(result, newNote)
+	}
+	return result, nil
 }
 
 func getLaters(db *sqlx.DB) ([]Later, error) {
