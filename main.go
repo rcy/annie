@@ -238,19 +238,24 @@ func webserver(db *sqlx.DB) {
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
+func parseTime(str string) (time.Time, error) {
+	result, err := time.Parse("2006-01-02 15:04:05", str)
+	if err != nil {
+		result, err = time.Parse("2006-01-02T15:04:05Z", str)
+	}
+	return result, err
+}
+
 func formatNotesDates(notes []Note) ([]Note, error) {
 	result := []Note{}
 	for _, n := range notes {
 		newNote := n
 
-		// not sure why
-		createdAt, err := time.Parse("2006-01-02 15:04:05", n.CreatedAt)
+		createdAt, err := parseTime(n.CreatedAt)
 		if err != nil {
-			createdAt, err = time.Parse("2006-01-02T15:04:05Z", n.CreatedAt)
-			if err != nil {
-				return nil, err
-			}
+			return nil, err
 		}
+
 		newNote.CreatedAt = createdAt.Format("Mon, 02 Jan 2006 15:04:05 -0700")
 		result = append(result, newNote)
 	}
@@ -606,7 +611,7 @@ func prefixMatchesKnownNick(db *sqlx.DB, channel, prefix string) bool {
 }
 
 func since(tstr string) string {
-	t, err := time.Parse("2006-01-02 15:04:05", tstr)
+	t, err := parseTime(tstr)
 	if err != nil {
 		log.Fatal(err)
 	}
