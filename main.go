@@ -24,9 +24,10 @@ import (
 )
 
 type ChannelNick struct {
-	Channel string
-	Nick    string
-	Present string
+	Channel   string
+	Nick      string
+	Present   string
+	UpdatedAt string `db:"updated_at"`
 }
 
 type Note struct {
@@ -133,6 +134,11 @@ create table seen_by(
   note_id references notes not null,
   nick text not null
 );`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add updated_at to channel_nicks")
+			_, err := tx.Exec(`alter table channel_nicks add column updated_at text`)
 			return err
 		},
 	}
@@ -288,14 +294,14 @@ func getNotes(db *sqlx.DB, nick string) ([]Note, error) {
 func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error) {
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
-	irccon.VerboseCallbackHandler = true
+	irccon.VerboseCallbackHandler = false
 	irccon.Debug = false
 	irccon.UseTLS = true
 	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
 	irccon.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
-		_, err := db.Exec(`update channel_nicks set present = false`)
+		_, err := db.Exec(`update channel_nicks set updated_at = current_timestamp, present = false`)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -303,11 +309,11 @@ func ircmain(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error)
 		// remove @ op markers from nick argument
 		nickStr := strings.ReplaceAll(e.Arguments[len(e.Arguments)-1], "@", "")
 
-		// mark nicks as present
+		// mark nicks as present and record timestamp which can be intepreted as 'last seen', or 'online since'
 		for _, nick := range strings.Split(nickStr, " ") {
 			_, err = db.Exec(`
-insert into channel_nicks(channel, nick, present) values(?, ?, ?)
-on conflict(channel, nick) do update set present=excluded.present`,
+insert into channel_nicks(updated_at, channel, nick, present) values(current_timestamp, ?, ?, ?)
+on conflict(channel, nick) do update set updated_at = current_timestamp, present=excluded.present`,
 				channel, nick, true)
 			if err != nil {
 				log.Fatal(err)
@@ -320,10 +326,13 @@ on conflict(channel, nick) do update set present=excluded.present`,
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
-			// trigger NAMES to update the list of joined nicks
-			irccon.SendRawf("NAMES %s", channel)
 			sendLaters(irccon, db, channel, e.Nick)
+
+			go sendMissed(irccon, db, channel, e.Nick)
 		}
+
+		// trigger NAMES to update the list of joined nicks
+		irccon.SendRawf("NAMES %s", channel)
 	})
 	irccon.AddCallback("PART", func(e *irc.Event) {
 		if e.Nick != nick {
@@ -381,6 +390,35 @@ func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string
 				log.Fatal(err)
 			}
 			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, later.Message, later.Nick, since(later.CreatedAt))
+		}
+	}
+}
+
+func isAltNick(nick string) bool {
+	return strings.HasSuffix(nick, "`") || strings.HasSuffix(nick, "_")
+}
+
+func sendMissed(irccon *irc.Connection, db *sqlx.DB, channel string, nick string) {
+	if isAltNick(nick) {
+		return
+	}
+
+	channelNick := ChannelNick{}
+	err := db.Get(&channelNick, `select * from channel_nicks where present = 0 and channel = ? and nick = ?`, channel, nick)
+	if err != nil {
+		return
+	}
+
+	notes := []Note{}
+	db.Select(&notes, "select * from notes where created_at > ? order by created_at desc limit 69", channelNick.UpdatedAt)
+
+	if len(notes) > 0 {
+		irccon.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
+			nick, len(notes), channel, channelNick.UpdatedAt)
+
+		for _, note := range notes {
+			irccon.Privmsgf(nick, "%s (from %s %s ago)", note.Text, note.Nick, since(note.CreatedAt))
+			time.Sleep(1 * time.Second)
 		}
 	}
 }
