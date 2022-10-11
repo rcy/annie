@@ -30,6 +30,7 @@ type ChannelNick struct {
 }
 
 type Note struct {
+	Id        int64
 	CreatedAt string `db:"created_at"`
 	Text      string
 	Nick      string
@@ -99,6 +100,39 @@ func openDb(dbfile string) *sqlx.DB {
 
 			// add unique constraint
 			_, err = tx.Exec(`create unique index channel_nick_unique_index on channel_nicks(channel, nick)`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add primary key to notes")
+			_, err := tx.Exec(`
+pragma foreign_key = off;
+
+alter table notes rename to old_notes;
+
+create table notes(
+  id INTEGER not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text,
+  text text,
+  kind string not null default "note"
+);
+
+insert into notes select rowid, * from old_notes;
+
+drop table old_notes;
+
+pragma foreign_key = on;
+`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add seen table")
+			_, err := tx.Exec(`
+create table seen_by(
+  created_at datetime not null default current_timestamp,
+  note_id references notes not null,
+  nick text not null
+);`)
 			return err
 		},
 	}
@@ -208,9 +242,14 @@ func formatNotesDates(notes []Note) ([]Note, error) {
 	result := []Note{}
 	for _, n := range notes {
 		newNote := n
+
+		// not sure why
 		createdAt, err := time.Parse("2006-01-02 15:04:05", n.CreatedAt)
 		if err != nil {
-			return nil, err
+			createdAt, err = time.Parse("2006-01-02T15:04:05Z", n.CreatedAt)
+			if err != nil {
+				return nil, err
+			}
 		}
 		newNote.CreatedAt = createdAt.Format("Mon, 02 Jan 2006 15:04:05 -0700")
 		result = append(result, newNote)
@@ -346,6 +385,39 @@ type MatchHandler struct {
 	Function func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool
 }
 
+func markAsSeen(db *sqlx.DB, noteId int64, target string) error {
+	//db.Select(`select * from channel_nicks where channel = ?`, target)
+	channelNicks, err := joinedNicks(db, target)
+	if err != nil {
+		return err
+	}
+	// for each channelNick insert a seen_by record
+	for _, nick := range channelNicks {
+		_, err := db.Exec(`insert into seen_by(note_id, nick) values(?, ?)`, noteId, nick.Nick)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func insertNote(db *sqlx.DB, target string, nick string, kind string, text string) error {
+	result, err := db.Exec(`insert into notes(nick, text, kind) values(?, ?, ?) returning id`, nick, text, kind)
+	if err != nil {
+		return err
+	} else {
+		noteId, err := result.LastInsertId()
+		if err != nil {
+			return err
+		}
+		err = markAsSeen(db, noteId, target)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var matchHandlers = []MatchHandler{
 	{
 		Name: "Match Create Note",
@@ -359,9 +431,9 @@ var matchHandlers = []MatchHandler{
 					return false
 				}
 
-				note := string(matches[1])
+				text := string(matches[1])
 
-				_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'note')`, nick, note)
+				err := insertNote(db, target, nick, "note", text)
 				if err != nil {
 					log.Print(err)
 					irccon.Privmsg(target, err.Error())
@@ -421,7 +493,8 @@ var matchHandlers = []MatchHandler{
 				}
 
 				url := string(matches[1])
-				_, err := db.Exec(`insert into notes values(datetime('now'), ?, ?, 'link')`, nick, url)
+
+				err := insertNote(db, target, nick, "link", url)
 				if err != nil {
 					log.Print(err)
 					irccon.Privmsg(target, err.Error())
@@ -455,17 +528,18 @@ var matchHandlers = []MatchHandler{
 
 			notes := []Note{}
 
-			err := db.Select(&notes, `select created_at, nick, text, kind from notes order by random() limit 1`)
+			err := db.Select(&notes, `select id, created_at, nick, text, kind from notes order by random() limit 1`)
 			if err != nil {
 				irccon.Privmsgf(target, "%v", err)
-				return false
-			}
-			if len(notes) >= 1 {
+			} else if len(notes) >= 1 {
 				note := notes[0]
 				irccon.Privmsgf(target, "%s (from %s %s ago)", note.Text, note.Nick, since(note.CreatedAt))
-				return true
+				err = markAsSeen(db, note.Id, target)
+				if err != nil {
+					irccon.Privmsg(target, err.Error())
+				}
 			}
-			return false
+			return true
 		},
 	},
 	{
@@ -480,6 +554,7 @@ var matchHandlers = []MatchHandler{
 
 			notes := []Note{}
 
+			// TODO: markAsSeen
 			err := db.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc`)
 			if err != nil {
 				irccon.Privmsgf(target, "%v", err)
@@ -497,13 +572,18 @@ var matchHandlers = []MatchHandler{
 	},
 }
 
+func joinedNicks(db *sqlx.DB, channel string) ([]ChannelNick, error) {
+	channelNicks := []ChannelNick{}
+	err := db.Select(&channelNicks, `select channel, nick, present from channel_nicks where present = true and channel = ?`, channel)
+	return channelNicks, err
+}
+
 func prefixMatchesJoinedNick(db *sqlx.DB, channel, prefix string) bool {
-	channel_nicks := []ChannelNick{}
-	err := db.Select(&channel_nicks, `select channel, nick, present from channel_nicks where present = true`)
+	channelNicks, err := joinedNicks(db, channel)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, row := range channel_nicks {
+	for _, row := range channelNicks {
 		if strings.HasPrefix(row.Nick, prefix) {
 			return true
 		}
