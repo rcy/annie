@@ -613,6 +613,26 @@ var matchHandlers = []MatchHandler{
 			return true
 		},
 	},
+	{
+		Name: "Match Until Command",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+			re := regexp.MustCompile(`world.?cup.*over`)
+			match := re.Find([]byte(msg))
+
+			if len(match) == 0 {
+				return false
+			}
+
+			end, err := time.Parse(time.RFC3339, "2022-12-18T15:00:00Z")
+			if err != nil {
+				irccon.Privmsgf(target, "error: %v", err)
+				return true
+			}
+			until := time.Until(end)
+			irccon.Privmsgf(target, "the world cup will be over in %.0f days", math.Round(until.Hours()/24))
+			return true
+		},
+	},
 }
 
 func joinedNicks(db *sqlx.DB, channel string) ([]ChannelNick, error) {
