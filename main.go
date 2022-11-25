@@ -410,7 +410,7 @@ func sendMissed(irccon *irc.Connection, db *sqlx.DB, channel string, nick string
 	}
 
 	notes := []Note{}
-	db.Select(&notes, "select * from notes where created_at > ? order by created_at desc limit 69", channelNick.UpdatedAt)
+	db.Select(&notes, "select * from notes where created_at > ? order by created_at asc limit 69", channelNick.UpdatedAt)
 
 	if len(notes) > 0 {
 		irccon.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
