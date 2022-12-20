@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"crypto/tls"
 	_ "embed"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"goirc/fin"
 	"strings"
 	"text/template"
 	"time"
@@ -645,168 +644,20 @@ var matchHandlers = []MatchHandler{
 				return false
 			}
 
-			symbol := string(matches[1])
+			symbol := matches[1]
 
-			//curl 'https://query1.finance.yahoo.com/v11/finance/quoteSummary/tsla?modules=financialData'|jq .
-			resp, err := http.Get(fmt.Sprintf("https://query1.finance.yahoo.com/v11/finance/quoteSummary/%s?modules=financialData", symbol))
+			data, err := fin.YahooFinanceFetch(string(symbol))
 			if err != nil {
-				irccon.Privmsgf(target, "error: %s", err.Error)
+				irccon.Privmsgf(target, "error: %s", err)
 				return true
 			}
 
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.Fatalln(err)
-				irccon.Privmsgf(target, "error: %s", err.Error)
-			}
-			//sb := string(body)
-
-			data := YahooResponse{}
-			json.Unmarshal(body, &data)
-
-			log.Printf("%v", data)
-
-			if data.QuoteSummary.Error.Code != "" {
-				irccon.Privmsgf(target, "$%s: %s", symbol, data.QuoteSummary.Error.Code)
-			} else {
-				irccon.Privmsgf(target, "$%s: %f", symbol, data.QuoteSummary.Result[0].FinancialData.CurrentPrice.Raw)
-			}
+			result := data.QuoteSummary.Result[0]
+			irccon.Privmsgf(target, "$%s: %f %s", symbol, result.FinancialData.CurrentPrice.Raw, result.SummaryProfile.Website)
 
 			return true
 		},
 	},
-}
-
-type YahooResponse struct {
-	QuoteSummary struct {
-		Result []struct {
-			FinancialData struct {
-				MaxAge       int `json:"maxAge"`
-				CurrentPrice struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"currentPrice"`
-				TargetHighPrice struct {
-					Raw int    `json:"raw"`
-					Fmt string `json:"fmt"`
-				} `json:"targetHighPrice"`
-				TargetLowPrice struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"targetLowPrice"`
-				TargetMeanPrice struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"targetMeanPrice"`
-				TargetMedianPrice struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"targetMedianPrice"`
-				RecommendationMean struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"recommendationMean"`
-				RecommendationKey       string `json:"recommendationKey"`
-				NumberOfAnalystOpinions struct {
-					Raw     int    `json:"raw"`
-					Fmt     string `json:"fmt"`
-					LongFmt string `json:"longFmt"`
-				} `json:"numberOfAnalystOpinions"`
-				TotalCash struct {
-					Raw     int64  `json:"raw"`
-					Fmt     string `json:"fmt"`
-					LongFmt string `json:"longFmt"`
-				} `json:"totalCash"`
-				TotalCashPerShare struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"totalCashPerShare"`
-				Ebitda struct {
-					Raw     int64  `json:"raw"`
-					Fmt     string `json:"fmt"`
-					LongFmt string `json:"longFmt"`
-				} `json:"ebitda"`
-				TotalDebt struct {
-					Raw     int64  `json:"raw"`
-					Fmt     string `json:"fmt"`
-					LongFmt string `json:"longFmt"`
-				} `json:"totalDebt"`
-				QuickRatio struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"quickRatio"`
-				CurrentRatio struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"currentRatio"`
-				TotalRevenue struct {
-					Raw     int64  `json:"raw"`
-					Fmt     string `json:"fmt"`
-					LongFmt string `json:"longFmt"`
-				} `json:"totalRevenue"`
-				DebtToEquity struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"debtToEquity"`
-				RevenuePerShare struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"revenuePerShare"`
-				ReturnOnAssets struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"returnOnAssets"`
-				ReturnOnEquity struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"returnOnEquity"`
-				GrossProfits struct {
-					Raw     int64  `json:"raw"`
-					Fmt     string `json:"fmt"`
-					LongFmt string `json:"longFmt"`
-				} `json:"grossProfits"`
-				FreeCashflow struct {
-					Raw     int64  `json:"raw"`
-					Fmt     string `json:"fmt"`
-					LongFmt string `json:"longFmt"`
-				} `json:"freeCashflow"`
-				OperatingCashflow struct {
-					Raw     int64  `json:"raw"`
-					Fmt     string `json:"fmt"`
-					LongFmt string `json:"longFmt"`
-				} `json:"operatingCashflow"`
-				EarningsGrowth struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"earningsGrowth"`
-				RevenueGrowth struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"revenueGrowth"`
-				GrossMargins struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"grossMargins"`
-				EbitdaMargins struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"ebitdaMargins"`
-				OperatingMargins struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"operatingMargins"`
-				ProfitMargins struct {
-					Raw float64 `json:"raw"`
-					Fmt string  `json:"fmt"`
-				} `json:"profitMargins"`
-				FinancialCurrency string `json:"financialCurrency"`
-			} `json:"financialData"`
-		} `json:"result"`
-		Error struct {
-			Code        string `json:"code"`
-			Description string `json:"description"`
-		} `json:"error"`
-	} `json:"quoteSummary"`
 }
 
 func joinedNicks(db *sqlx.DB, channel string) ([]ChannelNick, error) {
