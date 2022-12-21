@@ -14,6 +14,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 
@@ -644,20 +645,30 @@ var matchHandlers = []MatchHandler{
 				return false
 			}
 
-			symbol := matches[1]
+			symbol := string(matches[1])
 
-			data, err := fin.YahooFinanceFetch(string(symbol))
+			data, err := fin.YahooFinanceFetch(symbol)
 			if err != nil {
 				irccon.Privmsgf(target, "error: %s", err)
 				return true
 			}
 
 			result := data.QuoteSummary.Result[0]
-			irccon.Privmsgf(target, "$%s: %f %s", symbol, result.FinancialData.CurrentPrice.Raw, result.SummaryProfile.Website)
+			irccon.Privmsgf(target, "%s %s %f", strings.ToUpper(symbol), bareDomain(result.SummaryProfile.Website), result.FinancialData.CurrentPrice.Raw)
 
 			return true
 		},
 	},
+}
+
+// from a uri like https://www.google.com/abc?def=123 return google.com
+func bareDomain(uri string) string {
+	parsedUrl, err := url.Parse(uri)
+	if err != nil {
+		// just punt and return the original uri
+		return uri
+	}
+	return strings.Replace(parsedUrl.Host, "www.", "", 1)
 }
 
 func joinedNicks(db *sqlx.DB, channel string) ([]ChannelNick, error) {
