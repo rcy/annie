@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"fmt"
 	"goirc/fin"
+	"goirc/trader"
 	"strings"
 	"text/template"
 	"time"
@@ -141,6 +142,19 @@ create table seen_by(
 		func(tx migration.LimitedTx) error {
 			log.Println("MIGRATE: add updated_at to channel_nicks")
 			_, err := tx.Exec(`alter table channel_nicks add column updated_at text`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: transactions table")
+			_, err := tx.Exec(`
+create table transactions(
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  verb text not null,
+  symbol text not null,
+  shares number not null,
+  price number not null
+);`)
 			return err
 		},
 	}
@@ -657,6 +671,30 @@ var matchHandlers = []MatchHandler{
 			irccon.Privmsgf(target, "%s %s %f", strings.ToUpper(symbol), bareDomain(result.SummaryProfile.Website), result.FinancialData.CurrentPrice.Raw)
 
 			return true
+		},
+	},
+	{
+		Name: "Trade stock",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+			re := regexp.MustCompile("^!((buy|sell).*)$")
+			matches := re.FindStringSubmatch(msg)
+
+			if len(matches) == 0 {
+				return false
+			}
+
+			reply, err := trader.Trade(nick, matches[1], db)
+			if err != nil {
+				irccon.Privmsgf(target, "error: %s", err)
+				return true
+			}
+
+			if reply != "" {
+				irccon.Privmsgf(target, "%s: %s", nick, reply)
+				return true
+			}
+
+			return false
 		},
 	},
 }
