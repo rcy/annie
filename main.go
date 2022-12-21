@@ -697,6 +697,30 @@ var matchHandlers = []MatchHandler{
 			return false
 		},
 	},
+	{
+		Name: "Trade: show holdings report",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+			re := regexp.MustCompile("^!((report).*)$")
+			matches := re.FindStringSubmatch(msg)
+
+			if len(matches) == 0 {
+				return false
+			}
+
+			reply, err := trader.Report(nick, db)
+			if err != nil {
+				irccon.Privmsgf(target, "error: %s", err)
+				return true
+			}
+
+			if reply != "" {
+				irccon.Privmsgf(target, "%s: %s", nick, reply)
+				return true
+			}
+
+			return false
+		},
+	},
 }
 
 // from a uri like https://www.google.com/abc?def=123 return google.com

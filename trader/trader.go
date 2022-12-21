@@ -13,16 +13,16 @@ import (
 )
 
 func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
-	re := regexp.MustCompile("^(buy|sell) ([0-9]+) ([A-Za-z]+)$")
+	re := regexp.MustCompile("^(buy|sell) ([A-Za-z]+) ([0-9]+)$")
 	matches := re.FindStringSubmatch(msg)
 
 	if len(matches) == 0 {
-		return "usage: buy|sell shares symbol", nil
+		return "usage: buy|sell symbol shares", nil
 	}
 
 	command := strings.ToUpper(string(matches[1]))
-	symbol := strings.ToUpper(matches[3])
-	amount, err := strconv.Atoi(string(matches[2]))
+	symbol := strings.ToUpper(matches[2])
+	amount, err := strconv.Atoi(string(matches[3]))
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("cannot convert amount: %s", err))
 	}
@@ -52,9 +52,18 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 				return "", errors.New(fmt.Sprintf("could not log transaction: %s", err))
 			}
 
-			cost := float64(price*amount) / 100.0
+			position := Position{
+				Symbol: symbol,
+				Amount: amount,
+				Price:  price,
+			}
 
-			return fmt.Sprintf("bought %d shares of %s@%.02f for $%.02f", amount, symbol, float64(price)/100.0, cost), nil
+			report, err := Report(nick, db)
+			if err != nil {
+				return "", err
+			}
+
+			return fmt.Sprintf("BUY %s | %s", position.String(), report), nil
 		}
 
 		if command == "SELL" { //////////////////////////////////////////////////////////////// SELL
@@ -72,12 +81,49 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 				return "", errors.New(fmt.Sprintf("could not log transaction: %s", err))
 			}
 
-			cost := float64(price*amount) / 100.0
-			return fmt.Sprintf("sold %d shares of %s@%.02f for $%.02f", amount, symbol, float64(price)/100.0, cost), nil
+			position := Position{
+				Symbol: symbol,
+				Amount: amount,
+				Price:  price,
+			}
+
+			report, err := Report(nick, db)
+			if err != nil {
+				return "", err
+			}
+
+			return fmt.Sprintf("SELL %s | %s", position.String(), report), nil
 		}
 	}
 
 	return "", errors.New(fmt.Sprintf("unknown command: %s", command))
+}
+
+func Report(nick string, db *sqlx.DB) (string, error) {
+	cash, err := getCash(db, nick)
+	if err != nil {
+		return "", err
+	}
+
+	holdings, err := getHoldings(db, nick)
+	if err != nil {
+		return "", err
+	}
+
+	positions, err := holdingsToPositions(*holdings)
+	if err != nil {
+		return "", err
+	}
+
+	total := cash
+
+	arr := []string{}
+	for _, position := range positions {
+		arr = append(arr, position.String())
+		total += position.Amount * position.Price
+	}
+
+	return fmt.Sprintf("CASH $%.02f + %s = NET $%0.2f", float64(cash)/100.0, strings.Join(arr, " + "), float64(total)/100.0), nil
 }
 
 func stockPrice(symbol string) (int, error) {
@@ -92,6 +138,39 @@ func stockPrice(symbol string) (int, error) {
 }
 
 type Holdings map[string]int
+
+type Position struct {
+	Symbol string
+	Amount int
+	Price  int
+}
+
+func (p *Position) String() string {
+	return fmt.Sprintf("%s %d@%.02f $%.02f", p.Symbol, p.Amount, float64(p.Price)/100.0, float64(p.Amount*p.Price)/100.0)
+}
+
+type Positions map[string]*Position
+
+func holdingsToPositions(holdings Holdings) (Positions, error) {
+	positions := Positions{}
+
+	for symbol, amount := range holdings {
+		price, err := stockPrice(symbol)
+		if err != nil {
+			return nil, err
+		}
+
+		if amount > 0 {
+			positions[symbol] = &Position{
+				Symbol: symbol,
+				Amount: amount,
+				Price:  price,
+			}
+		}
+	}
+
+	return positions, nil
+}
 
 type Transaction struct {
 	CreatedAt string
