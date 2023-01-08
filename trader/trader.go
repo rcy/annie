@@ -13,7 +13,7 @@ import (
 )
 
 func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
-	re := regexp.MustCompile("^(buy|sell) ([A-Za-z]+) ([0-9]+)$")
+	re := regexp.MustCompile("^(buy|sell) ([A-Za-z-]+) ([0-9]+)$")
 	matches := re.FindStringSubmatch(msg)
 
 	if len(matches) == 0 {
@@ -115,15 +115,16 @@ func Report(nick string, db *sqlx.DB) (string, error) {
 		return "", err
 	}
 
+	arr := []string{
+		fmt.Sprintf("CASH $%.02f", float64(cash)/100.0),
+	}
 	total := cash
-
-	arr := []string{}
 	for _, position := range positions {
 		arr = append(arr, position.String())
 		total += position.Amount * position.Price
 	}
 
-	return fmt.Sprintf("CASH $%.02f + %s = NET $%0.2f", float64(cash)/100.0, strings.Join(arr, " + "), float64(total)/100.0), nil
+	return fmt.Sprintf("%s = NET $%0.2f", strings.Join(arr, " + "), float64(total)/100.0), nil
 }
 
 func stockPrice(symbol string) (int, error) {
@@ -208,7 +209,7 @@ func getCash(db *sqlx.DB, nick string) (int, error) {
 		return 0, err
 	}
 
-	cash := 10_000 * 100 // opening balance $10k
+	cash := 1_000_000 * 100 // opening balance
 
 	for _, tx := range transactions {
 		if tx.Verb == "BUY" {

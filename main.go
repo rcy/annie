@@ -652,7 +652,7 @@ var matchHandlers = []MatchHandler{
 	{
 		Name: "Match stock price",
 		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
-			re := regexp.MustCompile("^[$]([A-Za-z]+)")
+			re := regexp.MustCompile("^[$]([A-Za-z-]+)")
 			matches := re.FindSubmatch([]byte(msg))
 
 			if len(matches) == 0 {
@@ -676,7 +676,7 @@ var matchHandlers = []MatchHandler{
 	{
 		Name: "Trade stock",
 		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
-			re := regexp.MustCompile("^!((buy|sell).*)$")
+			re := regexp.MustCompile("^((buy|sell).*)$")
 			matches := re.FindStringSubmatch(msg)
 
 			if len(matches) == 0 {
@@ -700,7 +700,7 @@ var matchHandlers = []MatchHandler{
 	{
 		Name: "Trade: show holdings report",
 		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
-			re := regexp.MustCompile("^!((report).*)$")
+			re := regexp.MustCompile("^((report).*)$")
 			matches := re.FindStringSubmatch(msg)
 
 			if len(matches) == 0 {
