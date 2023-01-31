@@ -531,8 +531,6 @@ var matchHandlers = []MatchHandler{
 					}
 
 					irccon.Privmsgf(target, "%s: will send to %s* later", nick, prefix)
-				} else {
-					irccon.Privmsgf(target, "%s: %s* doesn't match any known nick", nick, prefix)
 				}
 				return true
 			}
