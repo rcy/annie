@@ -674,6 +674,29 @@ var matchHandlers = []MatchHandler{
 		},
 	},
 	{
+		Name: "Match quote",
+		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+			re := regexp.MustCompile(`^"(.+)$`)
+			matches := re.FindSubmatch([]byte(msg))
+
+			if len(matches) > 0 {
+				if target == nick {
+					irccon.Privmsg(target, "not your personal secretary")
+					return false
+				}
+
+				text := string(matches[1])
+
+				err := insertNote(db, target, nick, "quote", text)
+				if err != nil {
+					log.Print(err)
+				}
+				return true
+			}
+			return false
+		},
+	},
+	{
 		Name: "Trade stock",
 		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
 			re := regexp.MustCompile("^((buy|sell).*)$")
