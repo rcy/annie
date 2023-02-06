@@ -690,6 +690,16 @@ var matchHandlers = []MatchHandler{
 				if err != nil {
 					log.Print(err)
 				}
+
+				// post to twitter
+				nvurl := os.Getenv("NICHE_VOMIT_URL")
+				if nvurl != "" {
+					res, err := http.Post(nvurl, "text/plain", strings.NewReader(text))
+					if res.StatusCode >= 300 || err != nil {
+						log.Printf("error posting to twitter %d %v\n", res.StatusCode, err)
+					}
+				}
+
 				return true
 			}
 			return false
