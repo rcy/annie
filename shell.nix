@@ -8,5 +8,6 @@ mkShell {
     flyctl
     golangci-lint
     foreman
+    google-cloud-sdk
   ];
 }
