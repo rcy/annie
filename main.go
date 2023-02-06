@@ -674,7 +674,8 @@ var matchHandlers = []MatchHandler{
 	{
 		Name: "Match quote",
 		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
-			re := regexp.MustCompile(`^(".+[^"])$`)
+			// match anything that starts with a quote and has no subsequent quotes
+			re := regexp.MustCompile(`^("[^"]+)$`)
 			matches := re.FindSubmatch([]byte(msg))
 
 			if len(matches) > 0 {
