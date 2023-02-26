@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-func CreateNote(params irc.Params) bool {
+func CreateNote(params irc.HandlerParams) bool {
 	re := regexp.MustCompile(`^,(.+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 

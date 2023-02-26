@@ -4,7 +4,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Params struct {
+type HandlerParams struct {
 	Privmsgf func(string, string, ...interface{})
 	Db       *sqlx.DB
 	Msg      string
@@ -12,4 +12,4 @@ type Params struct {
 	Target   string
 }
 
-type HandlerFunction func(Params) bool
+type HandlerFunction func(HandlerParams) bool

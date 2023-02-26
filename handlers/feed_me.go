@@ -7,7 +7,7 @@ import (
 	"regexp"
 )
 
-func FeedMe(params irc.Params) bool {
+func FeedMe(params irc.HandlerParams) bool {
 	re := regexp.MustCompile(`^!feedme`)
 	match := re.Find([]byte(params.Msg))
 

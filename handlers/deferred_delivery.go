@@ -7,7 +7,7 @@ import (
 	"regexp"
 )
 
-func DeferredDelivery(params irc.Params) bool {
+func DeferredDelivery(params irc.HandlerParams) bool {
 	re := regexp.MustCompile(`^([^\s:]+): (.+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func Ticker(params irc.Params) bool {
+func Ticker(params irc.HandlerParams) bool {
 	re := regexp.MustCompile("^[$]([A-Za-z-]+)")
 	matches := re.FindSubmatch([]byte(params.Msg))
 

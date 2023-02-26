@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-func Trade(params irc.Params) bool {
+func Trade(params irc.HandlerParams) bool {
 	re := regexp.MustCompile("^((buy|sell).*)$")
 	matches := re.FindStringSubmatch(params.Msg)
 

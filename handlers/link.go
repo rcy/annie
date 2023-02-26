@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Link(params irc.Params) bool {
+func Link(params irc.HandlerParams) bool {
 	re := regexp.MustCompile(`(https?://\S+)`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 

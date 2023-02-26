@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func Catchup(params irc.Params) bool {
+func Catchup(params irc.HandlerParams) bool {
 	re := regexp.MustCompile(`^!catchup`)
 	match := re.Find([]byte(params.Msg))
 

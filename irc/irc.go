@@ -115,7 +115,7 @@ func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event, handlers [
 			target = channel
 		}
 
-		f(Params{
+		f(HandlerParams{
 			Privmsgf: makePrivmsgf(irccon),
 			Db:       db,
 			Msg:      msg,

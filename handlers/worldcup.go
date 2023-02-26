@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Worldcup(params irc.Params) bool {
+func Worldcup(params irc.HandlerParams) bool {
 	re := regexp.MustCompile(`world.?cup`)
 	match := re.Find([]byte(params.Msg))
 

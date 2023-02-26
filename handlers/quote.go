@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Quote(params irc.Params) bool {
+func Quote(params irc.HandlerParams) bool {
 	// match anything that starts with a quote and has no subsequent quotes
 	re := regexp.MustCompile(`^("[^"]+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))
