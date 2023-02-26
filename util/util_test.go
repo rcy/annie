@@ -48,6 +48,11 @@ func TestAgo(t *testing.T) {
 		},
 		{
 			t0:   "2010-01-01 00:00:00",
+			t1:   "2010-03-01 00:00:00",
+			want: "8 weeks", // 2 months would be better here
+		},
+		{
+			t0:   "2010-01-01 00:00:00",
 			t1:   "2010-01-01 01:01:01",
 			want: "1 hour",
 		},
@@ -65,6 +70,11 @@ func TestAgo(t *testing.T) {
 			t0:   "2010-01-01 00:00:00",
 			t1:   "2010-01-01 00:00:10",
 			want: "10 seconds",
+		},
+		{
+			t0:   "2023-02-26 11:59:13",
+			t1:   "2026-06-01T15:00:00Z",
+			want: "3 years",
 		},
 	} {
 		then := mustParseTime(scenario.t0)
