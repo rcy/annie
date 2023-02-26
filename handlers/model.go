@@ -6,31 +6,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type replyFunction func()
-
-type Params struct {
-	Privmsgf func(string, string, ...interface{})
-	Db       *sqlx.DB
-	Msg      string
-	Nick     string
-	Target   string
-}
-
-type handlerFunction func(Params) bool
-
-var Functions = []handlerFunction{
-	createNote,
-	deferredDelivery,
-	link,
-	feedMe,
-	catchup,
-	worldcup,
-	ticker,
-	quote,
-	trade,
-	report,
-}
-
 func insertNote(db *sqlx.DB, target string, nick string, kind string, text string) error {
 	result, err := db.Exec(`insert into notes(nick, text, kind) values(?, ?, ?) returning id`, nick, text, kind)
 	if err != nil {

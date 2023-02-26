@@ -2,7 +2,6 @@ package irc
 
 import (
 	"crypto/tls"
-	"goirc/irc/handlers"
 	"goirc/model"
 	"goirc/util"
 	"log"
@@ -13,7 +12,7 @@ import (
 	irc "github.com/thoj/go-ircevent"
 )
 
-func Connect(db *sqlx.DB, nick, channel, server string) (*irc.Connection, error) {
+func Connect(db *sqlx.DB, nick string, channel string, server string, handlers []HandlerFunction) (*irc.Connection, error) {
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
 	irccon.VerboseCallbackHandler = false
@@ -44,7 +43,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	})
 	irccon.AddCallback("366", func(e *irc.Event) {})
 	irccon.AddCallback("PRIVMSG", func(e *irc.Event) {
-		go handlePrivmsg(irccon, db, e)
+		go handlePrivmsg(irccon, db, e, handlers)
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
@@ -102,12 +101,12 @@ func makePrivmsgf(irccon *irc.Connection) func(string, string, ...interface{}) {
 	}
 }
 
-func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
+func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event, handlers []HandlerFunction) {
 	channel := e.Arguments[0]
 	msg := e.Arguments[1]
 	nick := e.Nick
 
-	for _, f := range handlers.Functions {
+	for _, f := range handlers {
 		var target string
 
 		if channel == irccon.GetNick() {
@@ -116,7 +115,7 @@ func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
 			target = channel
 		}
 
-		f(handlers.Params{
+		f(Params{
 			Privmsgf: makePrivmsgf(irccon),
 			Db:       db,
 			Msg:      msg,

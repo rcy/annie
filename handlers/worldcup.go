@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"goirc/irc"
 	"math"
 	"regexp"
 	"time"
 )
 
-func worldcup(params Params) bool {
+func Worldcup(params irc.Params) bool {
 	re := regexp.MustCompile(`world.?cup`)
 	match := re.Find([]byte(params.Msg))
 

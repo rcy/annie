@@ -1,19 +1,20 @@
 package handlers
 
 import (
+	"goirc/irc"
 	"goirc/trader"
 	"regexp"
 )
 
-func trade(params Params) bool {
-	re := regexp.MustCompile("^((buy|sell).*)$")
+func Report(params irc.Params) bool {
+	re := regexp.MustCompile("^((report).*)$")
 	matches := re.FindStringSubmatch(params.Msg)
 
 	if len(matches) == 0 {
 		return false
 	}
 
-	reply, err := trader.Trade(params.Nick, matches[1], params.Db)
+	reply, err := trader.Report(params.Nick, params.Db)
 	if err != nil {
 		params.Privmsgf(params.Target, "error: %s", err)
 		return true

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"goirc/irc"
 	"log"
 	"net/http"
 	"os"
@@ -8,8 +9,9 @@ import (
 	"strings"
 )
 
-func link(params Params) bool {
-	re := regexp.MustCompile(`(https?://\S+)`)
+func Quote(params irc.Params) bool {
+	// match anything that starts with a quote and has no subsequent quotes
+	re := regexp.MustCompile(`^("[^"]+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 
 	if len(matches) > 0 {
@@ -18,20 +20,17 @@ func link(params Params) bool {
 			return false
 		}
 
-		url := string(matches[1])
+		text := string(matches[1])
 
-		err := insertNote(params.Db, params.Target, params.Nick, "link", url)
+		err := insertNote(params.Db, params.Target, params.Nick, "quote", text)
 		if err != nil {
 			log.Print(err)
-			params.Privmsgf(params.Target, err.Error())
-		} else {
-			log.Printf("recorded url %s", url)
 		}
 
 		// post to twitter
 		nvurl := os.Getenv("NICHE_VOMIT_URL")
 		if nvurl != "" {
-			res, err := http.Post(nvurl, "text/plain", strings.NewReader(url))
+			res, err := http.Post(nvurl, "text/plain", strings.NewReader(text))
 			if res.StatusCode >= 300 || err != nil {
 				log.Printf("error posting to twitter %d %v\n", res.StatusCode, err)
 			}

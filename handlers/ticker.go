@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"goirc/fin"
+	"goirc/irc"
 	"goirc/util"
 	"regexp"
 	"strings"
 )
 
-func ticker(params Params) bool {
+func Ticker(params irc.Params) bool {
 	re := regexp.MustCompile("^[$]([A-Za-z-]+)")
 	matches := re.FindSubmatch([]byte(params.Msg))
 
