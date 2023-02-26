@@ -2,8 +2,6 @@ package notes
 
 import (
 	"goirc/model"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Note struct {
@@ -14,8 +12,8 @@ type Note struct {
 	Kind      string
 }
 
-func Create(db *sqlx.DB, target string, nick string, kind string, text string) error {
-	result, err := db.Exec(`insert into notes(nick, text, kind) values(?, ?, ?) returning id`, nick, text, kind)
+func Create(target string, nick string, kind string, text string) error {
+	result, err := model.DB.Exec(`insert into notes(nick, text, kind) values(?, ?, ?) returning id`, nick, text, kind)
 	if err != nil {
 		return err
 	} else {
@@ -23,7 +21,7 @@ func Create(db *sqlx.DB, target string, nick string, kind string, text string) e
 		if err != nil {
 			return err
 		}
-		err = MarkAsSeen(db, noteId, target)
+		err = MarkAsSeen(noteId, target)
 		if err != nil {
 			return err
 		}
@@ -31,15 +29,15 @@ func Create(db *sqlx.DB, target string, nick string, kind string, text string) e
 	return nil
 }
 
-func MarkAsSeen(db *sqlx.DB, noteId int64, target string) error {
+func MarkAsSeen(noteId int64, target string) error {
 	//db.Select(`select * from channel_nicks where channel = ?`, target)
-	channelNicks, err := model.JoinedNicks(db, target)
+	channelNicks, err := model.JoinedNicks(target)
 	if err != nil {
 		return err
 	}
 	// for each channelNick insert a seen_by record
 	for _, nick := range channelNicks {
-		_, err := db.Exec(`insert into seen_by(note_id, nick) values(?, ?)`, noteId, nick.Nick)
+		_, err := model.DB.Exec(`insert into seen_by(note_id, nick) values(?, ?)`, noteId, nick.Nick)
 		if err != nil {
 			return err
 		}

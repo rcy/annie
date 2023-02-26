@@ -24,7 +24,7 @@ func FeedMe(params bot.HandlerParams) bool {
 	} else if len(rows) >= 1 {
 		note := rows[0]
 		params.Privmsgf(params.Target, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
-		err = notes.MarkAsSeen(model.DB, note.Id, params.Target)
+		err = notes.MarkAsSeen(note.Id, params.Target)
 		if err != nil {
 			params.Privmsgf(params.Target, err.Error())
 		}
