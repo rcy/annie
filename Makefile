@@ -1,3 +1,5 @@
+include .env
+
 start:
 	foreman start
 
@@ -9,3 +11,6 @@ deploy:
 
 lint:
 	golangci-lint run
+
+sql:
+	sqlite3 ${SQLITE_DB}
