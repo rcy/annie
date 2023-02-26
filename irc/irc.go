@@ -98,7 +98,7 @@ func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string
 
 func makePrivmsgf(irccon *irc.Connection) func(string, string, ...interface{}) {
 	return func(target, message string, a ...interface{}) {
-		irccon.Privmsgf(target, message, a)
+		irccon.Privmsgf(target, message, a...)
 	}
 }
 
