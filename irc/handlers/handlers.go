@@ -17,32 +17,40 @@ import (
 	irc "github.com/thoj/go-ircevent"
 )
 
+type HandlerParams struct {
+	Irccon *irc.Connection
+	Db     *sqlx.DB
+	Msg    string
+	Nick   string
+	Target string
+}
+
 type Handler struct {
 	Name     string
-	Function func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool
+	Function func(HandlerParams) bool
 }
 
 var Handlers = []Handler{
 	{
 		Name: "Match Create Note",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile(`^,(.+)$`)
-			matches := re.FindSubmatch([]byte(msg))
+			matches := re.FindSubmatch([]byte(params.Msg))
 
 			if len(matches) > 0 {
-				if target == nick {
-					irccon.Privmsg(target, "not your personal secretary")
+				if params.Target == params.Nick {
+					params.Irccon.Privmsg(params.Target, "not your personal secretary")
 					return false
 				}
 
 				text := string(matches[1])
 
-				err := insertNote(db, target, nick, "note", text)
+				err := insertNote(params.Db, params.Target, params.Nick, "note", text)
 				if err != nil {
 					log.Print(err)
-					irccon.Privmsg(target, err.Error())
+					params.Irccon.Privmsg(params.Target, err.Error())
 				} else {
-					irccon.Privmsg(target, "recorded note")
+					params.Irccon.Privmsg(params.Target, "recorded note")
 				}
 				return true
 			}
@@ -51,13 +59,13 @@ var Handlers = []Handler{
 	},
 	{
 		Name: "Match Deferred Delivery",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile(`^([^\s:]+): (.+)$`)
-			matches := re.FindSubmatch([]byte(msg))
+			matches := re.FindSubmatch([]byte(params.Msg))
 
 			if len(matches) > 0 {
-				if target == nick {
-					irccon.Privmsg(target, "not your personal secretary")
+				if params.Target == params.Nick {
+					params.Irccon.Privmsg(params.Target, "not your personal secretary")
 					return false
 				}
 
@@ -65,17 +73,17 @@ var Handlers = []Handler{
 				message := string(matches[2])
 
 				// if the prefix matches a currently joined nick, we do nothing
-				if model.PrefixMatchesJoinedNick(db, target, prefix) {
+				if model.PrefixMatchesJoinedNick(params.Db, params.Target, prefix) {
 					return false
 				}
 
-				if model.PrefixMatchesKnownNick(db, target, prefix) {
-					_, err := db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, nick, prefix, message, false)
+				if model.PrefixMatchesKnownNick(params.Db, params.Target, prefix) {
+					_, err := params.Db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, params.Nick, prefix, message, false)
 					if err != nil {
 						log.Fatal(err)
 					}
 
-					irccon.Privmsgf(target, "%s: will send to %s* later", nick, prefix)
+					params.Irccon.Privmsgf(params.Target, "%s: will send to %s* later", params.Nick, prefix)
 				}
 				return true
 			}
@@ -84,22 +92,22 @@ var Handlers = []Handler{
 	},
 	{
 		Name: "Match Link",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile(`(https?://\S+)`)
-			matches := re.FindSubmatch([]byte(msg))
+			matches := re.FindSubmatch([]byte(params.Msg))
 
 			if len(matches) > 0 {
-				if target == nick {
-					irccon.Privmsg(target, "not your personal secretary")
+				if params.Target == params.Nick {
+					params.Irccon.Privmsg(params.Target, "not your personal secretary")
 					return false
 				}
 
 				url := string(matches[1])
 
-				err := insertNote(db, target, nick, "link", url)
+				err := insertNote(params.Db, params.Target, params.Nick, "link", url)
 				if err != nil {
 					log.Print(err)
-					irccon.Privmsg(target, err.Error())
+					params.Irccon.Privmsg(params.Target, err.Error())
 				} else {
 					log.Printf("recorded url %s", url)
 				}
@@ -120,9 +128,9 @@ var Handlers = []Handler{
 	},
 	{
 		Name: "Match Feedme Command",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile(`^!feedme`)
-			match := re.Find([]byte(msg))
+			match := re.Find([]byte(params.Msg))
 
 			if len(match) == 0 {
 				return false
@@ -130,15 +138,15 @@ var Handlers = []Handler{
 
 			notes := []model.Note{}
 
-			err := db.Select(&notes, `select id, created_at, nick, text, kind from notes order by random() limit 1`)
+			err := params.Db.Select(&notes, `select id, created_at, nick, text, kind from notes order by random() limit 1`)
 			if err != nil {
-				irccon.Privmsgf(target, "%v", err)
+				params.Irccon.Privmsgf(params.Target, "%v", err)
 			} else if len(notes) >= 1 {
 				note := notes[0]
-				irccon.Privmsgf(target, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
-				err = markAsSeen(db, note.Id, target)
+				params.Irccon.Privmsgf(params.Target, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
+				err = markAsSeen(params.Db, note.Id, params.Target)
 				if err != nil {
-					irccon.Privmsg(target, err.Error())
+					params.Irccon.Privmsg(params.Target, err.Error())
 				}
 			}
 			return true
@@ -146,9 +154,9 @@ var Handlers = []Handler{
 	},
 	{
 		Name: "Match Catchup Command",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile(`^!catchup`)
-			match := re.Find([]byte(msg))
+			match := re.Find([]byte(params.Msg))
 
 			if len(match) == 0 {
 				return false
@@ -157,26 +165,26 @@ var Handlers = []Handler{
 			notes := []model.Note{}
 
 			// TODO: markAsSeen
-			err := db.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc`)
+			err := params.Db.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc`)
 			if err != nil {
-				irccon.Privmsgf(target, "%v", err)
+				params.Irccon.Privmsgf(params.Target, "%v", err)
 				return false
 			}
 			if len(notes) >= 1 {
 				for _, note := range notes {
-					irccon.Privmsgf(nick, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
+					params.Irccon.Privmsgf(params.Nick, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
 					time.Sleep(1 * time.Second)
 				}
 			}
-			irccon.Privmsgf(nick, "--- %d total from last 24 hours", len(notes))
+			params.Irccon.Privmsgf(params.Nick, "--- %d total from last 24 hours", len(notes))
 			return true
 		},
 	},
 	{
 		Name: "Match Until Command",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile(`world.?cup`)
-			match := re.Find([]byte(msg))
+			match := re.Find([]byte(params.Msg))
 
 			if len(match) == 0 {
 				return false
@@ -184,19 +192,19 @@ var Handlers = []Handler{
 
 			end, err := time.Parse(time.RFC3339, "2026-06-01T15:00:00Z")
 			if err != nil {
-				irccon.Privmsgf(target, "error: %v", err)
+				params.Irccon.Privmsgf(params.Target, "error: %v", err)
 				return true
 			}
 			until := time.Until(end)
-			irccon.Privmsgf(target, "the world cup will start in %.0f days", math.Round(until.Hours()/24))
+			params.Irccon.Privmsgf(params.Target, "the world cup will start in %.0f days", math.Round(until.Hours()/24))
 			return true
 		},
 	},
 	{
 		Name: "Match stock price",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile("^[$]([A-Za-z-]+)")
-			matches := re.FindSubmatch([]byte(msg))
+			matches := re.FindSubmatch([]byte(params.Msg))
 
 			if len(matches) == 0 {
 				return false
@@ -206,32 +214,32 @@ var Handlers = []Handler{
 
 			data, err := fin.YahooFinanceFetch(symbol)
 			if err != nil {
-				irccon.Privmsgf(target, "error: %s", err)
+				params.Irccon.Privmsgf(params.Target, "error: %s", err)
 				return true
 			}
 
 			result := data.QuoteSummary.Result[0]
-			irccon.Privmsgf(target, "%s %s %f", strings.ToUpper(symbol), util.BareDomain(result.SummaryProfile.Website), result.FinancialData.CurrentPrice.Raw)
+			params.Irccon.Privmsgf(params.Target, "%s %s %f", strings.ToUpper(symbol), util.BareDomain(result.SummaryProfile.Website), result.FinancialData.CurrentPrice.Raw)
 
 			return true
 		},
 	},
 	{
 		Name: "Match quote",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			// match anything that starts with a quote and has no subsequent quotes
 			re := regexp.MustCompile(`^("[^"]+)$`)
-			matches := re.FindSubmatch([]byte(msg))
+			matches := re.FindSubmatch([]byte(params.Msg))
 
 			if len(matches) > 0 {
-				if target == nick {
-					irccon.Privmsg(target, "not your personal secretary")
+				if params.Target == params.Nick {
+					params.Irccon.Privmsg(params.Target, "not your personal secretary")
 					return false
 				}
 
 				text := string(matches[1])
 
-				err := insertNote(db, target, nick, "quote", text)
+				err := insertNote(params.Db, params.Target, params.Nick, "quote", text)
 				if err != nil {
 					log.Print(err)
 				}
@@ -252,22 +260,22 @@ var Handlers = []Handler{
 	},
 	{
 		Name: "Trade stock",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile("^((buy|sell).*)$")
-			matches := re.FindStringSubmatch(msg)
+			matches := re.FindStringSubmatch(params.Msg)
 
 			if len(matches) == 0 {
 				return false
 			}
 
-			reply, err := trader.Trade(nick, matches[1], db)
+			reply, err := trader.Trade(params.Nick, matches[1], params.Db)
 			if err != nil {
-				irccon.Privmsgf(target, "error: %s", err)
+				params.Irccon.Privmsgf(params.Target, "error: %s", err)
 				return true
 			}
 
 			if reply != "" {
-				irccon.Privmsgf(target, "%s: %s", nick, reply)
+				params.Irccon.Privmsgf(params.Target, "%s: %s", params.Nick, reply)
 				return true
 			}
 
@@ -276,22 +284,22 @@ var Handlers = []Handler{
 	},
 	{
 		Name: "Trade: show holdings report",
-		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
+		Function: func(params HandlerParams) bool {
 			re := regexp.MustCompile("^((report).*)$")
-			matches := re.FindStringSubmatch(msg)
+			matches := re.FindStringSubmatch(params.Msg)
 
 			if len(matches) == 0 {
 				return false
 			}
 
-			reply, err := trader.Report(nick, db)
+			reply, err := trader.Report(params.Nick, params.Db)
 			if err != nil {
-				irccon.Privmsgf(target, "error: %s", err)
+				params.Irccon.Privmsgf(params.Target, "error: %s", err)
 				return true
 			}
 
 			if reply != "" {
-				irccon.Privmsgf(target, "%s: %s", nick, reply)
+				params.Irccon.Privmsgf(params.Target, "%s: %s", params.Nick, reply)
 				return true
 			}
 
