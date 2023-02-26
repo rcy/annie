@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"goirc/bot"
-	"math"
+	"goirc/util"
 	"regexp"
 	"time"
 )
@@ -15,12 +15,12 @@ func Worldcup(params bot.HandlerParams) bool {
 		return false
 	}
 
-	end, err := time.Parse(time.RFC3339, "2026-06-01T15:00:00Z")
+	then, err := time.Parse(time.RFC3339, "2026-06-01T15:00:00Z")
 	if err != nil {
 		params.Privmsgf(params.Target, "error: %v", err)
 		return true
 	}
-	until := time.Until(end)
-	params.Privmsgf(params.Target, "the world cup will start in %.0f days", math.Round(until.Hours()/24))
+	until := util.Ago(time.Until(then))
+	params.Privmsgf(params.Target, "the world cup will start in %s", until)
 	return true
 }
