@@ -9,11 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	irc "github.com/thoj/go-ircevent"
 )
 
-func Connect(db *sqlx.DB, nick string, channel string, server string, handlers []HandlerFunction) (*irc.Connection, error) {
+func Connect(nick string, channel string, server string, handlers []HandlerFunction) (*irc.Connection, error) {
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
 	irccon.VerboseCallbackHandler = false
@@ -23,7 +22,7 @@ func Connect(db *sqlx.DB, nick string, channel string, server string, handlers [
 	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
 	irccon.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
-		_, err := db.Exec(`update channel_nicks set updated_at = current_timestamp, present = false`)
+		_, err := model.DB.Exec(`update channel_nicks set updated_at = current_timestamp, present = false`)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -33,7 +32,7 @@ func Connect(db *sqlx.DB, nick string, channel string, server string, handlers [
 
 		// mark nicks as present and record timestamp which can be intepreted as 'last seen', or 'online since'
 		for _, nick := range strings.Split(nickStr, " ") {
-			_, err = db.Exec(`
+			_, err = model.DB.Exec(`
 insert into channel_nicks(updated_at, channel, nick, present) values(current_timestamp, ?, ?, ?)
 on conflict(channel, nick) do update set updated_at = current_timestamp, present=excluded.present`,
 				channel, nick, true)
@@ -44,13 +43,13 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	})
 	irccon.AddCallback("366", func(e *irc.Event) {})
 	irccon.AddCallback("PRIVMSG", func(e *irc.Event) {
-		go handlePrivmsg(irccon, db, e, handlers)
+		go handlePrivmsg(irccon, e, handlers)
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
-			sendLaters(irccon, db, channel, e.Nick)
+			sendLaters(irccon, channel, e.Nick)
 
-			go sendMissed(irccon, db, channel, e.Nick)
+			go sendMissed(irccon, channel, e.Nick)
 		}
 
 		// trigger NAMES to update the list of joined nicks
@@ -79,15 +78,15 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	return irccon, err
 }
 
-func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string) {
+func sendLaters(irccon *irc.Connection, channel string, nick string) {
 	// loop through each later message and see if the prefix matches this nick
-	laters, err := getLaters(db)
+	laters, err := getLaters()
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, later := range laters {
 		if strings.Contains(nick, later.Target) {
-			_, err := db.Exec(`delete from laters where rowid = ?`, later.RowId)
+			_, err := model.DB.Exec(`delete from laters where rowid = ?`, later.RowId)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -102,7 +101,7 @@ func makePrivmsgf(irccon *irc.Connection) func(string, string, ...interface{}) {
 	}
 }
 
-func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event, handlers []HandlerFunction) {
+func handlePrivmsg(irccon *irc.Connection, e *irc.Event, handlers []HandlerFunction) {
 	channel := e.Arguments[0]
 	msg := e.Arguments[1]
 	nick := e.Nick
@@ -129,25 +128,25 @@ func isAltNick(nick string) bool {
 	return strings.HasSuffix(nick, "`") || strings.HasSuffix(nick, "_")
 }
 
-func getLaters(db *sqlx.DB) ([]model.Later, error) {
+func getLaters() ([]model.Later, error) {
 	laters := []model.Later{}
-	err := db.Select(&laters, `select rowid, created_at, nick, target, message, sent from laters limit 100`)
+	err := model.DB.Select(&laters, `select rowid, created_at, nick, target, message, sent from laters limit 100`)
 	return laters, err
 }
 
-func sendMissed(irccon *irc.Connection, db *sqlx.DB, channel string, nick string) {
+func sendMissed(irccon *irc.Connection, channel string, nick string) {
 	if isAltNick(nick) {
 		return
 	}
 
 	channelNick := model.ChannelNick{}
-	err := db.Get(&channelNick, `select * from channel_nicks where present = 0 and channel = ? and nick = ?`, channel, nick)
+	err := model.DB.Get(&channelNick, `select * from channel_nicks where present = 0 and channel = ? and nick = ?`, channel, nick)
 	if err != nil {
 		return
 	}
 
 	notes := []notes.Note{}
-	db.Select(&notes, "select * from notes where created_at > ? order by created_at asc limit 69", channelNick.UpdatedAt)
+	model.DB.Select(&notes, "select * from notes where created_at > ? order by created_at asc limit 69", channelNick.UpdatedAt)
 
 	if len(notes) > 0 {
 		irccon.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
