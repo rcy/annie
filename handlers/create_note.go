@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"goirc/irc"
+	"goirc/bot"
 	"log"
 	"regexp"
 )
 
-func CreateNote(params irc.HandlerParams) bool {
+func CreateNote(params bot.HandlerParams) bool {
 	re := regexp.MustCompile(`^,(.+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 

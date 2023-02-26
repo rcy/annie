@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"goirc/irc"
+	"goirc/bot"
 	"log"
 	"net/http"
 	"os"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Quote(params irc.HandlerParams) bool {
+func Quote(params bot.HandlerParams) bool {
 	// match anything that starts with a quote and has no subsequent quotes
 	re := regexp.MustCompile(`^("[^"]+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))

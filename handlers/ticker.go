@@ -1,14 +1,14 @@
 package handlers
 
 import (
+	"goirc/bot"
 	"goirc/fin"
-	"goirc/irc"
 	"goirc/util"
 	"regexp"
 	"strings"
 )
 
-func Ticker(params irc.HandlerParams) bool {
+func Ticker(params bot.HandlerParams) bool {
 	re := regexp.MustCompile("^[$]([A-Za-z-]+)")
 	matches := re.FindSubmatch([]byte(params.Msg))
 

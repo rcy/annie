@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"goirc/irc"
+	"goirc/bot"
 	"log"
 	"net/http"
 	"os"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Link(params irc.HandlerParams) bool {
+func Link(params bot.HandlerParams) bool {
 	re := regexp.MustCompile(`(https?://\S+)`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 

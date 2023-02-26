@@ -1,9 +1,9 @@
 package main
 
 import (
+	"goirc/bot"
 	"goirc/db"
 	"goirc/handlers"
-	"goirc/irc"
 	"goirc/util"
 	"goirc/web"
 	"log"
@@ -13,7 +13,7 @@ func main() {
 	db := db.Open(util.Getenv("SQLITE_DB"))
 	defer db.Close()
 
-	var functions = []irc.HandlerFunction{
+	var functions = []bot.HandlerFunction{
 		handlers.CreateNote,
 		handlers.DeferredDelivery,
 		handlers.Link,
@@ -26,7 +26,7 @@ func main() {
 		handlers.Report,
 	}
 
-	conn, err := irc.Connect(db, util.Getenv("IRC_NICK"), util.Getenv("IRC_CHANNEL"), util.Getenv("IRC_SERVER"), functions)
+	conn, err := bot.Connect(db, util.Getenv("IRC_NICK"), util.Getenv("IRC_CHANNEL"), util.Getenv("IRC_SERVER"), functions)
 	if err != nil {
 		log.Fatal(err)
 	}

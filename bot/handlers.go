@@ -1,4 +1,4 @@
-package irc
+package bot
 
 import (
 	"github.com/jmoiron/sqlx"

@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"goirc/irc"
+	"goirc/bot"
 	"goirc/trader"
 	"regexp"
 )
 
-func Trade(params irc.HandlerParams) bool {
+func Trade(params bot.HandlerParams) bool {
 	re := regexp.MustCompile("^((buy|sell).*)$")
 	matches := re.FindStringSubmatch(params.Msg)
 

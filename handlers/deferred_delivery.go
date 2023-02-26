@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"goirc/irc"
+	"goirc/bot"
 	"goirc/model"
 	"log"
 	"regexp"
 )
 
-func DeferredDelivery(params irc.HandlerParams) bool {
+func DeferredDelivery(params bot.HandlerParams) bool {
 	re := regexp.MustCompile(`^([^\s:]+): (.+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 

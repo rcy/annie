@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"goirc/irc"
+	"goirc/bot"
 	"goirc/model"
 	"goirc/util"
 	"regexp"
 	"time"
 )
 
-func Catchup(params irc.HandlerParams) bool {
+func Catchup(params bot.HandlerParams) bool {
 	re := regexp.MustCompile(`^!catchup`)
 	match := re.Find([]byte(params.Msg))
 

@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"goirc/irc"
+	"goirc/bot"
 	"goirc/model"
 	"goirc/util"
 	"regexp"
 )
 
-func FeedMe(params irc.HandlerParams) bool {
+func FeedMe(params bot.HandlerParams) bool {
 	re := regexp.MustCompile(`^!feedme`)
 	match := re.Find([]byte(params.Msg))
 

@@ -1,4 +1,4 @@
-package irc
+package bot
 
 import (
 	"crypto/tls"

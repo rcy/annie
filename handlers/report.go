@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"goirc/irc"
+	"goirc/bot"
 	"goirc/trader"
 	"regexp"
 )
 
-func Report(params irc.HandlerParams) bool {
+func Report(params bot.HandlerParams) bool {
 	re := regexp.MustCompile("^((report).*)$")
 	matches := re.FindStringSubmatch(params.Msg)
 
