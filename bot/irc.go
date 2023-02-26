@@ -3,6 +3,7 @@ package bot
 import (
 	"crypto/tls"
 	"goirc/model"
+	"goirc/model/laters"
 	"goirc/model/notes"
 	"goirc/util"
 	"log"
@@ -80,17 +81,17 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 
 func sendLaters(irccon *irc.Connection, channel string, nick string) {
 	// loop through each later message and see if the prefix matches this nick
-	laters, err := getLaters()
+	rows, err := laters.Get()
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, later := range laters {
-		if strings.Contains(nick, later.Target) {
-			_, err := model.DB.Exec(`delete from laters where rowid = ?`, later.RowId)
+	for _, row := range rows {
+		if strings.Contains(nick, row.Target) {
+			_, err := model.DB.Exec(`delete from laters where rowid = ?`, row.RowId)
 			if err != nil {
 				log.Fatal(err)
 			}
-			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, later.Message, later.Nick, util.Since(later.CreatedAt))
+			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, row.Message, row.Nick, util.Since(row.CreatedAt))
 		}
 	}
 }
@@ -126,12 +127,6 @@ func handlePrivmsg(irccon *irc.Connection, e *irc.Event, handlers []HandlerFunct
 
 func isAltNick(nick string) bool {
 	return strings.HasSuffix(nick, "`") || strings.HasSuffix(nick, "_")
-}
-
-func getLaters() ([]model.Later, error) {
-	laters := []model.Later{}
-	err := model.DB.Select(&laters, `select rowid, created_at, nick, target, message, sent from laters limit 100`)
-	return laters, err
 }
 
 func sendMissed(irccon *irc.Connection, channel string, nick string) {
