@@ -11,16 +11,16 @@ import (
 
 func main() {
 	var functions = []bot.HandlerFunction{
+		handlers.Catchup,
 		handlers.CreateNote,
 		handlers.DeferredDelivery,
-		handlers.Link,
 		handlers.FeedMe,
-		handlers.Catchup,
-		handlers.Worldcup,
-		handlers.Ticker,
+		handlers.Link,
 		handlers.Quote,
-		handlers.Trade,
 		handlers.Report,
+		handlers.Ticker,
+		handlers.Trade,
+		handlers.Worldcup,
 	}
 
 	conn, err := bot.Connect(util.Getenv("IRC_NICK"), util.Getenv("IRC_CHANNEL"), util.Getenv("IRC_SERVER"), functions)
