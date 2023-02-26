@@ -1,13 +1,13 @@
 package util
 
 import (
-	"fmt"
 	"log"
-	"math"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/hako/durafmt"
 )
 
 func ParseTime(str string) (time.Time, error) {
@@ -27,11 +27,7 @@ func Since(tstr string) string {
 }
 
 func Ago(d time.Duration) string {
-	if d.Hours() >= 48.0 {
-		return fmt.Sprintf("%dd", int(math.Round(d.Hours()/24)))
-	} else {
-		return d.String()
-	}
+	return durafmt.Parse(d).LimitFirstN(1).String()
 }
 
 // from a uri like https://www.google.com/abc?def=123 return google.com

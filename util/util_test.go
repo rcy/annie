@@ -15,34 +15,61 @@ func mustParseTime(str string) time.Time {
 
 func TestAgo(t *testing.T) {
 	type cases struct {
-		t1   time.Time
-		t2   time.Time
+		t0   string
+		t1   string
 		want string
 	}
 
 	for _, scenario := range []cases{
 		{
-			t1:   mustParseTime("2010-01-01 00:00:00"),
-			t2:   mustParseTime("2020-01-01 00:00:00"),
-			want: "3652d",
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2020-01-01 00:00:00",
+			want: "10 years",
 		},
 		{
-			t1:   mustParseTime("2010-01-01 00:00:00"),
-			t2:   mustParseTime("2010-01-02 00:00:00"),
-			want: "24h0m0s",
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2019-01-01 00:00:00",
+			want: "9 years",
 		},
 		{
-			t1:   mustParseTime("2010-01-01 00:00:00"),
-			t2:   mustParseTime("2010-01-08 00:00:00"),
-			want: "7d",
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2010-01-02 00:00:00",
+			want: "1 day",
 		},
 		{
-			t1:   mustParseTime("2010-01-01 00:00:00"),
-			t2:   mustParseTime("2010-02-01 00:00:00"),
-			want: "31d",
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2010-01-08 00:00:00",
+			want: "1 week",
+		},
+		{
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2010-02-01 00:00:00",
+			want: "4 weeks",
+		},
+		{
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2010-01-01 01:01:01",
+			want: "1 hour",
+		},
+		{
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2010-01-01 00:45:01",
+			want: "45 minutes",
+		},
+		{
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2010-01-01 00:01:01",
+			want: "1 minute",
+		},
+		{
+			t0:   "2010-01-01 00:00:00",
+			t1:   "2010-01-01 00:00:10",
+			want: "10 seconds",
 		},
 	} {
-		dur := scenario.t2.Sub(scenario.t1)
+		then := mustParseTime(scenario.t0)
+		now := mustParseTime(scenario.t1)
+		dur := now.Sub(then)
 		result := Ago(dur)
 		if result != scenario.want {
 			t.Errorf("want %s got %s", scenario.want, result)
