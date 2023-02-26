@@ -16,6 +16,7 @@ func main() {
 		handlers.DeferredDelivery,
 		handlers.FeedMe,
 		handlers.Link,
+		handlers.OpeningDay,
 		handlers.Quote,
 		handlers.Report,
 		handlers.Ticker,
