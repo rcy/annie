@@ -4,15 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"goirc/fin"
+	"goirc/model"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/jmoiron/sqlx"
 )
 
-func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
+func Trade(nick string, msg string) (string, error) {
 	re := regexp.MustCompile("^(buy|sell) ([A-Za-z-]+) ([0-9]+)$")
 	matches := re.FindStringSubmatch(msg)
 
@@ -38,7 +37,7 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 		}
 
 		if command == "BUY" { //////////////////////////////////////////////////////////////// BUY
-			cash, err := getCash(db, nick)
+			cash, err := getCash(nick)
 			if err != nil {
 				return "", errors.New(fmt.Sprintf("failed lookup cash: %s", err))
 			}
@@ -47,7 +46,7 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 				return fmt.Sprintf("%d shares of %s costs $%.02f, you have $%.02f", amount, symbol, float64(price*amount)/100.0, float64(cash)/100.0), nil
 			}
 
-			err = logTransaction(db, nick, "BUY", symbol, amount, price)
+			err = logTransaction(nick, "BUY", symbol, amount, price)
 			if err != nil {
 				return "", errors.New(fmt.Sprintf("could not log transaction: %s", err))
 			}
@@ -58,7 +57,7 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 				Price:  price,
 			}
 
-			report, err := Report(nick, db)
+			report, err := Report(nick)
 			if err != nil {
 				return "", err
 			}
@@ -67,7 +66,7 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 		}
 
 		if command == "SELL" { //////////////////////////////////////////////////////////////// SELL
-			holdings, err := getHoldings(db, nick)
+			holdings, err := getHoldings(nick)
 			if err != nil {
 				return "", errors.New(fmt.Sprintf("failed to lookup holdings: %s", err))
 			}
@@ -76,7 +75,7 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 			if held < amount {
 				return fmt.Sprintf("cannot sell %d %s, holding %d", amount, symbol, held), nil
 			}
-			err = logTransaction(db, nick, "SELL", symbol, amount, price)
+			err = logTransaction(nick, "SELL", symbol, amount, price)
 			if err != nil {
 				return "", errors.New(fmt.Sprintf("could not log transaction: %s", err))
 			}
@@ -87,7 +86,7 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 				Price:  price,
 			}
 
-			report, err := Report(nick, db)
+			report, err := Report(nick)
 			if err != nil {
 				return "", err
 			}
@@ -99,13 +98,13 @@ func Trade(nick string, msg string, db *sqlx.DB) (string, error) {
 	return "", errors.New(fmt.Sprintf("unknown command: %s", command))
 }
 
-func Report(nick string, db *sqlx.DB) (string, error) {
-	cash, err := getCash(db, nick)
+func Report(nick string) (string, error) {
+	cash, err := getCash(nick)
 	if err != nil {
 		return "", err
 	}
 
-	holdings, err := getHoldings(db, nick)
+	holdings, err := getHoldings(nick)
 	if err != nil {
 		return "", err
 	}
@@ -182,9 +181,9 @@ type Transaction struct {
 	Price     int
 }
 
-func getHoldings(db *sqlx.DB, nick string) (*Holdings, error) {
+func getHoldings(nick string) (*Holdings, error) {
 	transactions := []Transaction{}
-	err := db.Select(&transactions, `select verb, symbol, shares, price from transactions where nick = ? order by created_at asc`, nick)
+	err := model.DB.Select(&transactions, `select verb, symbol, shares, price from transactions where nick = ? order by created_at asc`, nick)
 	if err != nil {
 		return nil, err
 	}
@@ -202,9 +201,9 @@ func getHoldings(db *sqlx.DB, nick string) (*Holdings, error) {
 	return &holdings, nil
 }
 
-func getCash(db *sqlx.DB, nick string) (int, error) {
+func getCash(nick string) (int, error) {
 	transactions := []Transaction{}
-	err := db.Select(&transactions, `select verb, symbol, shares, price from transactions where nick = ? order by created_at asc`, nick)
+	err := model.DB.Select(&transactions, `select verb, symbol, shares, price from transactions where nick = ? order by created_at asc`, nick)
 	if err != nil {
 		return 0, err
 	}
@@ -223,7 +222,7 @@ func getCash(db *sqlx.DB, nick string) (int, error) {
 	return cash, nil
 }
 
-func logTransaction(db *sqlx.DB, nick string, verb string, symbol string, amount int, price int) error {
-	_, err := db.Exec(`insert into transactions(nick, verb, symbol, shares, price) values(?, ?, ?, ?, ?)`, nick, verb, symbol, amount, price)
+func logTransaction(nick string, verb string, symbol string, amount int, price int) error {
+	_, err := model.DB.Exec(`insert into transactions(nick, verb, symbol, shares, price) values(?, ?, ?, ?, ?)`, nick, verb, symbol, amount, price)
 	return err
 }
