@@ -3,6 +3,7 @@ package bot
 import (
 	"crypto/tls"
 	"goirc/model"
+	"goirc/model/notes"
 	"goirc/util"
 	"log"
 	"strings"
@@ -146,7 +147,7 @@ func sendMissed(irccon *irc.Connection, db *sqlx.DB, channel string, nick string
 		return
 	}
 
-	notes := []model.Note{}
+	notes := []notes.Note{}
 	db.Select(&notes, "select * from notes where created_at > ? order by created_at asc limit 69", channelNick.UpdatedAt)
 
 	if len(notes) > 0 {

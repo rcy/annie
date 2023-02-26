@@ -4,7 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"goirc/model"
+	"goirc/model/notes"
 	"goirc/util"
 	"html/template"
 	"log"
@@ -100,15 +100,15 @@ func Serve(db *sqlx.DB) {
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
-func getNotes(db *sqlx.DB, nick string) ([]model.Note, error) {
-	notes := []model.Note{}
+func getNotes(db *sqlx.DB, nick string) ([]notes.Note, error) {
+	result := []notes.Note{}
 	var err error
 	if nick == "" {
-		err = db.Select(&notes, `select created_at, text, nick, kind from notes order by created_at desc limit 1000`)
+		err = db.Select(&result, `select created_at, text, nick, kind from notes order by created_at desc limit 1000`)
 	} else {
-		err = db.Select(&notes, `select created_at, text, nick, kind from notes where nick = ? order by created_at desc limit 1000`, nick)
+		err = db.Select(&result, `select created_at, text, nick, kind from notes where nick = ? order by created_at desc limit 1000`, nick)
 	}
-	return notes, err
+	return result, err
 }
 
 func getNicks(db *sqlx.DB) ([]NickWithNoteCount, error) {
@@ -117,9 +117,9 @@ func getNicks(db *sqlx.DB) ([]NickWithNoteCount, error) {
 	return nicks, err
 }
 
-func formatNotesDates(notes []model.Note) ([]model.Note, error) {
-	result := []model.Note{}
-	for _, n := range notes {
+func formatNotesDates(narr []notes.Note) ([]notes.Note, error) {
+	result := []notes.Note{}
+	for _, n := range narr {
 		newNote := n
 
 		createdAt, err := util.ParseTime(n.CreatedAt)

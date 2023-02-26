@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"goirc/bot"
-	"goirc/model"
+	"goirc/model/notes"
 	"goirc/util"
 	"regexp"
 )
@@ -15,7 +15,7 @@ func FeedMe(params bot.HandlerParams) bool {
 		return false
 	}
 
-	notes := []model.Note{}
+	notes := []notes.Note{}
 
 	err := params.Db.Select(&notes, `select id, created_at, nick, text, kind from notes order by random() limit 1`)
 	if err != nil {

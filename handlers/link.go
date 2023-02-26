@@ -14,12 +14,15 @@ func Link(params bot.HandlerParams) bool {
 	matches := re.FindSubmatch([]byte(params.Msg))
 
 	if len(matches) > 0 {
+		url := string(matches[1])
+
 		if params.Target == params.Nick {
-			params.Privmsgf(params.Target, "not your personal secretary")
+			// posted in a private message
+			params.Privmsgf(params.Target, "this will be shared later")
 			return false
 		}
 
-		url := string(matches[1])
+		// posted to channel
 
 		err := insertNote(params.Db, params.Target, params.Nick, "link", url)
 		if err != nil {
