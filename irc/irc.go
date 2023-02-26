@@ -2,7 +2,7 @@ package irc
 
 import (
 	"crypto/tls"
-	handlers "goirc/irc/handlers"
+	"goirc/irc/handlers"
 	"goirc/model"
 	"goirc/util"
 	"log"
