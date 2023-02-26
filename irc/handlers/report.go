@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-func report(params HandlerParams) bool {
+func report(params Params) bool {
 	re := regexp.MustCompile("^((report).*)$")
 	matches := re.FindStringSubmatch(params.Msg)
 

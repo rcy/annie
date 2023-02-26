@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func link(params HandlerParams) bool {
+func link(params Params) bool {
 	re := regexp.MustCompile(`(https?://\S+)`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 

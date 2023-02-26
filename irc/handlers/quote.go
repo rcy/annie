@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func quote(params HandlerParams) bool {
+func quote(params Params) bool {
 	// match anything that starts with a quote and has no subsequent quotes
 	re := regexp.MustCompile(`^("[^"]+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))

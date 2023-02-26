@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-func feedMe(params HandlerParams) bool {
+func feedMe(params Params) bool {
 	re := regexp.MustCompile(`^!feedme`)
 	match := re.Find([]byte(params.Msg))
 

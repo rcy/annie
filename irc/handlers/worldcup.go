@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func worldcup(params HandlerParams) bool {
+func worldcup(params Params) bool {
 	re := regexp.MustCompile(`world.?cup`)
 	match := re.Find([]byte(params.Msg))
 

@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-func createNote(params HandlerParams) bool {
+func createNote(params Params) bool {
 	re := regexp.MustCompile(`^,(.+)$`)
 	matches := re.FindSubmatch([]byte(params.Msg))
 

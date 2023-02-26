@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func ticker(params HandlerParams) bool {
+func ticker(params Params) bool {
 	re := regexp.MustCompile("^[$]([A-Za-z-]+)")
 	matches := re.FindSubmatch([]byte(params.Msg))
 

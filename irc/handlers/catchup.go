@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func catchup(params HandlerParams) bool {
+func catchup(params Params) bool {
 	re := regexp.MustCompile(`^!catchup`)
 	match := re.Find([]byte(params.Msg))
 
