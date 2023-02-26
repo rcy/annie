@@ -101,7 +101,7 @@ func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
 	msg := e.Arguments[1]
 	nick := e.Nick
 
-	for _, f := range handlers.Handlers {
+	for _, f := range handlers.Functions {
 		var target string
 
 		if channel == irccon.GetNick() {
@@ -110,7 +110,7 @@ func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
 			target = channel
 		}
 
-		f.Function(handlers.HandlerParams{Irccon: irccon, Db: db, Msg: msg, Nick: nick, Target: target})
+		f(handlers.Params{Irccon: irccon, Db: db, Msg: msg, Nick: nick, Target: target})
 	}
 }
 

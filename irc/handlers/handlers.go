@@ -7,7 +7,7 @@ import (
 	irc "github.com/thoj/go-ircevent"
 )
 
-type HandlerParams struct {
+type Params struct {
 	Irccon *irc.Connection
 	Db     *sqlx.DB
 	Msg    string
@@ -15,52 +15,19 @@ type HandlerParams struct {
 	Target string
 }
 
-type Handler struct {
-	Name     string
-	Function func(HandlerParams) bool
-}
+type handlerFunction func(Params) bool
 
-var Handlers = []Handler{
-	{
-		Name:     "Match Create Note",
-		Function: createNote,
-	},
-	{
-		Name:     "Match Deferred Delivery",
-		Function: deferredDelivery,
-	},
-	{
-		Name:     "Match Link",
-		Function: link,
-	},
-	{
-		Name:     "Match Feedme Command",
-		Function: feedMe,
-	},
-	{
-		Name:     "Match Catchup Command",
-		Function: catchup,
-	},
-	{
-		Name:     "Match Until Command",
-		Function: worldcup,
-	},
-	{
-		Name:     "Match stock price",
-		Function: ticker,
-	},
-	{
-		Name:     "Match quote",
-		Function: quote,
-	},
-	{
-		Name:     "Trade stock",
-		Function: trade,
-	},
-	{
-		Name:     "Trade: show holdings report",
-		Function: report,
-	},
+var Functions = []handlerFunction{
+	createNote,
+	deferredDelivery,
+	link,
+	feedMe,
+	catchup,
+	worldcup,
+	ticker,
+	quote,
+	trade,
+	report,
 }
 
 func insertNote(db *sqlx.DB, target string, nick string, kind string, text string) error {
