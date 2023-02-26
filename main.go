@@ -2,17 +2,14 @@ package main
 
 import (
 	"goirc/bot"
-	"goirc/db"
 	"goirc/handlers"
+	"goirc/model"
 	"goirc/util"
 	"goirc/web"
 	"log"
 )
 
 func main() {
-	db := db.Open(util.Getenv("SQLITE_DB"))
-	defer db.Close()
-
 	var functions = []bot.HandlerFunction{
 		handlers.CreateNote,
 		handlers.DeferredDelivery,
@@ -26,12 +23,12 @@ func main() {
 		handlers.Report,
 	}
 
-	conn, err := bot.Connect(db, util.Getenv("IRC_NICK"), util.Getenv("IRC_CHANNEL"), util.Getenv("IRC_SERVER"), functions)
+	conn, err := bot.Connect(model.DB, util.Getenv("IRC_NICK"), util.Getenv("IRC_CHANNEL"), util.Getenv("IRC_SERVER"), functions)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	go web.Serve(db)
+	go web.Serve(model.DB)
 
 	conn.Loop()
 }

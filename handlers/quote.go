@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"goirc/bot"
+	"goirc/model"
 	"goirc/model/notes"
 	"log"
 	"net/http"
@@ -23,7 +24,7 @@ func Quote(params bot.HandlerParams) bool {
 
 		text := string(matches[1])
 
-		err := notes.Create(params.Db, params.Target, params.Nick, "quote", text)
+		err := notes.Create(model.DB, params.Target, params.Nick, "quote", text)
 		if err != nil {
 			log.Print(err)
 		}

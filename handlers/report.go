@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"goirc/bot"
+	"goirc/model"
 	"goirc/trader"
 	"regexp"
 )
@@ -14,7 +15,7 @@ func Report(params bot.HandlerParams) bool {
 		return false
 	}
 
-	reply, err := trader.Report(params.Nick, params.Db)
+	reply, err := trader.Report(params.Nick, model.DB)
 	if err != nil {
 		params.Privmsgf(params.Target, "error: %s", err)
 		return true

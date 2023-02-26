@@ -21,12 +21,12 @@ func DeferredDelivery(params bot.HandlerParams) bool {
 		message := string(matches[2])
 
 		// if the prefix matches a currently joined nick, we do nothing
-		if model.PrefixMatchesJoinedNick(params.Db, params.Target, prefix) {
+		if model.PrefixMatchesJoinedNick(model.DB, params.Target, prefix) {
 			return false
 		}
 
-		if model.PrefixMatchesKnownNick(params.Db, params.Target, prefix) {
-			_, err := params.Db.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, params.Nick, prefix, message, false)
+		if model.PrefixMatchesKnownNick(model.DB, params.Target, prefix) {
+			_, err := model.DB.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, params.Nick, prefix, message, false)
 			if err != nil {
 				log.Fatal(err)
 			}

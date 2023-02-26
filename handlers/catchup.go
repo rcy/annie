@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"goirc/bot"
+	"goirc/model"
 	"goirc/model/notes"
 	"goirc/util"
 	"regexp"
@@ -19,7 +20,7 @@ func Catchup(params bot.HandlerParams) bool {
 	notes := []notes.Note{}
 
 	// TODO: markAsSeen
-	err := params.Db.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc`)
+	err := model.DB.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc`)
 	if err != nil {
 		params.Privmsgf(params.Target, "%v", err)
 		return false
