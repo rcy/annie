@@ -4,15 +4,16 @@ import (
 	"goirc/model"
 
 	"github.com/jmoiron/sqlx"
-	irc "github.com/thoj/go-ircevent"
 )
 
+type replyFunction func()
+
 type Params struct {
-	Irccon *irc.Connection
-	Db     *sqlx.DB
-	Msg    string
-	Nick   string
-	Target string
+	Privmsgf func(string, string, ...interface{})
+	Db       *sqlx.DB
+	Msg      string
+	Nick     string
+	Target   string
 }
 
 type handlerFunction func(Params) bool

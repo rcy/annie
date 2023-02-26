@@ -15,12 +15,12 @@ func report(params Params) bool {
 
 	reply, err := trader.Report(params.Nick, params.Db)
 	if err != nil {
-		params.Irccon.Privmsgf(params.Target, "error: %s", err)
+		params.Privmsgf(params.Target, "error: %s", err)
 		return true
 	}
 
 	if reply != "" {
-		params.Irccon.Privmsgf(params.Target, "%s: %s", params.Nick, reply)
+		params.Privmsgf(params.Target, "%s: %s", params.Nick, reply)
 		return true
 	}
 

@@ -14,7 +14,7 @@ func link(params Params) bool {
 
 	if len(matches) > 0 {
 		if params.Target == params.Nick {
-			params.Irccon.Privmsg(params.Target, "not your personal secretary")
+			params.Privmsgf(params.Target, "not your personal secretary")
 			return false
 		}
 
@@ -23,7 +23,7 @@ func link(params Params) bool {
 		err := insertNote(params.Db, params.Target, params.Nick, "link", url)
 		if err != nil {
 			log.Print(err)
-			params.Irccon.Privmsg(params.Target, err.Error())
+			params.Privmsgf(params.Target, err.Error())
 		} else {
 			log.Printf("recorded url %s", url)
 		}

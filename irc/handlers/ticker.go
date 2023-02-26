@@ -19,12 +19,12 @@ func ticker(params Params) bool {
 
 	data, err := fin.YahooFinanceFetch(symbol)
 	if err != nil {
-		params.Irccon.Privmsgf(params.Target, "error: %s", err)
+		params.Privmsgf(params.Target, "error: %s", err)
 		return true
 	}
 
 	result := data.QuoteSummary.Result[0]
-	params.Irccon.Privmsgf(params.Target, "%s %s %f", strings.ToUpper(symbol), util.BareDomain(result.SummaryProfile.Website), result.FinancialData.CurrentPrice.Raw)
+	params.Privmsgf(params.Target, "%s %s %f", strings.ToUpper(symbol), util.BareDomain(result.SummaryProfile.Website), result.FinancialData.CurrentPrice.Raw)
 
 	return true
 }

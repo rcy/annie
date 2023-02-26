@@ -96,6 +96,12 @@ func sendLaters(irccon *irc.Connection, db *sqlx.DB, channel string, nick string
 	}
 }
 
+func makePrivmsgf(irccon *irc.Connection) func(string, string, ...interface{}) {
+	return func(target, message string, a ...interface{}) {
+		irccon.Privmsgf(target, message, a)
+	}
+}
+
 func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
 	channel := e.Arguments[0]
 	msg := e.Arguments[1]
@@ -110,7 +116,13 @@ func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
 			target = channel
 		}
 
-		f(handlers.Params{Irccon: irccon, Db: db, Msg: msg, Nick: nick, Target: target})
+		f(handlers.Params{
+			Privmsgf: makePrivmsgf(irccon),
+			Db:       db,
+			Msg:      msg,
+			Nick:     nick,
+			Target:   target,
+		})
 	}
 }
 

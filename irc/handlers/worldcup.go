@@ -16,10 +16,10 @@ func worldcup(params Params) bool {
 
 	end, err := time.Parse(time.RFC3339, "2026-06-01T15:00:00Z")
 	if err != nil {
-		params.Irccon.Privmsgf(params.Target, "error: %v", err)
+		params.Privmsgf(params.Target, "error: %v", err)
 		return true
 	}
 	until := time.Until(end)
-	params.Irccon.Privmsgf(params.Target, "the world cup will start in %.0f days", math.Round(until.Hours()/24))
+	params.Privmsgf(params.Target, "the world cup will start in %.0f days", math.Round(until.Hours()/24))
 	return true
 }

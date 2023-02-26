@@ -12,7 +12,7 @@ func deferredDelivery(params Params) bool {
 
 	if len(matches) > 0 {
 		if params.Target == params.Nick {
-			params.Irccon.Privmsg(params.Target, "not your personal secretary")
+			params.Privmsgf(params.Target, "not your personal secretary")
 			return false
 		}
 
@@ -30,7 +30,7 @@ func deferredDelivery(params Params) bool {
 				log.Fatal(err)
 			}
 
-			params.Irccon.Privmsgf(params.Target, "%s: will send to %s* later", params.Nick, prefix)
+			params.Privmsgf(params.Target, "%s: will send to %s* later", params.Nick, prefix)
 		}
 		return true
 	}

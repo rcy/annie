@@ -15,12 +15,12 @@ func trade(params Params) bool {
 
 	reply, err := trader.Trade(params.Nick, matches[1], params.Db)
 	if err != nil {
-		params.Irccon.Privmsgf(params.Target, "error: %s", err)
+		params.Privmsgf(params.Target, "error: %s", err)
 		return true
 	}
 
 	if reply != "" {
-		params.Irccon.Privmsgf(params.Target, "%s: %s", params.Nick, reply)
+		params.Privmsgf(params.Target, "%s: %s", params.Nick, reply)
 		return true
 	}
 
