@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"goirc/bot"
+	"goirc/model/notes"
 	"log"
 	"regexp"
 )
@@ -18,7 +19,7 @@ func CreateNote(params bot.HandlerParams) bool {
 
 		text := string(matches[1])
 
-		err := insertNote(params.Db, params.Target, params.Nick, "note", text)
+		err := notes.Create(params.Db, params.Target, params.Nick, "note", text)
 		if err != nil {
 			log.Print(err)
 			params.Privmsgf(params.Target, err.Error())

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"goirc/bot"
+	"goirc/model/notes"
 	"log"
 	"net/http"
 	"os"
@@ -24,7 +25,7 @@ func Link(params bot.HandlerParams) bool {
 
 		// posted to channel
 
-		err := insertNote(params.Db, params.Target, params.Nick, "link", url)
+		err := notes.Create(params.Db, params.Target, params.Nick, "link", url)
 		if err != nil {
 			log.Print(err)
 			params.Privmsgf(params.Target, err.Error())
