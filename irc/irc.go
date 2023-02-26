@@ -110,9 +110,7 @@ func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
 			target = channel
 		}
 
-		if f.Function(handlers.HandlerParams{Irccon: irccon, Db: db, Msg: msg, Nick: nick, Target: target}) {
-			break
-		}
+		f.Function(handlers.HandlerParams{Irccon: irccon, Db: db, Msg: msg, Nick: nick, Target: target})
 	}
 }
 
