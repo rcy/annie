@@ -106,7 +106,7 @@ func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
 	msg := e.Arguments[1]
 	nick := e.Nick
 
-	for _, f := range matchHandlers {
+	for _, f := range handlers {
 		var target string
 
 		if channel == irccon.GetNick() {
@@ -121,12 +121,12 @@ func handlePrivmsg(irccon *irc.Connection, db *sqlx.DB, e *irc.Event) {
 	}
 }
 
-type MatchHandler struct {
+type Handler struct {
 	Name     string
 	Function func(irccon *irc.Connection, db *sqlx.DB, msg, nick, channel string) bool
 }
 
-var matchHandlers = []MatchHandler{
+var handlers = []Handler{
 	{
 		Name: "Match Create Note",
 		Function: func(irccon *irc.Connection, db *sqlx.DB, msg, nick, target string) bool {
