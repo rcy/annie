@@ -3,11 +3,9 @@ package handlers
 import (
 	"goirc/bot"
 	"goirc/model/notes"
+	"goirc/twitter"
 	"log"
-	"net/http"
-	"os"
 	"regexp"
-	"strings"
 )
 
 func Quote(params bot.HandlerParams) bool {
@@ -28,14 +26,7 @@ func Quote(params bot.HandlerParams) bool {
 			log.Print(err)
 		}
 
-		// post to twitter
-		nvurl := os.Getenv("NICHE_VOMIT_URL")
-		if nvurl != "" {
-			res, err := http.Post(nvurl, "text/plain", strings.NewReader(text))
-			if res.StatusCode >= 300 || err != nil {
-				log.Printf("error posting to twitter %d %v\n", res.StatusCode, err)
-			}
-		}
+		twitter.Post(text)
 
 		return true
 	}
