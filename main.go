@@ -17,7 +17,6 @@ func main() {
 		handlers.FeedMe,
 		handlers.Link,
 		handlers.Nice,
-		handlers.OpeningDay,
 		handlers.Quote,
 		handlers.Report,
 		handlers.Ticker,
