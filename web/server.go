@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 )
@@ -30,6 +31,11 @@ func Serve(db *sqlx.DB) {
 	r := gin.Default()
 	//r.LoadHTMLGlob("templates/*")
 
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{"Origin"},
+	}))
+
 	r.GET("/snapshot.db", func(c *gin.Context) {
 		os.Remove("/tmp/snapshot.db")
 		if _, err := db.Exec(`vacuum into '/tmp/snapshot.db'`); err != nil {
@@ -38,6 +44,16 @@ func Serve(db *sqlx.DB) {
 		}
 		c.File("/tmp/snapshot.db")
 	})
+
+	r.HEAD("/snapshot.db", func(c *gin.Context) {
+		os.Remove("/tmp/snapshot.db")
+		if _, err := db.Exec(`vacuum into '/tmp/snapshot.db'`); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("%v", err))
+			return
+		}
+		c.File("/tmp/snapshot.db")
+	})
+
 	r.GET("/", func(c *gin.Context) {
 		nick := c.Query("nick")
 
