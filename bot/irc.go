@@ -23,7 +23,7 @@ func Connect(nick string, channel string, server string, handlers []HandlerFunct
 	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
 	irccon.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
-		_, err := model.DB.Exec(`update channel_nicks set updated_at = current_timestamp, present = false`)
+		_, err := model.DB.Exec(`update channel_nicks set updated_at = current_timestamp, present = false where present = true`)
 		if err != nil {
 			log.Fatal(err)
 		}
