@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"goirc/bot"
 	"regexp"
+	"time"
 )
 
 func Nice(params bot.HandlerParams) bool {
@@ -13,6 +15,10 @@ func Nice(params bot.HandlerParams) bool {
 		return false
 	}
 
-	params.Privmsgf(params.Target, "nice")
+	go func() {
+		time.Sleep(10 * time.Second)
+		params.Privmsgf(params.Target, fmt.Sprintf("%s: nice", params.Nick))
+	}()
+
 	return true
 }
