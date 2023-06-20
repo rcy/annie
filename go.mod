@@ -1,24 +1,24 @@
 module goirc
 
-go 1.17
+go 1.20
 
 require (
 	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335
+	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
 	modernc.org/sqlite v1.17.3
 )
 
 require (
-	github.com/gin-contrib/cors v1.4.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.11.0 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect

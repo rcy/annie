@@ -1,7 +1,7 @@
 with (import <nixpkgs> {});
 mkShell {
   buildInputs = [
-    go
+    go_1_20
     golint
     gopls
     sqlite
