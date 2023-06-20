@@ -2,6 +2,7 @@ package main
 
 import (
 	"goirc/bot"
+	"goirc/commit"
 	"goirc/handlers"
 	"goirc/model"
 	"goirc/util"
@@ -10,6 +11,8 @@ import (
 )
 
 func main() {
+	log.Printf("VERSION %s", commit.URL())
+
 	var functions = []bot.HandlerFunction{
 		handlers.Catchup,
 		handlers.CreateNote,

@@ -2,6 +2,7 @@ package bot
 
 import (
 	"crypto/tls"
+	"goirc/commit"
 	"goirc/model"
 	"goirc/model/laters"
 	"goirc/model/notes"
@@ -54,6 +55,11 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 			}()
 
 			go sendMissed(irccon, channel, e.Nick)
+		} else {
+			go func() {
+				time.Sleep(1 * time.Second)
+				irccon.Privmsgf(channel, commit.URL())
+			}()
 		}
 
 		// trigger NAMES to update the list of joined nicks

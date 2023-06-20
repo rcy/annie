@@ -1,9 +1,10 @@
 FROM golang:1.20-alpine as builder
+ARG rev=dev
 WORKDIR /work
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
+RUN go build -ldflags "-X goirc/commit.Rev=$rev" -o app .
 
 FROM alpine:latest
 WORKDIR /work
