@@ -48,7 +48,10 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
-			sendLaters(irccon, channel, e.Nick)
+			go func() {
+				time.Sleep(10 * time.Second)
+				sendLaters(irccon, channel, e.Nick)
+			}()
 
 			go sendMissed(irccon, channel, e.Nick)
 		}
