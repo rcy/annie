@@ -27,7 +27,11 @@ func main() {
 		handlers.Worldcup,
 	}
 
-	conn, err := bot.Connect(util.Getenv("IRC_NICK"), util.Getenv("IRC_CHANNEL"), util.Getenv("IRC_SERVER"), functions)
+	conn, err := bot.Connect(
+		util.Getenv("IRC_NICK"),
+		util.Getenv("IRC_CHANNEL"),
+		util.Getenv("IRC_SERVER"),
+		functions)
 	if err != nil {
 		log.Fatal(err)
 	}
