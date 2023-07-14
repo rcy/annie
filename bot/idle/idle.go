@@ -11,6 +11,7 @@ func Reset() {
 }
 
 func Every(duration time.Duration, fn func()) {
+	Reset()
 	for {
 		time.Sleep(1 * time.Minute)
 
