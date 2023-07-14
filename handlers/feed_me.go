@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-func FeedMe(params bot.HandlerParams) bool {
+func MatchFeedMe(params bot.HandlerParams) bool {
 	re := regexp.MustCompile(`^!feedme`)
 	match := re.Find([]byte(params.Msg))
 
@@ -16,6 +16,10 @@ func FeedMe(params bot.HandlerParams) bool {
 		return false
 	}
 
+	return FeedMe(params)
+}
+
+func FeedMe(params bot.HandlerParams) bool {
 	rows := []notes.Note{}
 
 	err := model.DB.Select(&rows, `select id, created_at, nick, text, kind from notes order by random() limit 1`)

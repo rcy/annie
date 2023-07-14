@@ -2,6 +2,7 @@ package bot
 
 import (
 	"crypto/tls"
+	"goirc/bot/idle"
 	"goirc/commit"
 	"goirc/model"
 	"goirc/model/laters"
@@ -14,7 +15,12 @@ import (
 	irc "github.com/thoj/go-ircevent"
 )
 
-func Connect(nick string, channel string, server string, handlers []HandlerFunction) (*irc.Connection, error) {
+type IdleParam struct {
+	Duration time.Duration
+	Handler  HandlerFunction
+}
+
+func Connect(nick string, channel string, server string, privmsgHandlers []HandlerFunction, idleParam IdleParam) (*irc.Connection, error) {
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
 	irccon.VerboseCallbackHandler = false
@@ -45,7 +51,8 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	})
 	irccon.AddCallback("366", func(e *irc.Event) {})
 	irccon.AddCallback("PRIVMSG", func(e *irc.Event) {
-		go handlePrivmsg(irccon, e, handlers)
+		idle.Reset()
+		go handlePrivmsg(irccon, e, privmsgHandlers)
 	})
 	irccon.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
@@ -84,6 +91,13 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 		}
 	})
 	err := irccon.Connect(server)
+
+	go idle.Every(idleParam.Duration, func() {
+		idleParam.Handler(HandlerParams{
+			Privmsgf: makePrivmsgf(irccon),
+			Target:   channel,
+		})
+	})
 
 	return irccon, err
 }
