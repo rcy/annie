@@ -6,9 +6,6 @@ start:
 fmt:
 	go fmt main.go
 
-deploy:
-	flyctl deploy --build-arg rev=$(shell git rev-parse --short=1 HEAD)
-
 lint:
 	golangci-lint run
 
