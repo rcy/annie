@@ -21,6 +21,7 @@ func main() {
 		handlers.MatchFeedMe,
 		handlers.Link,
 		handlers.Nice,
+		handlers.MatchPOM,
 		handlers.Quote,
 		handlers.Report,
 		handlers.Ticker,
