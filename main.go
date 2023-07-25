@@ -24,6 +24,7 @@ func main() {
 		handlers.MatchPOM,
 		handlers.Quote,
 		handlers.Report,
+		handlers.Seen,
 		handlers.Ticker,
 		handlers.Trade,
 		handlers.Worldcup,

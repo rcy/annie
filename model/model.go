@@ -20,6 +20,6 @@ func Close() {
 type ChannelNick struct {
 	Channel   string
 	Nick      string
-	Present   string
+	Present   bool
 	UpdatedAt string `db:"updated_at"`
 }
