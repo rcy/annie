@@ -8,7 +8,7 @@ import (
 )
 
 func Seen(params bot.HandlerParams) bool {
-	re := regexp.MustCompile("\\?(\\S+)")
+	re := regexp.MustCompile("^\\?(\\S+)")
 	matches := re.FindSubmatch([]byte(params.Msg))
 
 	if len(matches) == 0 {
