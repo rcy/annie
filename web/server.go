@@ -14,6 +14,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	"github.com/kkdai/youtube/v2"
 )
 
 type NickWithNoteCount struct {
@@ -26,6 +27,10 @@ var indexTemplate string
 
 //go:embed "templates/rss.gohtml"
 var rssTemplate string
+
+//go:embed "templates/player.gohtml"
+var playerTemplateContent string
+var playerTemplate = template.Must(template.New("").Parse(playerTemplateContent))
 
 func Serve(db *sqlx.DB) {
 	r := gin.Default()
@@ -111,6 +116,31 @@ func Serve(db *sqlx.DB) {
 		}
 
 		c.Data(http.StatusOK, "text/xml; charset=utf-8", out.Bytes())
+	})
+
+	r.GET("/player", func(c *gin.Context) {
+		var youtubeLinks []notes.Note
+		err := db.Select(&youtubeLinks, "select * from notes where kind = 'link' and text like '%youtube%'")
+		if err != nil {
+			log.Fatal("could not select links")
+		}
+
+		var videoIDs []string
+		for _, link := range youtubeLinks {
+			id, err := youtube.ExtractVideoID(link.Text)
+			if err != nil {
+				log.Fatalf("error extracting video id %s", link.Text)
+			}
+			videoIDs = append(videoIDs, id)
+		}
+
+		out := new(bytes.Buffer)
+		err = playerTemplate.Execute(out, gin.H{"VideoIDs": videoIDs})
+		if err != nil {
+			log.Fatalf("error executing template: %s", err)
+		}
+
+		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
 	})
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
