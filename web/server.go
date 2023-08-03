@@ -120,7 +120,7 @@ func Serve(db *sqlx.DB) {
 
 	r.GET("/player", func(c *gin.Context) {
 		var youtubeLinks []notes.Note
-		err := db.Select(&youtubeLinks, "select * from notes where kind = 'link' and text like '%youtube%'")
+		err := db.Select(&youtubeLinks, "select * from notes where kind = 'link' and text like '%youtube.com%' or text like '%youtu.be%'")
 		if err != nil {
 			log.Fatal("could not select links")
 		}
