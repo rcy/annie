@@ -1,7 +1,6 @@
 name: Deploy
 run-name: Deploy (${{ github.actor }})
 on:
-  pull_request:
   push:
     branches:
       - main
