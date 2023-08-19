@@ -3,6 +3,7 @@ package bot
 import (
 	"crypto/tls"
 	"goirc/bot/idle"
+	"goirc/bot/repeat"
 	"goirc/commit"
 	"goirc/model"
 	"goirc/model/laters"
@@ -20,7 +21,12 @@ type IdleParam struct {
 	Handler  HandlerFunction
 }
 
-func Connect(nick string, channel string, server string, privmsgHandlers []HandlerFunction, idleParam IdleParam) (*irc.Connection, error) {
+type RepeatParam struct {
+	Duration time.Duration
+	Handler  HandlerFunction
+}
+
+func Connect(nick string, channel string, server string, privmsgHandlers []HandlerFunction, idleParam IdleParam, repeatParam RepeatParam) (*irc.Connection, error) {
 	ircnick1 := nick
 	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
 	irccon.VerboseCallbackHandler = false
@@ -94,6 +100,13 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 
 	go idle.Every(idleParam.Duration, func() {
 		idleParam.Handler(HandlerParams{
+			Privmsgf: makePrivmsgf(irccon),
+			Target:   channel,
+		})
+	})
+
+	go repeat.Every(repeatParam.Duration, func() {
+		repeatParam.Handler(HandlerParams{
 			Privmsgf: makePrivmsgf(irccon),
 			Target:   channel,
 		})

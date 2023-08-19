@@ -24,6 +24,7 @@ func main() {
 		handlers.MatchPOM,
 		handlers.Quote,
 		handlers.Report,
+		handlers.RemindMe,
 		handlers.Seen,
 		handlers.Ticker,
 		handlers.Trade,
@@ -35,12 +36,18 @@ func main() {
 		Handler:  handlers.FeedMe,
 	}
 
+	var repeatParam = bot.RepeatParam{
+		Duration: 10 * time.Second,
+		Handler:  handlers.DoRemind,
+	}
+
 	conn, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
 		util.Getenv("IRC_SERVER"),
 		privmsgHandlers,
-		idleParam)
+		idleParam,
+		repeatParam)
 
 	if err != nil {
 		log.Fatal(err)

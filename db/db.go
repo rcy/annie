@@ -100,6 +100,18 @@ create table transactions(
 );`)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: reminders table")
+			_, err := tx.Exec(`
+create table reminders(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  remind_at datetime not null,
+  what text not null
+);`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
