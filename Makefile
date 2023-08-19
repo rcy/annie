@@ -11,3 +11,6 @@ lint:
 
 sql:
 	sqlite3 ${SQLITE_DB}
+
+test:
+	SQLITE_DB=:memory: go test ./...

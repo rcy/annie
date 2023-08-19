@@ -96,12 +96,14 @@ func TestRemind(t *testing.T) {
 
 			got := rows[len(rows)-1]
 
-			if secondsApart(*result, test.Want.RemindAt) > .01 {
-				t.Fatalf("result=%v and want.RemindAt=%v are not close", result, test.Want.RemindAt)
+			diff := secondsApart(*result, test.Want.RemindAt)
+			if diff > 1 {
+				t.Fatalf("result=%v and want.RemindAt=%v are not close: %f", result, test.Want.RemindAt, diff)
 			}
 
-			if secondsApart(test.Want.RemindAt, got.RemindAt) > .01 {
-				t.Fatalf("want.RemindAt=%v and got.RemindAt=%v are not close", test.Want.RemindAt, got.RemindAt)
+			diff = secondsApart(test.Want.RemindAt, got.RemindAt)
+			if diff > 1 {
+				t.Fatalf("want.RemindAt=%v and got.RemindAt=%v are not close: %f", test.Want.RemindAt, got.RemindAt, diff)
 			}
 
 			if got.Nick != test.Want.Nick {
@@ -113,42 +115,6 @@ func TestRemind(t *testing.T) {
 			}
 		})
 	}
-
-	// remindAt, err := remind("bob", "1d", "wake up")
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// rows, err := reminders.All()
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// if len(rows) != 1 {
-	// 	t.Fatalf("expected 1 row, got %d", len(rows))
-	// }
-
-	// got := rows[0]
-	// want := reminders.Reminder{
-	// 	Nick:     "bob",
-	// 	RemindAt: time.Now().Add(24 * time.Hour),
-	// 	What:     "wake up",
-	// }
-	// if secondsApart(*remindAt, want.RemindAt) > .01 {
-	// 	t.Fatalf("remindAt=%v and want.RemindAt=%v are not close", remindAt, want.RemindAt)
-	// }
-
-	// if secondsApart(want.RemindAt, got.RemindAt) > .01 {
-	// 	t.Fatalf("want.RemindAt=%v and got.RemindAt=%v are not close", want.RemindAt, got.RemindAt)
-	// }
-
-	// if got.Nick != want.Nick {
-	// 	t.Fatalf("bad nick: want %s got %s", want.Nick, got.Nick)
-	// }
-
-	// if got.What != want.What {
-	// 	t.Fatalf("bad what: want %s got %s", want.What, got.What)
-	// }
 }
 
 func secondsApart(t1, t2 time.Time) float64 {

@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"database/sql"
 	"goirc/bot"
 	"goirc/model/reminders"
+	"goirc/util"
+	"log"
 	"regexp"
 	"time"
 
@@ -26,11 +29,7 @@ func RemindMe(params bot.HandlerParams) bool {
 		return true
 	}
 
-	params.Privmsgf(params.Target, "I will remind %s on %s at %s \"%s\"\n",
-		params.Nick,
-		when.Format(time.DateOnly),
-		when.Format("15:04 MST"),
-		string(matches[2]))
+	params.Privmsgf(params.Target, "%s: reminding at %s %s\n", params.Nick, when.Format(time.DateTime), what)
 
 	return true
 }
@@ -49,4 +48,25 @@ func remind(nick string, dur string, what string) (*time.Time, error) {
 	}
 
 	return &at, nil
+}
+
+func DoRemind(params bot.HandlerParams) bool {
+	row, err := reminders.NextDue(params.Target)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			log.Printf("DoRemind NextDue error: %s", err)
+		}
+		return false
+	}
+
+	ago := util.Ago(time.Now().Sub(row.CreatedAt).Round(time.Second))
+	params.Privmsgf(params.Target, `%s: reminder (%s ago) "%s"`, row.Nick, ago, row.What)
+
+	err = reminders.Delete(row.ID)
+	if err != nil {
+		log.Printf("DoRemind NextDue error: %s", err)
+		return false
+	}
+
+	return true
 }
