@@ -29,7 +29,7 @@ func RemindMe(params bot.HandlerParams) bool {
 		return true
 	}
 
-	params.Privmsgf(params.Target, "%s: reminding at %s %s\n", params.Nick, when.Format(time.DateTime), what)
+	params.Privmsgf(params.Target, "%s: reminder set for %s\n", params.Nick, when.Format(time.DateTime))
 
 	return true
 }
