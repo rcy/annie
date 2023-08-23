@@ -29,7 +29,10 @@ func RemindMe(params bot.HandlerParams) bool {
 		return true
 	}
 
-	params.Privmsgf(params.Target, "%s: reminder set for %s\n", params.Nick, when.Format(time.DateTime))
+	loc, err := time.LoadLocation("America/Los_Angeles")
+	localFormat := when.In(loc).Format(time.DateTime)
+
+	params.Privmsgf(params.Target, "%s: reminder set for %s\n", params.Nick, localFormat)
 
 	return true
 }
