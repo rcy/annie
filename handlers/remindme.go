@@ -12,8 +12,8 @@ import (
 )
 
 func RemindMe(params bot.HandlerParams) bool {
-	duration := string(params.Matches[1])
-	what := string(params.Matches[2])
+	duration := params.Matches[1]
+	what := params.Matches[2]
 
 	when, err := remind(params.Nick, duration, what)
 	if err != nil {

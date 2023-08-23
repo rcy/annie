@@ -8,7 +8,7 @@ import (
 )
 
 func Ticker(params bot.HandlerParams) bool {
-	symbol := string(params.Matches[1])
+	symbol := params.Matches[1]
 
 	data, err := fin.YahooFinanceFetch(symbol)
 	if err != nil {

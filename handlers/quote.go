@@ -13,7 +13,7 @@ func Quote(params bot.HandlerParams) bool {
 		return false
 	}
 
-	text := string(params.Matches[1])
+	text := params.Matches[1]
 
 	err := notes.Create(params.Target, params.Nick, "quote", text)
 	if err != nil {

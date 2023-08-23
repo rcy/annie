@@ -12,8 +12,8 @@ func DeferredDelivery(params bot.HandlerParams) bool {
 		return false
 	}
 
-	prefix := string(params.Matches[1])
-	message := string(params.Matches[2])
+	prefix := params.Matches[1]
+	message := params.Matches[2]
 
 	// if the prefix matches a currently joined nick, we do nothing
 	if model.PrefixMatchesJoinedNick(model.DB, params.Target, prefix) {

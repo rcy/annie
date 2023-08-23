@@ -175,7 +175,7 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 	}
 
 	for _, handler := range bot.handlers {
-		matches := handler.regexp.FindSubmatch([]byte(msg))
+		matches := handler.regexp.FindStringSubmatch(msg)
 		if len(matches) > 0 {
 			handler.action(HandlerParams{
 				Privmsgf: bot.MakePrivmsgf(),

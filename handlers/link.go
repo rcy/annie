@@ -8,7 +8,7 @@ import (
 )
 
 func Link(params bot.HandlerParams) bool {
-	url := string(params.Matches[1])
+	url := params.Matches[1]
 
 	if params.Target == params.Nick {
 		// posted in a private message

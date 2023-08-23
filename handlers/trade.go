@@ -6,7 +6,7 @@ import (
 )
 
 func Trade(params bot.HandlerParams) bool {
-	reply, err := trader.Trade(params.Nick, string(params.Matches[1]))
+	reply, err := trader.Trade(params.Nick, params.Matches[1])
 	if err != nil {
 		params.Privmsgf(params.Target, "error: %s", err)
 		return true

@@ -7,7 +7,7 @@ import (
 )
 
 func Seen(params bot.HandlerParams) bool {
-	nick := string(params.Matches[1])
+	nick := params.Matches[1]
 
 	var channelNick model.ChannelNick
 
