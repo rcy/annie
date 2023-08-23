@@ -15,7 +15,6 @@ func main() {
 	log.Printf("VERSION %s", commit.URL())
 
 	var privmsgHandlers = []bot.HandlerFunction{
-		handlers.DeferredDelivery,
 		handlers.MatchFeedMe,
 		handlers.Link,
 		handlers.Nice,
@@ -51,8 +50,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bot.Handle("^!catchup", handlers.Catchup)
-	bot.Handle("^,(.+)$", handlers.CreateNote)
+	bot.Handle(`^!catchup`, handlers.Catchup)
+	bot.Handle(`^,(.+)$`, handlers.CreateNote)
+	bot.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
 
 	go web.Serve(model.DB)
 
