@@ -5,6 +5,7 @@ type HandlerParams struct {
 	Msg      string
 	Nick     string
 	Target   string
+	Matches  [][]byte
 }
 
 type HandlerFunction func(HandlerParams) bool

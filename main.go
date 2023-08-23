@@ -15,7 +15,6 @@ func main() {
 	log.Printf("VERSION %s", commit.URL())
 
 	var privmsgHandlers = []bot.HandlerFunction{
-		handlers.Catchup,
 		handlers.CreateNote,
 		handlers.DeferredDelivery,
 		handlers.MatchFeedMe,
@@ -52,6 +51,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	bot.Handle("^!catchup", handlers.Catchup)
 
 	go web.Serve(model.DB)
 

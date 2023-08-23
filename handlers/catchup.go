@@ -5,18 +5,10 @@ import (
 	"goirc/model"
 	"goirc/model/notes"
 	"goirc/util"
-	"regexp"
 	"time"
 )
 
 func Catchup(params bot.HandlerParams) bool {
-	re := regexp.MustCompile(`^!catchup`)
-	match := re.Find([]byte(params.Msg))
-
-	if len(match) == 0 {
-		return false
-	}
-
 	notes := []notes.Note{}
 
 	// TODO: markAsSeen

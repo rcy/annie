@@ -206,6 +206,7 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 				Msg:      msg,
 				Nick:     nick,
 				Target:   target,
+				Matches:  matches,
 			})
 		}
 	}
