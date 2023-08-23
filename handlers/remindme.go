@@ -6,22 +6,14 @@ import (
 	"goirc/model/reminders"
 	"goirc/util"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/xhit/go-str2duration/v2"
 )
 
 func RemindMe(params bot.HandlerParams) bool {
-	re := regexp.MustCompile(`^!remindme ([^\s]+) (.+)$`)
-	matches := re.FindSubmatch([]byte(params.Msg))
-
-	if len(matches) == 0 {
-		return false
-	}
-
-	duration := string(matches[1])
-	what := string(matches[2])
+	duration := params.Matches[1]
+	what := params.Matches[2]
 
 	when, err := remind(params.Nick, duration, what)
 	if err != nil {

@@ -4,19 +4,11 @@ import (
 	"goirc/bot"
 	"goirc/fin"
 	"goirc/util"
-	"regexp"
 	"strings"
 )
 
 func Ticker(params bot.HandlerParams) bool {
-	re := regexp.MustCompile("^[$]([A-Za-z-]+)")
-	matches := re.FindSubmatch([]byte(params.Msg))
-
-	if len(matches) == 0 {
-		return false
-	}
-
-	symbol := string(matches[1])
+	symbol := params.Matches[1]
 
 	data, err := fin.YahooFinanceFetch(symbol)
 	if err != nil {

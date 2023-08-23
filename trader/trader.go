@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"goirc/fin"
 	"goirc/model"
+	"log"
 	"math"
 	"regexp"
 	"strconv"
@@ -127,6 +128,7 @@ func Report(nick string) (string, error) {
 }
 
 func stockPrice(symbol string) (int, error) {
+	log.Println("symbol=", symbol)
 	resp, err := fin.YahooFinanceFetch(string(symbol))
 	if err != nil {
 		return 0.0, err
