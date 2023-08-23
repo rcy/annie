@@ -14,18 +14,7 @@ import (
 func main() {
 	log.Printf("VERSION %s", commit.URL())
 
-	var privmsgHandlers = []bot.HandlerFunction{
-		handlers.Link,
-		handlers.Nice,
-		handlers.MatchPOM,
-		handlers.Quote,
-		handlers.Report,
-		handlers.RemindMe,
-		handlers.Seen,
-		handlers.Ticker,
-		handlers.Trade,
-		handlers.Worldcup,
-	}
+	go web.Serve(model.DB)
 
 	var idleParam = bot.IdleParam{
 		Duration: 24 * time.Hour,
@@ -41,7 +30,6 @@ func main() {
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
 		util.Getenv("IRC_SERVER"),
-		privmsgHandlers,
 		idleParam,
 		repeatParam)
 
@@ -53,8 +41,16 @@ func main() {
 	bot.Handle(`^,(.+)$`, handlers.CreateNote)
 	bot.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
 	bot.Handle(`^!feedme`, handlers.FeedMe)
-
-	go web.Serve(model.DB)
+	bot.Handle(`(https?://\S+)`, handlers.Link)
+	bot.Handle(`\b69\b`, handlers.Nice)
+	bot.Handle(`^!pom`, handlers.POM)
+	bot.Handle(`^("[^"]+)$`, handlers.Quote)
+	bot.Handle(`^((report).*)$`, handlers.Report) // broken
+	bot.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
+	bot.Handle(`^\\?(\\S+)`, handlers.Seen)
+	bot.Handle(`^[$]([A-Za-z-]+)`, handlers.Ticker) // broken
+	bot.Handle(`^((buy|sell).*)$`, handlers.Trade)  // broken
+	bot.Handle(`world.?cup`, handlers.Worldcup)
 
 	bot.Loop()
 }

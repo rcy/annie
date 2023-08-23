@@ -50,7 +50,7 @@ func (b *Bot) Loop() {
 	b.Conn.Loop()
 }
 
-func Connect(nick string, channel string, server string, privmsgHandlers []HandlerFunction, idleParam IdleParam, repeatParam RepeatParam) (*Bot, error) {
+func Connect(nick string, channel string, server string, idleParam IdleParam, repeatParam RepeatParam) (*Bot, error) {
 	var bot Bot
 	bot.Conn = irc.IRC(nick, "github.com/rcy/annie")
 	bot.Conn.VerboseCallbackHandler = false
@@ -82,7 +82,6 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	bot.Conn.AddCallback("366", func(e *irc.Event) {})
 	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
 		idle.Reset()
-		go bot.HandlePrivmsg(e, privmsgHandlers)
 		go bot.RunHandlers(e)
 	})
 	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
@@ -160,29 +159,6 @@ func (bot *Bot) SendLaters(channel string, nick string) {
 func (bot *Bot) MakePrivmsgf() func(string, string, ...interface{}) {
 	return func(target, message string, a ...interface{}) {
 		bot.Conn.Privmsgf(target, message, a...)
-	}
-}
-
-func (bot *Bot) HandlePrivmsg(e *irc.Event, handlers []HandlerFunction) {
-	channel := e.Arguments[0]
-	msg := e.Arguments[1]
-	nick := e.Nick
-
-	for _, f := range handlers {
-		var target string
-
-		if channel == bot.Conn.GetNick() {
-			target = nick
-		} else {
-			target = channel
-		}
-
-		f(HandlerParams{
-			Privmsgf: bot.MakePrivmsgf(),
-			Msg:      msg,
-			Nick:     nick,
-			Target:   target,
-		})
 	}
 }
 

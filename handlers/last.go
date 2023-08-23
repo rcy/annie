@@ -4,18 +4,10 @@ import (
 	"goirc/bot"
 	"goirc/model"
 	"goirc/util"
-	"regexp"
 )
 
 func Seen(params bot.HandlerParams) bool {
-	re := regexp.MustCompile("^\\?(\\S+)")
-	matches := re.FindSubmatch([]byte(params.Msg))
-
-	if len(matches) == 0 {
-		return false
-	}
-
-	nick := string(matches[1])
+	nick := string(params.Matches[1])
 
 	var channelNick model.ChannelNick
 
