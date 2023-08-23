@@ -10,6 +10,7 @@ import (
 	"goirc/model/notes"
 	"goirc/util"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -26,13 +27,23 @@ type RepeatParam struct {
 	Handler  HandlerFunction
 }
 
-type Bot struct {
-	Conn     *irc.Connection
-	handlers map[string]HandlerFunction
+type Handler struct {
+	regexp regexp.Regexp
+	action HandlerFunction
 }
 
-func (b *Bot) Handle(re string, fn HandlerFunction) {
-	b.handlers[re] = fn
+type Bot struct {
+	Conn     *irc.Connection
+	handlers []Handler
+}
+
+func (b *Bot) Handle(pat string, action HandlerFunction) {
+	h := Handler{
+		*regexp.MustCompile(pat),
+		action,
+	}
+
+	b.handlers = append(b.handlers, h)
 }
 
 func (b *Bot) Loop() {
@@ -72,7 +83,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
 		idle.Reset()
 		go bot.HandlePrivmsg(e, privmsgHandlers)
-		//go runHanders()
+		go bot.RunHandlers(e)
 	})
 	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
@@ -172,6 +183,31 @@ func (bot *Bot) HandlePrivmsg(e *irc.Event, handlers []HandlerFunction) {
 			Nick:     nick,
 			Target:   target,
 		})
+	}
+}
+
+func (bot *Bot) RunHandlers(e *irc.Event) {
+	channel := e.Arguments[0]
+	msg := e.Arguments[1]
+	nick := e.Nick
+
+	var target string
+	if channel == bot.Conn.GetNick() {
+		target = nick
+	} else {
+		target = channel
+	}
+
+	for _, handler := range bot.handlers {
+		matches := handler.regexp.FindSubmatch([]byte(msg))
+		if len(matches) > 0 {
+			handler.action(HandlerParams{
+				Privmsgf: bot.MakePrivmsgf(),
+				Msg:      msg,
+				Nick:     nick,
+				Target:   target,
+			})
+		}
 	}
 }
 
