@@ -41,7 +41,7 @@ func main() {
 		Handler:  handlers.DoRemind,
 	}
 
-	conn, err := bot.Connect(
+	bot, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
 		util.Getenv("IRC_SERVER"),
@@ -55,5 +55,5 @@ func main() {
 
 	go web.Serve(model.DB)
 
-	conn.Loop()
+	bot.Loop()
 }

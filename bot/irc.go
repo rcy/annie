@@ -26,15 +26,28 @@ type RepeatParam struct {
 	Handler  HandlerFunction
 }
 
-func Connect(nick string, channel string, server string, privmsgHandlers []HandlerFunction, idleParam IdleParam, repeatParam RepeatParam) (*irc.Connection, error) {
-	ircnick1 := nick
-	irccon := irc.IRC(ircnick1, "github.com/rcy/annie")
-	irccon.VerboseCallbackHandler = false
-	irccon.Debug = false
-	irccon.UseTLS = true
-	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
-	irccon.AddCallback("353", func(e *irc.Event) {
+type Bot struct {
+	Conn     *irc.Connection
+	handlers map[string]HandlerFunction
+}
+
+func (b *Bot) Handle(re string, fn HandlerFunction) {
+	b.handlers[re] = fn
+}
+
+func (b *Bot) Loop() {
+	b.Conn.Loop()
+}
+
+func Connect(nick string, channel string, server string, privmsgHandlers []HandlerFunction, idleParam IdleParam, repeatParam RepeatParam) (*Bot, error) {
+	var bot Bot
+	bot.Conn = irc.IRC(nick, "github.com/rcy/annie")
+	bot.Conn.VerboseCallbackHandler = false
+	bot.Conn.Debug = false
+	bot.Conn.UseTLS = true
+	bot.Conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	bot.Conn.AddCallback("001", func(e *irc.Event) { bot.Conn.Join(channel) })
+	bot.Conn.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
 		_, err := model.DB.Exec(`update channel_nicks set updated_at = current_timestamp, present = false where present = true`)
 		if err != nil {
@@ -55,67 +68,68 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 			}
 		}
 	})
-	irccon.AddCallback("366", func(e *irc.Event) {})
-	irccon.AddCallback("PRIVMSG", func(e *irc.Event) {
+	bot.Conn.AddCallback("366", func(e *irc.Event) {})
+	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
 		idle.Reset()
-		go handlePrivmsg(irccon, e, privmsgHandlers)
+		go handlePrivmsg(&bot, e, privmsgHandlers)
+		//go runHanders()
 	})
-	irccon.AddCallback("JOIN", func(e *irc.Event) {
+	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
 			go func() {
 				time.Sleep(10 * time.Second)
-				sendLaters(irccon, channel, e.Nick)
+				sendLaters(&bot, channel, e.Nick)
 			}()
 
-			go sendMissed(irccon, channel, e.Nick)
+			go sendMissed(&bot, channel, e.Nick)
 		} else {
 			go func() {
 				time.Sleep(1 * time.Second)
-				irccon.Privmsgf(channel, commit.URL())
+				bot.Conn.Privmsgf(channel, commit.URL())
 			}()
 		}
 
 		// trigger NAMES to update the list of joined nicks
-		irccon.SendRawf("NAMES %s", channel)
+		bot.Conn.SendRawf("NAMES %s", channel)
 	})
-	irccon.AddCallback("PART", func(e *irc.Event) {
+	bot.Conn.AddCallback("PART", func(e *irc.Event) {
 		if e.Nick != nick {
 			// trigger NAMES to update the list of joined nicks
-			irccon.SendRawf("NAMES %s", channel)
+			bot.Conn.SendRawf("NAMES %s", channel)
 		}
 	})
-	irccon.AddCallback("QUIT", func(e *irc.Event) {
+	bot.Conn.AddCallback("QUIT", func(e *irc.Event) {
 		if e.Nick != nick {
 			// trigger NAMES to update the list of joined nicks
-			irccon.SendRawf("NAMES %s", channel)
+			bot.Conn.SendRawf("NAMES %s", channel)
 		}
 	})
-	irccon.AddCallback("NICK", func(e *irc.Event) {
+	bot.Conn.AddCallback("NICK", func(e *irc.Event) {
 		if e.Nick != nick {
 			// trigger NAMES to update the list of joined nicks
-			irccon.SendRawf("NAMES %s", channel)
+			bot.Conn.SendRawf("NAMES %s", channel)
 		}
 	})
-	err := irccon.Connect(server)
+	err := bot.Conn.Connect(server)
 
 	go idle.Every(idleParam.Duration, func() {
 		idleParam.Handler(HandlerParams{
-			Privmsgf: makePrivmsgf(irccon),
+			Privmsgf: makePrivmsgf(&bot),
 			Target:   channel,
 		})
 	})
 
 	go repeat.Every(repeatParam.Duration, func() {
 		repeatParam.Handler(HandlerParams{
-			Privmsgf: makePrivmsgf(irccon),
+			Privmsgf: makePrivmsgf(&bot),
 			Target:   channel,
 		})
 	})
 
-	return irccon, err
+	return &bot, err
 }
 
-func sendLaters(irccon *irc.Connection, channel string, nick string) {
+func sendLaters(bot *Bot, channel string, nick string) {
 	// loop through each later message and see if the prefix matches this nick
 	rows, err := laters.Get()
 	if err != nil {
@@ -127,18 +141,18 @@ func sendLaters(irccon *irc.Connection, channel string, nick string) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			irccon.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, row.Message, row.Nick, util.Since(row.CreatedAt))
+			bot.Conn.Privmsgf(channel, "%s: %s (from %s %s ago)", nick, row.Message, row.Nick, util.Since(row.CreatedAt))
 		}
 	}
 }
 
-func makePrivmsgf(irccon *irc.Connection) func(string, string, ...interface{}) {
+func makePrivmsgf(bot *Bot) func(string, string, ...interface{}) {
 	return func(target, message string, a ...interface{}) {
-		irccon.Privmsgf(target, message, a...)
+		bot.Conn.Privmsgf(target, message, a...)
 	}
 }
 
-func handlePrivmsg(irccon *irc.Connection, e *irc.Event, handlers []HandlerFunction) {
+func handlePrivmsg(bot *Bot, e *irc.Event, handlers []HandlerFunction) {
 	channel := e.Arguments[0]
 	msg := e.Arguments[1]
 	nick := e.Nick
@@ -146,14 +160,14 @@ func handlePrivmsg(irccon *irc.Connection, e *irc.Event, handlers []HandlerFunct
 	for _, f := range handlers {
 		var target string
 
-		if channel == irccon.GetNick() {
+		if channel == bot.Conn.GetNick() {
 			target = nick
 		} else {
 			target = channel
 		}
 
 		f(HandlerParams{
-			Privmsgf: makePrivmsgf(irccon),
+			Privmsgf: makePrivmsgf(bot),
 			Msg:      msg,
 			Nick:     nick,
 			Target:   target,
@@ -165,7 +179,7 @@ func isAltNick(nick string) bool {
 	return strings.HasSuffix(nick, "`") || strings.HasSuffix(nick, "_")
 }
 
-func sendMissed(irccon *irc.Connection, channel string, nick string) {
+func sendMissed(bot *Bot, channel string, nick string) {
 	if isAltNick(nick) {
 		return
 	}
@@ -180,11 +194,11 @@ func sendMissed(irccon *irc.Connection, channel string, nick string) {
 	model.DB.Select(&notes, "select * from notes where created_at > ? order by created_at asc limit 69", channelNick.UpdatedAt)
 
 	if len(notes) > 0 {
-		irccon.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
+		bot.Conn.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
 			nick, len(notes), channel, channelNick.UpdatedAt)
 
 		for _, note := range notes {
-			irccon.Privmsgf(nick, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
+			bot.Conn.Privmsgf(nick, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
 			time.Sleep(1 * time.Second)
 		}
 	}
