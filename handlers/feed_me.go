@@ -5,19 +5,7 @@ import (
 	"goirc/model"
 	"goirc/model/notes"
 	"goirc/util"
-	"regexp"
 )
-
-func MatchFeedMe(params bot.HandlerParams) bool {
-	re := regexp.MustCompile(`^!feedme`)
-	match := re.Find([]byte(params.Msg))
-
-	if len(match) == 0 {
-		return false
-	}
-
-	return FeedMe(params)
-}
 
 func FeedMe(params bot.HandlerParams) bool {
 	rows := []notes.Note{}
