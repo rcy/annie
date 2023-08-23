@@ -71,17 +71,17 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	bot.Conn.AddCallback("366", func(e *irc.Event) {})
 	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
 		idle.Reset()
-		go handlePrivmsg(&bot, e, privmsgHandlers)
+		go bot.HandlePrivmsg(e, privmsgHandlers)
 		//go runHanders()
 	})
 	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
 		if e.Nick != nick {
 			go func() {
 				time.Sleep(10 * time.Second)
-				sendLaters(&bot, channel, e.Nick)
+				bot.SendLaters(channel, e.Nick)
 			}()
 
-			go sendMissed(&bot, channel, e.Nick)
+			go bot.SendMissed(channel, e.Nick)
 		} else {
 			go func() {
 				time.Sleep(1 * time.Second)
@@ -114,14 +114,14 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 
 	go idle.Every(idleParam.Duration, func() {
 		idleParam.Handler(HandlerParams{
-			Privmsgf: makePrivmsgf(&bot),
+			Privmsgf: bot.MakePrivmsgf(),
 			Target:   channel,
 		})
 	})
 
 	go repeat.Every(repeatParam.Duration, func() {
 		repeatParam.Handler(HandlerParams{
-			Privmsgf: makePrivmsgf(&bot),
+			Privmsgf: bot.MakePrivmsgf(),
 			Target:   channel,
 		})
 	})
@@ -129,7 +129,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	return &bot, err
 }
 
-func sendLaters(bot *Bot, channel string, nick string) {
+func (bot *Bot) SendLaters(channel string, nick string) {
 	// loop through each later message and see if the prefix matches this nick
 	rows, err := laters.Get()
 	if err != nil {
@@ -146,13 +146,13 @@ func sendLaters(bot *Bot, channel string, nick string) {
 	}
 }
 
-func makePrivmsgf(bot *Bot) func(string, string, ...interface{}) {
+func (bot *Bot) MakePrivmsgf() func(string, string, ...interface{}) {
 	return func(target, message string, a ...interface{}) {
 		bot.Conn.Privmsgf(target, message, a...)
 	}
 }
 
-func handlePrivmsg(bot *Bot, e *irc.Event, handlers []HandlerFunction) {
+func (bot *Bot) HandlePrivmsg(e *irc.Event, handlers []HandlerFunction) {
 	channel := e.Arguments[0]
 	msg := e.Arguments[1]
 	nick := e.Nick
@@ -167,7 +167,7 @@ func handlePrivmsg(bot *Bot, e *irc.Event, handlers []HandlerFunction) {
 		}
 
 		f(HandlerParams{
-			Privmsgf: makePrivmsgf(bot),
+			Privmsgf: bot.MakePrivmsgf(),
 			Msg:      msg,
 			Nick:     nick,
 			Target:   target,
@@ -179,7 +179,7 @@ func isAltNick(nick string) bool {
 	return strings.HasSuffix(nick, "`") || strings.HasSuffix(nick, "_")
 }
 
-func sendMissed(bot *Bot, channel string, nick string) {
+func (bot *Bot) SendMissed(channel string, nick string) {
 	if isAltNick(nick) {
 		return
 	}
