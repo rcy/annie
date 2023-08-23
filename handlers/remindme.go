@@ -30,7 +30,7 @@ func RemindMe(params bot.HandlerParams) bool {
 	}
 
 	loc, err := time.LoadLocation("America/Los_Angeles")
-	localFormat := when.In(loc).Format(time.DateTime)
+	localFormat := when.In(loc).Format(time.RFC1123)
 
 	params.Privmsgf(params.Target, "%s: reminder set for %s\n", params.Nick, localFormat)
 
