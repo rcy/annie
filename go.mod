@@ -8,8 +8,10 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/jmoiron/sqlx v1.3.5
+	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/liamg/gomoon v0.0.0-20191001204632-f5f053d0ca99
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
+	github.com/xhit/go-str2duration/v2 v2.1.0
 	modernc.org/sqlite v1.17.3
 )
 
@@ -27,17 +29,13 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/kkdai/youtube/v2 v2.8.1 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
