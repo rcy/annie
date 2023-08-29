@@ -13,7 +13,7 @@ func POM(params bot.HandlerParams) bool {
 	cmd.Stdout = &out
 
 	if err := cmd.Run(); err != nil {
-		panic(err)
+		params.Privmsgf(params.Target, "%s", err)
 	}
 
 	params.Privmsgf(params.Target, "%s", out.String())
