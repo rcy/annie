@@ -8,4 +8,4 @@ type HandlerParams struct {
 	Matches  []string
 }
 
-type HandlerFunction func(HandlerParams) bool
+type HandlerFunction func(HandlerParams) error

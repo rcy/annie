@@ -3,13 +3,12 @@ package handlers
 import (
 	"goirc/bot"
 	"goirc/model"
-	"log"
 )
 
-func DeferredDelivery(params bot.HandlerParams) bool {
+func DeferredDelivery(params bot.HandlerParams) error {
 	if params.Target == params.Nick {
 		params.Privmsgf(params.Target, "not your personal secretary")
-		return false
+		return nil
 	}
 
 	prefix := params.Matches[1]
@@ -17,16 +16,16 @@ func DeferredDelivery(params bot.HandlerParams) bool {
 
 	// if the prefix matches a currently joined nick, we do nothing
 	if model.PrefixMatchesJoinedNick(model.DB, params.Target, prefix) {
-		return false
+		return nil
 	}
 
 	if model.PrefixMatchesKnownNick(model.DB, params.Target, prefix) {
 		_, err := model.DB.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, params.Nick, prefix, message, false)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		params.Privmsgf(params.Target, "%s: will send to %s* later", params.Nick, prefix)
 	}
-	return true
+	return nil
 }

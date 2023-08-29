@@ -6,7 +6,7 @@ import (
 	"goirc/util"
 )
 
-func Seen(params bot.HandlerParams) bool {
+func Seen(params bot.HandlerParams) error {
 	nick := params.Matches[1]
 
 	var channelNick model.ChannelNick
@@ -22,5 +22,5 @@ func Seen(params bot.HandlerParams) bool {
 	} else {
 		params.Privmsgf(params.Target, "Never seen %s", nick)
 	}
-	return true
+	return nil
 }

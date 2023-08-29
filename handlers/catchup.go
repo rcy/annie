@@ -8,14 +8,13 @@ import (
 	"time"
 )
 
-func Catchup(params bot.HandlerParams) bool {
+func Catchup(params bot.HandlerParams) error {
 	notes := []notes.Note{}
 
 	// TODO: markAsSeen
 	err := model.DB.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc`)
 	if err != nil {
-		params.Privmsgf(params.Target, "%v", err)
-		return false
+		return err
 	}
 	if len(notes) >= 1 {
 		for _, note := range notes {
@@ -24,5 +23,5 @@ func Catchup(params bot.HandlerParams) bool {
 		}
 	}
 	params.Privmsgf(params.Nick, "--- %d total from last 24 hours", len(notes))
-	return true
+	return nil
 }

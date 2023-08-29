@@ -177,13 +177,17 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 	for _, handler := range bot.handlers {
 		matches := handler.regexp.FindStringSubmatch(msg)
 		if len(matches) > 0 {
-			handler.action(HandlerParams{
-				Privmsgf: bot.MakePrivmsgf(),
-				Msg:      msg,
-				Nick:     nick,
-				Target:   target,
-				Matches:  matches,
+			err := handler.action(HandlerParams{
+				Msg:     msg,
+				Nick:    nick,
+				Target:  target,
+				Matches: matches,
 			})
+
+			if err != nil {
+				bot.Conn.Privmsgf(target, "error: %s", err)
+				return
+			}
 		}
 	}
 }
