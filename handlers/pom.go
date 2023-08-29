@@ -2,20 +2,21 @@ package handlers
 
 import (
 	"goirc/bot"
-
-	"github.com/liamg/gomoon"
+	"os/exec"
+	"strings"
 )
 
 func POM(params bot.HandlerParams) bool {
-	params.Privmsgf(params.Target, "%s", desc(gomoon.PhaseNow()))
-	return true
-}
+	cmd := exec.Command("/usr/games/pom")
 
-func desc(phase gomoon.MoonPhase) string {
-	switch phase {
-	case gomoon.FULL_MOON:
-		return "The moon is full"
-	default:
-		return "Not full"
+	var out strings.Builder
+	cmd.Stdout = &out
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
 	}
+
+	params.Privmsgf(params.Target, "%s", out.String())
+
+	return true
 }
