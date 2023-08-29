@@ -5,32 +5,29 @@ import (
 	"goirc/bot"
 	"goirc/model/reminders"
 	"goirc/util"
-	"log"
 	"time"
 
 	"github.com/xhit/go-str2duration/v2"
 )
 
-func RemindMe(params bot.HandlerParams) bool {
+func RemindMe(params bot.HandlerParams) error {
 	duration := params.Matches[1]
 	what := params.Matches[2]
 
 	when, err := remind(params.Nick, duration, what)
 	if err != nil {
-		params.Privmsgf(params.Target, "%s", err)
-		return true
+		return err
 	}
 
 	loc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
-		params.Privmsgf(params.Target, "%s: error: %s", err)
-		return true
+		return err
 	}
 	localFormat := when.In(loc).Format(time.RFC1123)
 
 	params.Privmsgf(params.Target, "%s: reminder set for %s\n", params.Nick, localFormat)
 
-	return true
+	return err
 }
 
 func remind(nick string, dur string, what string) (*time.Time, error) {
@@ -49,13 +46,13 @@ func remind(nick string, dur string, what string) (*time.Time, error) {
 	return &at, nil
 }
 
-func DoRemind(params bot.HandlerParams) bool {
+func DoRemind(params bot.HandlerParams) error {
 	row, err := reminders.NextDue(params.Target)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			log.Printf("DoRemind NextDue error: %s", err)
+			return err
 		}
-		return false
+		return nil
 	}
 
 	ago := util.Ago(time.Now().Sub(row.CreatedAt).Round(time.Second))
@@ -63,9 +60,8 @@ func DoRemind(params bot.HandlerParams) bool {
 
 	err = reminders.Delete(row.ID)
 	if err != nil {
-		log.Printf("DoRemind NextDue error: %s", err)
-		return false
+		return err
 	}
 
-	return true
+	return nil
 }

@@ -5,17 +5,15 @@ import (
 	"goirc/trader"
 )
 
-func Report(params bot.HandlerParams) bool {
+func Report(params bot.HandlerParams) error {
 	reply, err := trader.Report(params.Nick)
 	if err != nil {
-		params.Privmsgf(params.Target, "error: %s", err)
-		return true
+		return err
 	}
 
 	if reply != "" {
 		params.Privmsgf(params.Target, "%s: %s", params.Nick, reply)
-		return true
 	}
 
-	return false
+	return nil
 }
