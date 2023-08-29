@@ -14,3 +14,10 @@ sql:
 
 test:
 	SQLITE_DB=:memory: go test ./...
+
+build:
+	docker build -t annie .
+
+run:
+	docker run --env-file=.env -e SQLITE_DB=:memory: annie
+
