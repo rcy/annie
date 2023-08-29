@@ -9,7 +9,6 @@ require (
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
-	github.com/liamg/gomoon v0.0.0-20191001204632-f5f053d0ca99
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
 	github.com/xhit/go-str2duration/v2 v2.1.0
 	modernc.org/sqlite v1.17.3
