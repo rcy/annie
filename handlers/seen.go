@@ -11,7 +11,10 @@ func Seen(params bot.HandlerParams) error {
 
 	var channelNick model.ChannelNick
 
-	model.DB.Get(&channelNick, "select * from channel_nicks where nick = ? and channel = ?", nick, params.Target)
+	err := model.DB.Get(&channelNick, "select * from channel_nicks where nick = ? and channel = ?", nick, params.Target)
+	if err != nil {
+		return err
+	}
 
 	if channelNick.Nick != "" {
 		if channelNick.Present {
