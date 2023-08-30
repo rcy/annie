@@ -7,7 +7,6 @@ mkShell {
     sqlite
     flyctl
     golangci-lint
-    foreman
     google-cloud-sdk
   ];
 }

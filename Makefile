@@ -1,7 +1,7 @@
 include .env
 
 start:
-	foreman start
+	go run main.go
 
 fmt:
 	go fmt main.go
