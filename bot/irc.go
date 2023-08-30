@@ -178,10 +178,11 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 		matches := handler.regexp.FindStringSubmatch(msg)
 		if len(matches) > 0 {
 			err := handler.action(HandlerParams{
-				Msg:     msg,
-				Nick:    nick,
-				Target:  target,
-				Matches: matches,
+				Privmsgf: bot.MakePrivmsgf(),
+				Msg:      msg,
+				Nick:     nick,
+				Target:   target,
+				Matches:  matches,
 			})
 
 			if err != nil {
