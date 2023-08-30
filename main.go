@@ -47,7 +47,7 @@ func main() {
 	bot.Handle(`^("[^"]+)$`, handlers.Quote)
 	bot.Handle(`^((report).*)$`, handlers.Report) // broken
 	bot.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
-	bot.Handle(`^\\?(\\S+)`, handlers.Seen)
+	bot.Handle(`^\?(\S+)`, handlers.Seen)
 	bot.Handle(`^[$]([A-Za-z-]+)`, handlers.Ticker) // broken
 	bot.Handle(`^((buy|sell).*)$`, handlers.Trade)  // broken
 	bot.Handle(`world.?cup`, handlers.Worldcup)
