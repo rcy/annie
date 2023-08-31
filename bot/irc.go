@@ -2,6 +2,7 @@ package bot
 
 import (
 	"crypto/tls"
+	"fmt"
 	"goirc/bot/idle"
 	"goirc/bot/repeat"
 	"goirc/commit"
@@ -10,7 +11,9 @@ import (
 	"goirc/model/notes"
 	"goirc/util"
 	"log"
+	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -28,22 +31,29 @@ type RepeatParam struct {
 }
 
 type Handler struct {
-	regexp regexp.Regexp
-	action HandlerFunction
+	pattern string
+	regexp  regexp.Regexp
+	action  HandlerFunction
+}
+
+func (h Handler) String() string {
+	strs := strings.Split(runtime.FuncForPC(reflect.ValueOf(h.action).Pointer()).Name(), ".")
+	return fmt.Sprintf("%-32s %s", h.pattern, strs[len(strs)-1])
 }
 
 type Bot struct {
 	Conn     *irc.Connection
-	handlers []Handler
+	Handlers []Handler
 }
 
-func (b *Bot) Handle(pat string, action HandlerFunction) {
+func (b *Bot) Handle(pattern string, action HandlerFunction) {
 	h := Handler{
-		*regexp.MustCompile(pat),
+		pattern,
+		*regexp.MustCompile(pattern),
 		action,
 	}
 
-	b.handlers = append(b.handlers, h)
+	b.Handlers = append(b.Handlers, h)
 }
 
 func (b *Bot) Loop() {
@@ -174,7 +184,7 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 		target = channel
 	}
 
-	for _, handler := range bot.handlers {
+	for _, handler := range bot.Handlers {
 		matches := handler.regexp.FindStringSubmatch(msg)
 		if len(matches) > 0 {
 			err := handler.action(HandlerParams{

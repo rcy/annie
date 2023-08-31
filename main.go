@@ -26,7 +26,7 @@ func main() {
 		Handler:  handlers.DoRemind,
 	}
 
-	bot, err := bot.Connect(
+	b, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
 		util.Getenv("IRC_SERVER"),
@@ -37,20 +37,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bot.Handle(`^!catchup`, handlers.Catchup)
-	bot.Handle(`^,(.+)$`, handlers.CreateNote)
-	bot.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
-	bot.Handle(`^!feedme`, handlers.FeedMe)
-	bot.Handle(`(https?://\S+)`, handlers.Link)
-	bot.Handle(`\b69\b`, handlers.Nice)
-	bot.Handle(`^!pom`, handlers.POM)
-	bot.Handle(`^("[^"]+)$`, handlers.Quote)
-	bot.Handle(`^((report).*)$`, handlers.Report) // broken
-	bot.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
-	bot.Handle(`^\?(\S+)`, handlers.Seen)
-	bot.Handle(`^[$]([A-Za-z-]+)`, handlers.Ticker) // broken
-	bot.Handle(`^((buy|sell).*)$`, handlers.Trade)  // broken
-	bot.Handle(`world.?cup`, handlers.Worldcup)
+	b.Handle(`^!help`, func(params bot.HandlerParams) error {
+		for _, h := range b.Handlers {
+			params.Privmsgf(params.Target, "%s", h.String())
+		}
+		return nil
+	})
+	b.Handle(`^!catchup`, handlers.Catchup)
+	b.Handle(`^,(.+)$`, handlers.CreateNote)
+	b.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
+	b.Handle(`^!feedme`, handlers.FeedMe)
+	b.Handle(`(https?://\S+)`, handlers.Link)
+	b.Handle(`\b69\b`, handlers.Nice)
+	b.Handle(`^!pom`, handlers.POM)
+	b.Handle(`^("[^"]+)$`, handlers.Quote)
+	b.Handle(`^((report).*)$`, handlers.Report) // broken
+	b.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
+	b.Handle(`^\?(\S+)`, handlers.Seen)
+	b.Handle(`^[$]([A-Za-z-]+)`, handlers.Ticker) // broken
+	b.Handle(`^((buy|sell).*)$`, handlers.Trade)  // broken
+	b.Handle(`world.?cup`, handlers.Worldcup)
 
-	bot.Loop()
+	b.Loop()
 }
