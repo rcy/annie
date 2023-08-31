@@ -51,11 +51,8 @@ func main() {
 	b.Handle(`\b69\b`, handlers.Nice)
 	b.Handle(`^!pom`, handlers.POM)
 	b.Handle(`^("[^"]+)$`, handlers.Quote)
-	b.Handle(`^((report).*)$`, handlers.Report) // broken
 	b.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
 	b.Handle(`^\?(\S+)`, handlers.Seen)
-	b.Handle(`^[$]([A-Za-z-]+)`, handlers.Ticker) // broken
-	b.Handle(`^((buy|sell).*)$`, handlers.Trade)  // broken
 	b.Handle(`world.?cup`, handlers.Worldcup)
 
 	b.Loop()
