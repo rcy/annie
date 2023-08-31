@@ -48,6 +48,7 @@ func main() {
 	b.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
 	b.Handle(`^!feedme`, handlers.FeedMe)
 	b.Handle(`(https?://\S+)`, handlers.Link)
+	b.Handle(`^!day`, handlers.NationalDay)
 	b.Handle(`\b69\b`, handlers.Nice)
 	b.Handle(`^!pom`, handlers.POM)
 	b.Handle(`^("[^"]+)$`, handlers.Quote)
