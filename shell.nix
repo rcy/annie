@@ -5,11 +5,12 @@ in
 with nixpkgs; mkShell {
   buildInputs = [
     unstable.go_1_21
-    golint
-    gopls
+    unstable.golint
+    unstable.gopls
+    pup
     sqlite
     flyctl
-    golangci-lint
+    unstable.golangci-lint
     google-cloud-sdk
   ];
 }
