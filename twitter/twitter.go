@@ -1,7 +1,6 @@
 package twitter
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,10 +12,10 @@ func Post(text string) error {
 	if nvurl != "" {
 		res, err := http.Post(nvurl, "text/plain", strings.NewReader(text))
 		if err != nil {
-			return errors.New(fmt.Sprintf("error posting to twitter err=%s\n", err))
+			return fmt.Errorf("error posting to twitter %w\n", err)
 		}
 		if res.StatusCode >= 300 {
-			return errors.New(fmt.Sprintf("error posting to twitter statusCode=%s\n", err))
+			return fmt.Errorf("error posting to twitter statusCode=%d\n", res.StatusCode)
 		}
 	}
 	return nil

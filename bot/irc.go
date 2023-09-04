@@ -11,6 +11,7 @@ import (
 	"goirc/model/notes"
 	"goirc/util"
 	"log"
+	"log/slog"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -133,10 +134,13 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	err := bot.Conn.Connect(server)
 
 	go idle.Every(idleParam.Duration, func() {
-		idleParam.Handler(HandlerParams{
+		err := idleParam.Handler(HandlerParams{
 			Privmsgf: bot.MakePrivmsgf(),
 			Target:   channel,
 		})
+		if err != nil {
+			slog.Warn("idle.Every", "err", err)
+		}
 	})
 
 	go repeat.Every(repeatParam.Duration, func() {
@@ -144,6 +148,10 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 			Privmsgf: bot.MakePrivmsgf(),
 			Target:   channel,
 		})
+		if err != nil {
+			slog.Warn("repeat.Every", "err", err)
+		}
+
 	})
 
 	return &bot, err

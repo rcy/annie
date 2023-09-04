@@ -15,7 +15,7 @@ func Every(duration time.Duration, fn func()) {
 	for {
 		time.Sleep(1 * time.Minute)
 
-		if time.Now().Sub(lastMessage) >= duration {
+		if time.Since(lastMessage) >= duration {
 			Reset()
 			fn()
 		}

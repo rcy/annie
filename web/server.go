@@ -143,7 +143,10 @@ func Serve(db *sqlx.DB) {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
 	})
 
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	err := r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getNotes(db *sqlx.DB, nick string) ([]notes.Note, error) {

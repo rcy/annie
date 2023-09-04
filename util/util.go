@@ -23,7 +23,7 @@ func Since(tstr string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return Ago(time.Now().Sub(t).Round(time.Second))
+	return Ago(time.Since(t).Round(time.Second))
 }
 
 func Ago(d time.Duration) string {
