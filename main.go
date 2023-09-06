@@ -50,6 +50,8 @@ func main() {
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, handlers.NationalDay)
 	b.Handle(`\b69\b`, handlers.Nice)
+	b.Handle(`^mlb odds (...)?$`, handlers.MLBOdds)
+	b.Handle(`^mlb teams$`, handlers.MLBTeams)
 	b.Handle(`^!pom`, handlers.POM)
 	b.Handle(`^("[^"]+)$`, handlers.Quote)
 	b.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
