@@ -2,7 +2,6 @@ package main
 
 import (
 	"goirc/bot"
-	"goirc/commit"
 	"goirc/handlers"
 	"goirc/model"
 	"goirc/util"
@@ -12,8 +11,6 @@ import (
 )
 
 func main() {
-	log.Printf("VERSION %s", commit.URL())
-
 	go web.Serve(model.DB)
 
 	var idleParam = bot.IdleParam{
