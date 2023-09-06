@@ -106,7 +106,14 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 		} else {
 			go func() {
 				time.Sleep(1 * time.Second)
-				bot.Conn.Privmsgf(channel, commit.URL())
+				url, err := commit.URL()
+				if err != nil {
+					bot.Conn.Privmsgf(channel, "error: %s", err)
+					return
+				}
+				if url != "" {
+					bot.Conn.Privmsgf(channel, url)
+				}
 			}()
 		}
 

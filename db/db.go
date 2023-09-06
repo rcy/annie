@@ -112,6 +112,16 @@ create table reminders(
 );`)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: revs table")
+			_, err := tx.Exec(`
+create table revs(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  sha text not null
+);`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
