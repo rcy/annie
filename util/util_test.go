@@ -44,12 +44,12 @@ func TestAgo(t *testing.T) {
 		{
 			t0:   "2010-01-01 00:00:00",
 			t1:   "2010-02-01 00:00:00",
-			want: "4 weeks",
+			want: "1 month",
 		},
 		{
 			t0:   "2010-01-01 00:00:00",
 			t1:   "2010-03-01 00:00:00",
-			want: "8 weeks", // 2 months would be better here
+			want: "2 months",
 		},
 		{
 			t0:   "2010-01-01 00:00:00",

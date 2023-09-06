@@ -1,13 +1,12 @@
 package util
 
 import (
+	"goirc/durfmt"
 	"log"
 	"net/url"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/hako/durafmt"
 )
 
 func ParseTime(str string) (time.Time, error) {
@@ -27,7 +26,7 @@ func Since(tstr string) string {
 }
 
 func Ago(d time.Duration) string {
-	return durafmt.Parse(d).LimitFirstN(1).String()
+	return durfmt.Format(d)
 }
 
 // from a uri like https://www.google.com/abc?def=123 return google.com
