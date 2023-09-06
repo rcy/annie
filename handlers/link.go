@@ -3,7 +3,6 @@ package handlers
 import (
 	"goirc/bot"
 	"goirc/model/notes"
-	"goirc/twitter"
 	"log"
 )
 
@@ -24,11 +23,6 @@ func Link(params bot.HandlerParams) error {
 	}
 
 	log.Printf("recorded url %s", url)
-
-	err = twitter.Post(url)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
