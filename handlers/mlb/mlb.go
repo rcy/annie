@@ -3,6 +3,7 @@ package mlb
 import (
 	"fmt"
 	"goirc/bot"
+	"goirc/shell"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,7 +15,7 @@ func SingleTeamOdds(params bot.HandlerParams) error {
 
 	date := time.Now().Format(time.DateOnly)
 
-	r, err := shell(fmt.Sprintf(`
+	r, err := shell.Command(fmt.Sprintf(`
 curl -s 'https://www.fangraphs.com/api/playoff-odds/odds?dateEnd=%s&dateDelta=&projectionMode=2&standingsType=div' |\
 jq .[] |\
 jq 'select(.abbName == "%s")'.endData.poffTitle
@@ -36,7 +37,7 @@ jq 'select(.abbName == "%s")'.endData.poffTitle
 func Teams(params bot.HandlerParams) error {
 	date := time.Now().Format(time.DateOnly)
 
-	r, err := shell(fmt.Sprintf(`
+	r, err := shell.Command(fmt.Sprintf(`
 curl -s 'https://www.fangraphs.com/api/playoff-odds/odds?dateEnd=%s&dateDelta=&projectionMode=2&standingsType=div' | jq -r .[].abbName
 `, date))
 	if err != nil {
