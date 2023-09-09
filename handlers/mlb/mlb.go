@@ -1,4 +1,4 @@
-package handlers
+package mlb
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func MLBOdds(params bot.HandlerParams) error {
+func SingleTeamOdds(params bot.HandlerParams) error {
 	team := strings.ToUpper(params.Matches[1])
 
 	date := time.Now().Format(time.DateOnly)
@@ -33,7 +33,7 @@ jq 'select(.abbName == "%s")'.endData.poffTitle
 	return nil
 }
 
-func MLBTeams(params bot.HandlerParams) error {
+func Teams(params bot.HandlerParams) error {
 	date := time.Now().Format(time.DateOnly)
 
 	r, err := shell(fmt.Sprintf(`

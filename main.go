@@ -3,6 +3,7 @@ package main
 import (
 	"goirc/bot"
 	"goirc/handlers"
+	"goirc/handlers/mlb"
 	"goirc/model"
 	"goirc/util"
 	"goirc/web"
@@ -47,8 +48,8 @@ func main() {
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, handlers.NationalDay)
 	b.Handle(`\b69\b`, handlers.Nice)
-	b.Handle(`^mlb odds (...)?$`, handlers.MLBOdds)
-	b.Handle(`^mlb teams$`, handlers.MLBTeams)
+	b.Handle(`^mlb odds (...)?$`, mlb.SingleTeamOdds)
+	b.Handle(`^mlb teams$`, mlb.Teams)
 	b.Handle(`^!pom`, handlers.POM)
 	b.Handle(`^("[^"]+)$`, handlers.Quote)
 	b.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
