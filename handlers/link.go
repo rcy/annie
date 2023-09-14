@@ -8,7 +8,7 @@ import (
 func Link(params bot.HandlerParams) error {
 	url := params.Matches[1]
 
-	err := notes.Create(params.Target, params.Nick, "link", url)
+	_, err := notes.Create(notes.CreateParams{Target: params.Target, Nick: params.Nick, Kind: "link", Text: url})
 	if err != nil {
 		return err
 	}

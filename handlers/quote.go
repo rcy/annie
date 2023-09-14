@@ -8,7 +8,7 @@ import (
 func Quote(params bot.HandlerParams) error {
 	text := params.Matches[1]
 
-	err := notes.Create(params.Target, params.Nick, "quote", text)
+	_, err := notes.Create(notes.CreateParams{Target: params.Target, Nick: params.Nick, Kind: "quote", Text: text})
 	if err != nil {
 		return err
 	}
