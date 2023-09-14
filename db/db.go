@@ -122,6 +122,13 @@ create table revs(
 );`)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add target to notes")
+			_, err := tx.Exec(`
+alter table notes add column target string not null default "";
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
