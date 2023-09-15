@@ -57,7 +57,7 @@ func (b *Bot) Repeat(duration time.Duration, action HandlerFunction) {
 				Target:   b.Channel,
 			})
 			if err != nil {
-				slog.Warn("handleRepeat", "err", err)
+				slog.Warn("Repeat", "err", err)
 			}
 		}
 	}()
@@ -70,7 +70,7 @@ func (b *Bot) Idle(duration time.Duration, action HandlerFunction) {
 			Target:   b.Channel,
 		})
 		if err != nil {
-			slog.Warn("handleRepeat", "err", err)
+			slog.Warn("Idle", "err", err)
 		}
 	})
 
