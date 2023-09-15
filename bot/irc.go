@@ -48,10 +48,10 @@ func (b *Bot) Handle(pattern string, action HandlerFunction) {
 	b.Handlers = append(b.Handlers, h)
 }
 
-func (b *Bot) Repeat(duration time.Duration, action HandlerFunction) {
+func (b *Bot) Repeat(timeout time.Duration, action HandlerFunction) {
 	go func() {
 		for {
-			time.Sleep(duration)
+			time.Sleep(timeout)
 			err := action(HandlerParams{
 				Privmsgf: b.MakePrivmsgf(),
 				Target:   b.Channel,
@@ -63,14 +63,28 @@ func (b *Bot) Repeat(duration time.Duration, action HandlerFunction) {
 	}()
 }
 
-func (b *Bot) Idle(duration time.Duration, action HandlerFunction) {
-	reset := idle.Register(duration, func() {
+func (b *Bot) IdleRepeat(timeout time.Duration, action HandlerFunction) {
+	reset := idle.Repeat(timeout, func() {
 		err := action(HandlerParams{
 			Privmsgf: b.MakePrivmsgf(),
 			Target:   b.Channel,
 		})
 		if err != nil {
-			slog.Warn("Idle", "err", err)
+			slog.Warn("IdleRepeat", "err", err)
+		}
+	})
+
+	b.idleResetFunctions = append(b.idleResetFunctions, reset)
+}
+
+func (b *Bot) IdleRepeatAfterReset(timeout time.Duration, action HandlerFunction) {
+	reset := idle.RepeatAfterReset(timeout, func() {
+		err := action(HandlerParams{
+			Privmsgf: b.MakePrivmsgf(),
+			Target:   b.Channel,
+		})
+		if err != nil {
+			slog.Warn("IdleRepeatAfterReset", "err", err)
 		}
 	})
 
