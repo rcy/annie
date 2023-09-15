@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"goirc/bot/idle"
-	"goirc/bot/repeat"
 	"goirc/commit"
 	"goirc/model"
 	"goirc/model/laters"
@@ -26,11 +25,6 @@ type IdleParam struct {
 	Handler  HandlerFunction
 }
 
-type RepeatParam struct {
-	Duration time.Duration
-	Handler  HandlerFunction
-}
-
 type Handler struct {
 	pattern string
 	regexp  regexp.Regexp
@@ -44,6 +38,7 @@ func (h Handler) String() string {
 
 type Bot struct {
 	Conn     *irc.Connection
+	Channel  string
 	Handlers []Handler
 }
 
@@ -57,12 +52,28 @@ func (b *Bot) Handle(pattern string, action HandlerFunction) {
 	b.Handlers = append(b.Handlers, h)
 }
 
+func (b *Bot) Repeat(duration time.Duration, action HandlerFunction) {
+	go func() {
+		for {
+			time.Sleep(duration)
+			err := action(HandlerParams{
+				Privmsgf: b.MakePrivmsgf(),
+				Target:   b.Channel,
+			})
+			if err != nil {
+				slog.Warn("handleRepeat", "err", err)
+			}
+		}
+	}()
+}
+
 func (b *Bot) Loop() {
 	b.Conn.Loop()
 }
 
-func Connect(nick string, channel string, server string, idleParam IdleParam, repeatParam RepeatParam) (*Bot, error) {
+func Connect(nick string, channel string, server string, idleParam IdleParam) (*Bot, error) {
 	var bot Bot
+	bot.Channel = channel
 	bot.Conn = irc.IRC(nick, "github.com/rcy/annie")
 	bot.Conn.VerboseCallbackHandler = false
 	bot.Conn.Debug = false
@@ -92,7 +103,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	})
 	bot.Conn.AddCallback("366", func(e *irc.Event) {})
 	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
-		idle.Reset()
+		idle.Reset(e.Nick)
 		go bot.RunHandlers(e)
 	})
 	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
@@ -148,17 +159,6 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 		if err != nil {
 			slog.Warn("idle.Every", "err", err)
 		}
-	})
-
-	go repeat.Every(repeatParam.Duration, func() {
-		repeatParam.Handler(HandlerParams{
-			Privmsgf: bot.MakePrivmsgf(),
-			Target:   channel,
-		})
-		if err != nil {
-			slog.Warn("repeat.Every", "err", err)
-		}
-
 	})
 
 	return &bot, err

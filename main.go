@@ -19,21 +19,17 @@ func main() {
 		Handler:  handlers.FeedMe,
 	}
 
-	var repeatParam = bot.RepeatParam{
-		Duration: 10 * time.Second,
-		Handler:  handlers.DoRemind,
-	}
-
 	b, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
 		util.Getenv("IRC_SERVER"),
-		idleParam,
-		repeatParam)
+		idleParam)
 
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	b.Repeat(10*time.Second, handlers.DoRemind)
 
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
 		for _, h := range b.Handlers {

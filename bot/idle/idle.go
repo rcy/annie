@@ -4,19 +4,22 @@ import (
 	"time"
 )
 
-var lastMessage time.Time
+var lastMessage struct {
+	sentAt time.Time
+	sentBy string
+}
 
-func Reset() {
-	lastMessage = time.Now()
+func Reset(nick string) {
+	lastMessage.sentAt = time.Now()
+	lastMessage.sentBy = nick
 }
 
 func Every(duration time.Duration, fn func()) {
-	Reset()
+	Reset("nobody")
 	for {
 		time.Sleep(1 * time.Minute)
 
-		if time.Since(lastMessage) >= duration {
-			Reset()
+		if time.Since(lastMessage.sentAt) >= duration {
 			fn()
 		}
 	}
