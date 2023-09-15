@@ -88,6 +88,7 @@ func (b *Bot) Loop() {
 }
 
 func Connect(nick string, channel string, server string) (*Bot, error) {
+	initialized := make(chan bool)
 	var bot Bot
 	bot.Channel = channel
 	bot.Conn = irc.IRC(nick, "github.com/rcy/annie")
@@ -141,6 +142,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 				if url != "" {
 					bot.Conn.Privmsgf(channel, url)
 				}
+				initialized <- true
 			}()
 		}
 
@@ -166,6 +168,8 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 		}
 	})
 	err := bot.Conn.Connect(server)
+
+	<-initialized
 
 	return &bot, err
 }
