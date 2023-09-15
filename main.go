@@ -14,22 +14,16 @@ import (
 func main() {
 	go web.Serve(model.DB)
 
-	var idleParam = bot.IdleParam{
-		Duration: 24 * time.Hour,
-		Handler:  handlers.FeedMe,
-	}
-
 	b, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
-		util.Getenv("IRC_SERVER"),
-		idleParam)
-
+		util.Getenv("IRC_SERVER"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
+	b.Idle(24*time.Hour, handlers.FeedMe)
 
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
 		for _, h := range b.Handlers {

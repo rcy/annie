@@ -20,11 +20,6 @@ import (
 	irc "github.com/thoj/go-ircevent"
 )
 
-type IdleParam struct {
-	Duration time.Duration
-	Handler  HandlerFunction
-}
-
 type Handler struct {
 	pattern string
 	regexp  regexp.Regexp
@@ -37,9 +32,10 @@ func (h Handler) String() string {
 }
 
 type Bot struct {
-	Conn     *irc.Connection
-	Channel  string
-	Handlers []Handler
+	Conn               *irc.Connection
+	Channel            string
+	Handlers           []Handler
+	idleResetFunctions []func()
 }
 
 func (b *Bot) Handle(pattern string, action HandlerFunction) {
@@ -67,11 +63,31 @@ func (b *Bot) Repeat(duration time.Duration, action HandlerFunction) {
 	}()
 }
 
+func (b *Bot) Idle(duration time.Duration, action HandlerFunction) {
+	reset := idle.Register(duration, func() {
+		err := action(HandlerParams{
+			Privmsgf: b.MakePrivmsgf(),
+			Target:   b.Channel,
+		})
+		if err != nil {
+			slog.Warn("handleRepeat", "err", err)
+		}
+	})
+
+	b.idleResetFunctions = append(b.idleResetFunctions, reset)
+}
+
+func (b *Bot) resetIdle() {
+	for _, fn := range b.idleResetFunctions {
+		fn()
+	}
+}
+
 func (b *Bot) Loop() {
 	b.Conn.Loop()
 }
 
-func Connect(nick string, channel string, server string, idleParam IdleParam) (*Bot, error) {
+func Connect(nick string, channel string, server string) (*Bot, error) {
 	var bot Bot
 	bot.Channel = channel
 	bot.Conn = irc.IRC(nick, "github.com/rcy/annie")
@@ -103,7 +119,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	})
 	bot.Conn.AddCallback("366", func(e *irc.Event) {})
 	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
-		idle.Reset(e.Nick)
+		bot.resetIdle()
 		go bot.RunHandlers(e)
 	})
 	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
@@ -150,16 +166,6 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 		}
 	})
 	err := bot.Conn.Connect(server)
-
-	go idle.Every(idleParam.Duration, func() {
-		err := idleParam.Handler(HandlerParams{
-			Privmsgf: bot.MakePrivmsgf(),
-			Target:   channel,
-		})
-		if err != nil {
-			slog.Warn("idle.Every", "err", err)
-		}
-	})
 
 	return &bot, err
 }

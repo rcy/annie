@@ -4,23 +4,30 @@ import (
 	"time"
 )
 
-var lastMessage struct {
-	sentAt time.Time
-	sentBy string
-}
+// Run handler repeatedly after timeout given by duration.
+// Returns a function which when called resets the timeout.
+func Register(duration time.Duration, handler func()) func() {
+	ch := make(chan bool)
 
-func Reset(nick string) {
-	lastMessage.sentAt = time.Now()
-	lastMessage.sentBy = nick
-}
-
-func Every(duration time.Duration, fn func()) {
-	Reset("nobody")
-	for {
-		time.Sleep(1 * time.Minute)
-
-		if time.Since(lastMessage.sentAt) >= duration {
-			fn()
-		}
+	reset := func() {
+		ch <- true
 	}
+
+	go func() {
+		alarm := time.Now().Add(duration)
+		for {
+			select {
+			case <-ch:
+				alarm = time.Now().Add(duration)
+			default:
+				time.Sleep(time.Second)
+				if time.Now().After(alarm) {
+					handler()
+					alarm = time.Now().Add(duration)
+				}
+			}
+		}
+	}()
+
+	return reset
 }
