@@ -23,7 +23,8 @@ func main() {
 	}
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
-	b.Idle(24*time.Hour, handlers.FeedMe)
+
+	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
 
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
 		for _, h := range b.Handlers {
