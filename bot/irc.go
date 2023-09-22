@@ -26,6 +26,14 @@ type Handler struct {
 	action  HandlerFunction
 }
 
+func NewHandler(pattern string, regexp regexp.Regexp, action HandlerFunction) *Handler {
+	return &Handler{pattern, regexp, action}
+}
+
+func (h Handler) Regexp() *regexp.Regexp {
+	return &h.regexp
+}
+
 func (h Handler) String() string {
 	strs := strings.Split(runtime.FuncForPC(reflect.ValueOf(h.action).Pointer()).Name(), ".")
 	return fmt.Sprintf("%-32s %s", h.pattern, strs[len(strs)-1])

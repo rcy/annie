@@ -22,6 +22,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	addHandlers(b)
+
+	b.Loop()
+}
+
+func addHandlers(b *bot.Bot) {
 	b.Repeat(10*time.Second, handlers.DoRemind)
 
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
@@ -38,13 +44,11 @@ func main() {
 	b.Handle(`^!feedme`, handlers.FeedMe)
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, handlers.NationalDay)
-	b.Handle(`\b69\b`, handlers.Nice)
+	b.Handle(`\b69[^0-9]*\b`, handlers.Nice)
 	b.Handle(`^!odds`, mlb.PlayoffOdds)
 	b.Handle(`^!pom`, handlers.POM)
 	b.Handle(`^("[^"]+)$`, handlers.Quote)
 	b.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
 	b.Handle(`^\?(\S+)`, handlers.Seen)
 	b.Handle(`world.?cup`, handlers.Worldcup)
-
-	b.Loop()
 }
