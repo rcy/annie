@@ -142,7 +142,9 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	})
 	bot.Conn.AddCallback("366", func(e *irc.Event) {})
 	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
-		bot.resetIdle()
+		if e.Arguments[0] == channel {
+			bot.resetIdle()
+		}
 		go bot.RunHandlers(e)
 	})
 	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
