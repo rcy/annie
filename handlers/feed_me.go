@@ -6,12 +6,16 @@ import (
 	"goirc/model"
 	"goirc/model/notes"
 	"goirc/util"
+	"time"
 )
 
 func FeedMe(params bot.HandlerParams) error {
 	notes := []notes.Note{}
 
-	err := model.DB.Select(&notes, `select id, created_at, nick, text, kind from notes where nick = target order by random() limit 5`)
+	query := `select id, created_at, nick, text, kind from notes where created_at <= ? and nick = target order by random() limit 5`
+
+	t := time.Now().Add(-time.Hour * 24).UTC().Format("2006-01-02T15:04:05Z")
+	err := model.DB.Select(&notes, query, t)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil

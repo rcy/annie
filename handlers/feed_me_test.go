@@ -1,50 +1,108 @@
 package handlers
 
 import (
-	"fmt"
 	"goirc/bot"
 	"goirc/model"
 	"goirc/model/notes"
 	"testing"
+	"time"
 )
 
 func TestFeedMe(t *testing.T) {
-	for i, tc := range []struct {
-		messages []string
+	type message struct {
+		text      string
+		createdAt time.Time
+	}
+
+	for _, tc := range []struct {
+		name     string
+		messages []message
 		want     int
 	}{
 		{
-			messages: []string{"abc", "def", "ghi", "jkl", "mno"},
-			want:     4,
+			name: "6 old messages",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+			},
+			want: 5,
 		},
 		{
-			messages: []string{"abc", "def", "ghi", "jkl"},
-			want:     4,
+			name: "5 old messages",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+			},
+			want: 4,
 		},
 		{
-			messages: []string{"abc", "def"},
-			want:     2,
+			name: "4 old messages and 1 new message",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now()},
+			},
+			want: 5,
 		},
 		{
-			messages: []string{"abc"},
-			want:     1,
+			name: "3 old messages and 2 new message",
+			messages: []message{
+				{"", time.Now()},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now()},
+			},
+			want: 5,
 		},
 		{
-			messages: []string{},
+			name: "2 old messages",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+			},
+			want: 2,
+		},
+		{
+			name: "1 old messages",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+			},
+			want: 1,
+		},
+		{
+			name:     "no messages",
+			messages: []message{},
 			want:     0,
 		},
 	} {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			_, err := model.DB.Exec(`delete from notes`)
 			if err != nil {
 				t.Fatalf("error deleting notes %s", err)
 			}
 
 			for _, x := range tc.messages {
-				_, err := notes.Create(notes.CreateParams{Target: "nick", Nick: "nick", Kind: "link", Text: x})
+				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, ?)`
+				createdAt := x.createdAt.UTC().Format("2006-01-02T15:04:05Z")
+				_, err := model.DB.Exec(query, "nick", "nick", "link", x.text, createdAt)
 				if err != nil {
 					t.Fatalf("error creating note %s", err)
 				}
+			}
+			var notes []notes.Note
+			err = model.DB.Select(&notes, "select * from notes")
+			if err != nil {
+				panic(err)
 			}
 			err = FeedMe(bot.HandlerParams{
 				Privmsgf: dummyPrivmsgf,
