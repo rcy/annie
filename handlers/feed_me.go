@@ -20,6 +20,7 @@ func FeedMe(params bot.HandlerParams) error {
 	}
 
 	if len(notes) < 5 {
+		params.Privmsgf(params.Target, "not enough links to feed the channel")
 		return nil
 	}
 
