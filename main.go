@@ -32,6 +32,8 @@ func addHandlers(b *bot.Bot) {
 
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
 
+	b.Repeat(23*time.Hour, handlers.FeedMe)
+
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
 		for _, h := range b.Handlers {
 			params.Privmsgf(params.Target, "%s", h.String())
