@@ -268,7 +268,7 @@ func (bot *Bot) SendMissed(channel string, nick string) {
 	}
 
 	notes := []notes.Note{}
-	model.DB.Select(&notes, "select * from notes where created_at > ? order and nick <> target by created_at asc limit 69", channelNick.UpdatedAt)
+	model.DB.Select(&notes, "select * from notes where created_at > ? and nick <> target order by created_at asc limit 69", channelNick.UpdatedAt)
 
 	if len(notes) > 0 {
 		bot.Conn.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
