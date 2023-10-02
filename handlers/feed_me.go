@@ -9,21 +9,34 @@ import (
 	"time"
 )
 
-func FeedMe(params bot.HandlerParams) error {
+func candidateLinks(age time.Duration) ([]notes.Note, error) {
 	notes := []notes.Note{}
 
-	query := `select id, created_at, nick, text, kind from notes where created_at <= ? and nick = target order by random() limit 5`
+	query := `select id, created_at, nick, text, kind from notes where created_at <= ? and nick = target order by random() limit 69`
 
-	t := time.Now().Add(-time.Hour * 24).UTC().Format("2006-01-02T15:04:05Z")
+	t := time.Now().Add(-age).UTC().Format("2006-01-02T15:04:05Z")
 	err := model.DB.Select(&notes, query, t)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return nil, nil
 		}
+		return nil, err
+	}
+	return notes, nil
+}
+
+const (
+	MINAGE    = time.Hour * 24
+	THRESHOLD = 5
+)
+
+func FeedMe(params bot.HandlerParams) error {
+	notes, err := candidateLinks(MINAGE)
+	if err != nil {
 		return err
 	}
 
-	if len(notes) < 5 {
+	if len(notes) < THRESHOLD {
 		params.Privmsgf(params.Target, "not enough links to feed the channel")
 		return nil
 	}
@@ -36,6 +49,24 @@ func FeedMe(params bot.HandlerParams) error {
 	}
 
 	params.Privmsgf(params.Target, "%s (from ??? %s ago)", note.Text, util.Since(note.CreatedAt))
+
+	return nil
+}
+
+func PipeHealth(params bot.HandlerParams) error {
+	readyNotes, err := candidateLinks(MINAGE)
+	if err != nil {
+		return err
+	}
+	totalNotes, err := candidateLinks(0)
+	if err != nil {
+		return err
+	}
+
+	ready := len(readyNotes)
+	fermenting := len(totalNotes) - ready
+
+	params.Privmsgf(params.Target, "%d links ready to serve (%d fermenting)", ready, fermenting)
 
 	return nil
 }

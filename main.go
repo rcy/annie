@@ -44,6 +44,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^,(.+)$`, handlers.CreateNote)
 	b.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
 	b.Handle(`^!feedme`, handlers.FeedMe)
+	b.Handle(`^!pipehealth`, handlers.PipeHealth)
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, handlers.NationalDay)
 	b.Handle(`\b69[^0-9]*\b`, handlers.Nice)
