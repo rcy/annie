@@ -27,10 +27,9 @@ type TeamList []Team
 
 func (tl TeamList) String() string {
 	arr := []string{}
-	for i, team := range tl {
-		arr = append(arr, fmt.Sprintf("%s:%.0f%%", team.AbbName, 100*team.EndData.WsWin))
-		if i == 5 { // top 6 teams make the playoffs in each league
-			arr = append(arr, "|")
+	for _, team := range tl {
+		if team.EndData.WsWin != 0.0 {
+			arr = append(arr, fmt.Sprintf("%s:%.0f%%", team.AbbName, 100*team.EndData.WsWin))
 		}
 	}
 	return strings.Join(arr, " ")
