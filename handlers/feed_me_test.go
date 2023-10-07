@@ -227,7 +227,7 @@ func TestPipeHealth(t *testing.T) {
 						t.Errorf("ready want %d got %d", tc.wantReady, ready)
 					}
 					if fermenting != tc.wantFermenting {
-						t.Errorf("ready want %d got %d", tc.wantReady, ready)
+						t.Errorf("fermenting want %d got %d", tc.wantFermenting, fermenting)
 					}
 				},
 				Msg:     "",
