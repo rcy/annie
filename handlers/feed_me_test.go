@@ -126,6 +126,121 @@ func TestFeedMe(t *testing.T) {
 	}
 }
 
+func TestPipeHealth(t *testing.T) {
+	type message struct {
+		text      string
+		createdAt time.Time
+	}
+
+	for _, tc := range []struct {
+		name           string
+		messages       []message
+		wantReady      int
+		wantFermenting int
+	}{
+		{
+			name: "6 old messages",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+			},
+			wantReady: 6,
+		},
+		{
+			name: "5 old messages",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+			},
+			wantReady: 5,
+		},
+		{
+			name: "3 old messages and 2 new message",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 48)},
+				{"", time.Now().Add(-time.Hour * 1)},
+				{"", time.Now()},
+			},
+			wantReady:      3,
+			wantFermenting: 2,
+		},
+		{
+			name: "3 old messages and 2 new message",
+			messages: []message{
+				{"", time.Now()},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now()},
+			},
+			wantReady:      3,
+			wantFermenting: 2,
+		},
+		{
+			name: "2 old messages",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+				{"", time.Now().Add(-time.Hour * 24)},
+			},
+			wantReady: 2,
+		},
+		{
+			name: "1 old messages",
+			messages: []message{
+				{"", time.Now().Add(-time.Hour * 24)},
+			},
+			wantReady: 1,
+		},
+		{
+			name:     "no messages",
+			messages: []message{},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := model.DB.Exec(`delete from notes`)
+			if err != nil {
+				t.Fatalf("error deleting notes %s", err)
+			}
+
+			for _, x := range tc.messages {
+				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, ?)`
+				createdAt := x.createdAt.UTC().Format("2006-01-02T15:04:05Z")
+				_, err := model.DB.Exec(query, "nick", "nick", "link", x.text, createdAt)
+				if err != nil {
+					t.Fatalf("error creating note %s", err)
+				}
+			}
+			err = PipeHealth(bot.HandlerParams{
+				Privmsgf: func(x string, y string, z ...interface{}) {
+					ready := z[0]
+					fermenting := z[1]
+					if ready != tc.wantReady {
+						t.Errorf("ready want %d got %d", tc.wantReady, ready)
+					}
+					if fermenting != tc.wantFermenting {
+						t.Errorf("ready want %d got %d", tc.wantReady, ready)
+					}
+				},
+				Msg:     "",
+				Target:  "",
+				Matches: []string{},
+			})
+			if err != nil {
+				t.Fatalf("error running PipeHealth %s", err)
+			}
+		})
+	}
+}
+
 func dummyPrivmsgf(x string, y string, z ...interface{}) {
 	return
 }
