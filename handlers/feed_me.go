@@ -48,25 +48,40 @@ func FeedMe(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s (from ??? %s ago)", note.Text, util.Since(note.CreatedAt))
+	ready, fermenting, err := health()
+	if err != nil {
+		return err
+	}
+
+	params.Privmsgf(params.Target, "%s (%s ago) [pipe=%d+%d]", note.Text, util.Since(note.CreatedAt), ready, fermenting)
 
 	return nil
 }
 
 func PipeHealth(params bot.HandlerParams) error {
-	readyNotes, err := candidateLinks(MINAGE)
+	ready, fermenting, err := health()
 	if err != nil {
 		return err
 	}
+
+	params.Privmsgf(params.Target, "%d links ready to serve (%d fermenting)", ready, fermenting)
+
+	return nil
+}
+
+// Return ready, fermenting, error
+func health() (int, int, error) {
+	readyNotes, err := candidateLinks(MINAGE)
+	if err != nil {
+		return 0, 0, err
+	}
 	totalNotes, err := candidateLinks(0)
 	if err != nil {
-		return err
+		return 0, 0, err
 	}
 
 	ready := len(readyNotes)
 	fermenting := len(totalNotes) - ready
 
-	params.Privmsgf(params.Target, "%d links ready to serve (%d fermenting)", ready, fermenting)
-
-	return nil
+	return ready, fermenting, nil
 }
