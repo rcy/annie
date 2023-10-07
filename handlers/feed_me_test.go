@@ -92,7 +92,7 @@ func TestFeedMe(t *testing.T) {
 			}
 
 			for _, x := range tc.messages {
-				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, ?)`
+				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, datetime(?))`
 				createdAt := x.createdAt.UTC().Format("2006-01-02T15:04:05Z")
 				_, err := model.DB.Exec(query, "nick", "nick", "link", x.text, createdAt)
 				if err != nil {
@@ -212,7 +212,7 @@ func TestPipeHealth(t *testing.T) {
 			}
 
 			for _, x := range tc.messages {
-				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, ?)`
+				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, datetime(?))`
 				createdAt := x.createdAt.UTC().Format("2006-01-02T15:04:05Z")
 				_, err := model.DB.Exec(query, "nick", "nick", "link", x.text, createdAt)
 				if err != nil {
@@ -238,6 +238,41 @@ func TestPipeHealth(t *testing.T) {
 				t.Fatalf("error running PipeHealth %s", err)
 			}
 		})
+	}
+}
+
+func TestCandidateLinks(t *testing.T) {
+	_, err := model.DB.Exec(`delete from notes`)
+	if err != nil {
+		t.Fatalf("error deleting notes %s", err)
+	}
+
+	err = Link(bot.HandlerParams{
+		Privmsgf: dummyPrivmsgf,
+		Matches:  []string{"", "http://www.example.com"},
+		Target:   "theguy",
+		Nick:     "theguy",
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var notes []notes.Note
+	notes, err = candidateLinks(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(notes) != 1 {
+		t.Fatalf("candidateLinks 0: want 1 got %d", len(notes))
+	}
+
+	notes, err = candidateLinks(time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(notes) != 0 {
+		t.Fatalf("candidate links 1 hour: want 0 got %d", len(notes))
 	}
 }
 
