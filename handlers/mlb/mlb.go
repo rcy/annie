@@ -80,13 +80,15 @@ func PlayoffOdds(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
-	params.Privmsgf(params.Target, "AL %s", teams.String())
+	al := fmt.Sprintf("AL %s", teams.String())
 
 	teams, err = fetchLeagueTeams("NL")
 	if err != nil {
 		return err
 	}
-	params.Privmsgf(params.Target, "NL %s", teams.String())
+	nl := fmt.Sprintf("NL %s", teams.String())
+
+	params.Privmsgf(params.Target, "%s - %s - %s", al, nl, "https://www.mlb.com/postseason")
 
 	return nil
 }
