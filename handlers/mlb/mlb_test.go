@@ -1,6 +1,7 @@
 package mlb
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -24,4 +25,12 @@ func TestFetchLeagueTeams(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLastUpdatedAt(t *testing.T) {
+	got, err := lastUpdatedAt()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("got %v", got)
 }

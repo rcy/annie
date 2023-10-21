@@ -1,6 +1,7 @@
 package mlb
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"goirc/bot"
@@ -8,6 +9,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type TeamEndData struct {
@@ -89,7 +92,51 @@ func PlayoffOdds(params bot.HandlerParams) error {
 	}
 	nl := fmt.Sprintf("NL %s", teams.String())
 
-	params.Privmsgf(params.Target, "%s - %s - %s", al, nl, "https://www.mlb.com/postseason")
+	at, err := lastUpdatedAt()
+	if err != nil {
+		return err
+	}
+	lastUpdatedStr := fmt.Sprintf("%.0fm ago", time.Now().Sub(*at).Minutes())
+	params.Privmsgf(params.Target, "%s - %s - %s - %s", al, nl, lastUpdatedStr, "https://www.mlb.com/postseason")
 
 	return nil
+}
+
+func lastUpdatedAt() (*time.Time, error) {
+	code, data, err := fetch.Get("https://www.fangraphs.com/standings/playoff-odds", time.Minute)
+	if err != nil {
+		return nil, err
+	}
+	if code > 299 {
+		return nil, fmt.Errorf("Bad status: %d", code)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
+	text := doc.Find(".footer-bar-item").Find(".mobile-hide").Text()
+	// Updated: Friday, October 20, 2023 11:12 PM ET
+
+	timeStr, ok := strings.CutPrefix(text, "Updated: ")
+	if !ok {
+		return nil, fmt.Errorf("couldn't cut prefix from %s", timeStr)
+	}
+	timeStr, ok = strings.CutSuffix(timeStr, " ET")
+	if !ok {
+		return nil, fmt.Errorf("couldn't cut prefix from %s", timeStr)
+	}
+
+	location, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := time.ParseInLocation("Monday, January 2, 2006 15:04 PM", timeStr, location)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

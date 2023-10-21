@@ -15,6 +15,8 @@ require (
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.1 // indirect
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/dlclark/regexp2 v1.9.0 // indirect
 	github.com/dop251/goja v0.0.0-20230402114112-623f9dda9079 // indirect
