@@ -11,8 +11,9 @@ import (
 )
 
 type TeamEndData struct {
-	//PoffTitle float64
-	WsWin float64
+	PoffTitle float64
+	WsWin     float64
+	CsWin     float64
 }
 
 type Team struct {
@@ -28,8 +29,8 @@ type TeamList []Team
 func (tl TeamList) String() string {
 	arr := []string{}
 	for _, team := range tl {
-		if team.EndData.WsWin != 0.0 {
-			arr = append(arr, fmt.Sprintf("%s:%.0f%%", team.AbbName, 100*team.EndData.WsWin))
+		if team.EndData.CsWin != 0.0 {
+			arr = append(arr, fmt.Sprintf("%s:%.0f%%", team.AbbName, 100*team.EndData.CsWin))
 		}
 	}
 	return strings.Join(arr, " ")
@@ -52,7 +53,7 @@ func fetchTeams() (TeamList, error) {
 	}
 
 	sort.Slice(teams, func(i, j int) bool {
-		return teams[i].EndData.WsWin > teams[j].EndData.WsWin
+		return teams[i].EndData.CsWin > teams[j].EndData.CsWin
 	})
 
 	return teams, nil
