@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"goirc/bot"
 	"goirc/fetch"
+	"goirc/util"
 	"sort"
 	"strings"
 	"time"
@@ -96,7 +97,7 @@ func PlayoffOdds(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
-	lastUpdatedStr := fmt.Sprintf("%.0fm ago", time.Now().Sub(*at).Minutes())
+	lastUpdatedStr := fmt.Sprintf("%s ago", util.Ago(time.Now().Sub(*at)))
 	params.Privmsgf(params.Target, "%s - %s - %s - %s", al, nl, lastUpdatedStr, "https://www.mlb.com/postseason")
 
 	return nil
