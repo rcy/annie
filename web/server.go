@@ -153,9 +153,9 @@ func getNotes(db *sqlx.DB, nick string) ([]notes.Note, error) {
 	result := []notes.Note{}
 	var err error
 	if nick == "" {
-		err = db.Select(&result, `select created_at, text, nick, kind from notes order by created_at desc limit 1000`)
+		err = db.Select(&result, `select created_at, text, nick, kind from notes where target != nick order by created_at desc limit 10000`)
 	} else {
-		err = db.Select(&result, `select created_at, text, nick, kind from notes where nick = ? order by created_at desc limit 1000`, nick)
+		err = db.Select(&result, `select created_at, text, nick, kind from notes where target != nick and nick = ? order by created_at desc limit 10000`, nick)
 	}
 	return result, err
 }
