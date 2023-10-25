@@ -33,8 +33,8 @@ type TeamList []Team
 func (tl TeamList) String() string {
 	arr := []string{}
 	for _, team := range tl {
-		if team.EndData.CsWin != 0.0 {
-			arr = append(arr, fmt.Sprintf("%s:%.0f%%", team.AbbName, 100*team.EndData.CsWin))
+		if team.EndData.WsWin != 0.0 {
+			arr = append(arr, fmt.Sprintf("%s:%.0f%%", team.AbbName, 100*team.EndData.WsWin))
 		}
 	}
 	return strings.Join(arr, " ")
@@ -57,7 +57,7 @@ func fetchTeams() (TeamList, error) {
 	}
 
 	sort.Slice(teams, func(i, j int) bool {
-		return teams[i].EndData.CsWin > teams[j].EndData.CsWin
+		return teams[i].EndData.WsWin > teams[j].EndData.WsWin
 	})
 
 	return teams, nil
