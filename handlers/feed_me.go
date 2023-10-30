@@ -12,7 +12,7 @@ import (
 func candidateLinks(age time.Duration) ([]notes.Note, error) {
 	notes := []notes.Note{}
 
-	query := `select id, created_at, nick, text, kind from notes where created_at <= datetime(?) and nick = target order by random() limit 69`
+	query := `select id, created_at, nick, text, kind from notes where created_at <= datetime(?) and nick = target order by random() limit 420`
 
 	t := time.Now().UTC().Add(-age).Format(time.RFC3339)
 	err := model.DB.Select(&notes, query, t)
