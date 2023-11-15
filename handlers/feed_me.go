@@ -28,9 +28,16 @@ func candidateLinks(age time.Duration) ([]notes.Note, error) {
 const (
 	MINAGE    = time.Hour * 24
 	THRESHOLD = 5
+	THROTTLE  = time.Hour * 5
 )
 
+var lastSentAt = time.Now()
+
 func FeedMe(params bot.HandlerParams) error {
+	if time.Now().Sub(lastSentAt) < THROTTLE {
+		return nil
+	}
+
 	notes, err := candidateLinks(MINAGE)
 	if err != nil {
 		return err
@@ -54,6 +61,8 @@ func FeedMe(params bot.HandlerParams) error {
 	}
 
 	params.Privmsgf(params.Target, "%s (%s ago) [pipe=%d+%d]", note.Text, util.Since(note.CreatedAt), ready, fermenting)
+
+	lastSentAt = time.Now()
 
 	return nil
 }
