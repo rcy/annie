@@ -129,6 +129,36 @@ alter table notes add column target string not null default "";
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: drop transactions")
+			_, err := tx.Exec(`drop table transactions;`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: drop seen_by")
+			_, err := tx.Exec(`drop table seen_by;`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: fix notes.kind")
+			_, err := tx.Exec(`
+alter table notes add column kindx text not null default 'note';
+update notes set kindx = kind;
+alter table notes drop column kind;
+alter table notes rename column kindx to kind;
+`)
+			return err
+		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: fix notes.kind")
+			_, err := tx.Exec(`
+alter table notes add column targetx text not null default '';
+update notes set targetx = target;
+alter table notes drop column target;
+alter table notes rename column targetx to target;
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
