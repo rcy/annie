@@ -52,4 +52,5 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
 	b.Handle(`^\?(\S+)`, handlers.Seen)
 	b.Handle(`world.?cup`, handlers.Worldcup)
+	b.Handle(`^!left`, handlers.TimeLeft)
 }
