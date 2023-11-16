@@ -34,10 +34,16 @@ const (
 
 var lastSentAt = time.Unix(0, 0)
 
+func canSendIn(startTime time.Time) time.Duration {
+	return startTime.Add(COOLOFF).Sub(time.Now())
+}
+
 func FeedMe(params bot.HandlerParams) error {
-	if time.Now().Sub(lastSentAt) < COOLOFF {
+	waitFor := canSendIn(lastSentAt)
+
+	if waitFor > 0 {
 		if params.Nick != "" {
-			params.Privmsgf(params.Target, "throttled until %s", durfmt.Format(time.Now().Sub(lastSentAt.Add(COOLOFF))))
+			params.Privmsgf(params.Target, "throttled for another %s", durfmt.Format(waitFor))
 		}
 		return nil
 	}

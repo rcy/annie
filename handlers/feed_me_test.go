@@ -4,6 +4,7 @@ import (
 	"goirc/bot"
 	"goirc/model"
 	"goirc/model/notes"
+	"math"
 	"testing"
 	"time"
 )
@@ -277,5 +278,30 @@ func reset(t *testing.T) {
 	_, err := model.DB.Exec(`delete from notes`)
 	if err != nil {
 		t.Fatalf("error deleting notes %s", err)
+	}
+}
+
+func TestCanSendIn(t *testing.T) {
+	for _, tc := range []struct {
+		start time.Time
+		want  time.Duration
+	}{
+		{
+			start: time.Now(),
+			want:  5 * time.Hour,
+		},
+		{
+			start: time.Now().Add(-2 * time.Hour),
+			want:  3 * time.Hour,
+		},
+		{
+			start: time.Now().Add(-6 * time.Hour),
+			want:  -1 * time.Hour,
+		},
+	} {
+		got := canSendIn(tc.start)
+		if math.Abs(float64(tc.want-got)) > float64(time.Second) {
+			t.Errorf("got %s, want %s", got, tc.want)
+		}
 	}
 }
