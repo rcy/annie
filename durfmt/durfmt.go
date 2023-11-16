@@ -2,6 +2,7 @@ package durfmt
 
 import (
 	"fmt"
+	"math"
 	"time"
 )
 
@@ -30,9 +31,9 @@ func Format(dur time.Duration) string {
 	}
 	if dur >= time.Hour && dur < day {
 		if dur >= 2*time.Hour {
-			return fmt.Sprintf("%d hours", dur/time.Hour)
+			return fmt.Sprintf("%d hours", int(math.Round(dur.Hours())))
 		}
-		return fmt.Sprintf("%d hour", dur/time.Hour)
+		return fmt.Sprintf("%d hour", int(dur.Hours()))
 	}
 	if dur >= day && dur < week {
 		if dur >= 2*day {

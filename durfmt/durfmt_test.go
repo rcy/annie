@@ -39,8 +39,28 @@ func TestFormat(t *testing.T) {
 			want:  "1 hour",
 		},
 		{
+			input: 60*time.Minute - time.Millisecond,
+			want:  "59 minutes",
+		},
+		{
+			input: 59 * time.Minute,
+			want:  "59 minutes",
+		},
+		{
 			input: 120 * time.Minute,
 			want:  "2 hours",
+		},
+		{
+			input: 5*time.Hour - time.Millisecond,
+			want:  "5 hours",
+		},
+		{
+			input: 5*time.Hour - time.Second,
+			want:  "5 hours",
+		},
+		{
+			input: 5*time.Hour - time.Minute,
+			want:  "5 hours",
 		},
 		{
 			input: 12 * time.Hour,
