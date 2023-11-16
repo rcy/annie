@@ -86,10 +86,7 @@ func TestFeedMe(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := model.DB.Exec(`delete from notes`)
-			if err != nil {
-				t.Fatalf("error deleting notes %s", err)
-			}
+			reset(t)
 
 			for _, x := range tc.messages {
 				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, datetime(?))`
@@ -100,7 +97,7 @@ func TestFeedMe(t *testing.T) {
 				}
 			}
 			var notes []notes.Note
-			err = model.DB.Select(&notes, "select * from notes")
+			err := model.DB.Select(&notes, "select * from notes")
 			if err != nil {
 				panic(err)
 			}
@@ -206,10 +203,7 @@ func TestPipeHealth(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := model.DB.Exec(`delete from notes`)
-			if err != nil {
-				t.Fatalf("error deleting notes %s", err)
-			}
+			reset(t)
 
 			for _, x := range tc.messages {
 				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, datetime(?))`
@@ -219,7 +213,7 @@ func TestPipeHealth(t *testing.T) {
 					t.Fatalf("error creating note %s", err)
 				}
 			}
-			err = PipeHealth(bot.HandlerParams{
+			err := PipeHealth(bot.HandlerParams{
 				Privmsgf: func(x string, y string, z ...interface{}) {
 					ready := z[0]
 					fermenting := z[1]
@@ -242,12 +236,9 @@ func TestPipeHealth(t *testing.T) {
 }
 
 func TestCandidateLinks(t *testing.T) {
-	_, err := model.DB.Exec(`delete from notes`)
-	if err != nil {
-		t.Fatalf("error deleting notes %s", err)
-	}
+	reset(t)
 
-	err = Link(bot.HandlerParams{
+	err := Link(bot.HandlerParams{
 		Privmsgf: dummyPrivmsgf,
 		Matches:  []string{"", "http://www.example.com"},
 		Target:   "theguy",
@@ -278,4 +269,13 @@ func TestCandidateLinks(t *testing.T) {
 
 func dummyPrivmsgf(x string, y string, z ...interface{}) {
 	return
+}
+
+func reset(t *testing.T) {
+	lastSentAt = time.Unix(0, 0)
+
+	_, err := model.DB.Exec(`delete from notes`)
+	if err != nil {
+		t.Fatalf("error deleting notes %s", err)
+	}
 }

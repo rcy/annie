@@ -28,13 +28,16 @@ func candidateLinks(age time.Duration) ([]notes.Note, error) {
 const (
 	MINAGE    = time.Hour * 24
 	THRESHOLD = 5
-	THROTTLE  = time.Hour * 5
+	COOLOFF   = time.Hour * 5
 )
 
-var lastSentAt = time.Now()
+var lastSentAt = time.Unix(0, 0)
 
 func FeedMe(params bot.HandlerParams) error {
-	if time.Now().Sub(lastSentAt) < THROTTLE {
+	if time.Now().Sub(lastSentAt) < COOLOFF {
+		if params.Nick != "" {
+			params.Privmsgf(params.Target, "throttled until %s", lastSentAt.Add(COOLOFF))
+		}
 		return nil
 	}
 
@@ -44,7 +47,9 @@ func FeedMe(params bot.HandlerParams) error {
 	}
 
 	if len(notes) < THRESHOLD {
-		params.Privmsgf(params.Target, "not enough links to feed the channel")
+		if params.Nick != "" {
+			params.Privmsgf(params.Target, "not enough links to feed the channel")
+		}
 		return nil
 	}
 
