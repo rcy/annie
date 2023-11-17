@@ -1,10 +1,12 @@
 package handlers
 
 import (
-	"fmt"
 	"goirc/bot"
 	"math"
 	"time"
+
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 func TimeLeft(params bot.HandlerParams) error {
@@ -18,7 +20,9 @@ func TimeLeft(params bot.HandlerParams) error {
 	minutes := int(math.Round(left.Minutes()))
 	seconds := int(math.Round(left.Seconds()))
 
-	str := fmt.Sprintf("%d years / %d months / %d weeks / %d days / %d hours / %d minutes / %d seconds\n", years, months, weeks, days, hours, minutes, seconds)
+	p := message.NewPrinter(language.English)
+
+	str := p.Sprintf("%d years / %d months / %d weeks / %d days / %d hours / %d minutes / %d seconds\n", years, months, weeks, days, hours, minutes, seconds)
 
 	params.Privmsgf(params.Target, str)
 

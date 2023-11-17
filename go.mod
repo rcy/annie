@@ -4,18 +4,18 @@ go 1.20
 
 require (
 	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
-	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
 	github.com/xhit/go-str2duration/v2 v2.1.0
+	golang.org/x/text v0.9.0
 	modernc.org/sqlite v1.17.3
 )
 
 require (
-	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/dlclark/regexp2 v1.9.0 // indirect
@@ -41,7 +41,6 @@ require (
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
