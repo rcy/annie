@@ -43,6 +43,7 @@ type Bot struct {
 	Conn               *irc.Connection
 	Channel            string
 	Handlers           []Handler
+	LastEvent          *irc.Event
 	idleResetFunctions []func()
 }
 
@@ -237,11 +238,12 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 		matches := handler.regexp.FindStringSubmatch(msg)
 		if len(matches) > 0 {
 			err := handler.action(HandlerParams{
-				Privmsgf: bot.MakePrivmsgf(),
-				Msg:      msg,
-				Nick:     nick,
-				Target:   target,
-				Matches:  matches,
+				Privmsgf:  bot.MakePrivmsgf(),
+				Msg:       msg,
+				Nick:      nick,
+				Target:    target,
+				Matches:   matches,
+				LastEvent: bot.LastEvent,
 			})
 
 			if err != nil {
@@ -250,6 +252,7 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 			}
 		}
 	}
+	bot.LastEvent = e
 }
 
 func isAltNick(nick string) bool {
