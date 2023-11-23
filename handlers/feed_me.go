@@ -151,7 +151,7 @@ func bestMatch(s string, candidates []string) int {
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
 
 func cleanMessage(msg string) string {
-	return nonAlphanumericRegex.ReplaceAllString(msg, "")
+	return nonAlphanumericRegex.ReplaceAllString(msg, " ")
 }
 
 func stemMessage(msg string) []string {
