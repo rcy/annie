@@ -3,7 +3,6 @@ package web
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"goirc/model/notes"
 	"goirc/util"
 	"html/template"
@@ -11,10 +10,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"github.com/kkdai/youtube/v2"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type NickWithNoteCount struct {
@@ -33,34 +32,20 @@ var playerTemplateContent string
 var playerTemplate = template.Must(template.New("").Parse(playerTemplateContent))
 
 func Serve(db *sqlx.DB) {
-	r := gin.Default()
-	//r.LoadHTMLGlob("templates/*")
+	r := chi.NewRouter()
 
-	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		AllowHeaders: []string{"Origin"},
-	}))
-
-	r.GET("/snapshot.db", func(c *gin.Context) {
+	r.Get("/snapshot.db", func(w http.ResponseWriter, r *http.Request) {
 		os.Remove("/tmp/snapshot.db")
 		if _, err := db.Exec(`vacuum into '/tmp/snapshot.db'`); err != nil {
-			c.String(http.StatusInternalServerError, fmt.Sprintf("%v", err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		c.File("/tmp/snapshot.db")
+
+		http.ServeFile(w, r, "/tmp/snapshot.db")
 	})
 
-	r.HEAD("/snapshot.db", func(c *gin.Context) {
-		os.Remove("/tmp/snapshot.db")
-		if _, err := db.Exec(`vacuum into '/tmp/snapshot.db'`); err != nil {
-			c.String(http.StatusInternalServerError, fmt.Sprintf("%v", err))
-			return
-		}
-		c.File("/tmp/snapshot.db")
-	})
-
-	r.GET("/", func(c *gin.Context) {
-		nick := c.Query("nick")
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		nick := r.URL.Query().Get("nick")
 
 		notes, err := getNotes(db, nick)
 		if err != nil {
@@ -78,7 +63,7 @@ func Serve(db *sqlx.DB) {
 		}
 
 		out := new(bytes.Buffer)
-		err = tmpl.Execute(out, gin.H{
+		err = tmpl.Execute(out, map[string]any{
 			"nicks": nicks,
 			"notes": notes,
 		})
@@ -86,11 +71,11 @@ func Serve(db *sqlx.DB) {
 			log.Fatal("error executing template on data")
 		}
 
-		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
+		w.Write(out.Bytes())
 	})
 
-	r.GET("/rss.xml", func(c *gin.Context) {
-		nick := c.Query("nick")
+	r.Get("/rss.xml", func(w http.ResponseWriter, r *http.Request) {
+		nick := r.URL.Query().Get("nick")
 
 		notes, err := getNotes(db, nick)
 		if err != nil {
@@ -108,17 +93,17 @@ func Serve(db *sqlx.DB) {
 		}
 
 		out := new(bytes.Buffer)
-		err = tmpl.Execute(out, gin.H{
+		err = tmpl.Execute(out, map[string]any{
 			"notes": fnotes,
 		})
 		if err != nil {
 			log.Fatal("error executing template on data")
 		}
 
-		c.Data(http.StatusOK, "text/xml; charset=utf-8", out.Bytes())
+		w.Write(out.Bytes())
 	})
 
-	r.GET("/player", func(c *gin.Context) {
+	r.Get("/player", func(w http.ResponseWriter, r *http.Request) {
 		var youtubeLinks []notes.Note
 		err := db.Select(&youtubeLinks, "select * from notes where kind = 'link' and text like '%youtube.com%' or text like '%youtu.be%'")
 		if err != nil {
@@ -135,18 +120,15 @@ func Serve(db *sqlx.DB) {
 		}
 
 		out := new(bytes.Buffer)
-		err = playerTemplate.Execute(out, gin.H{"VideoIDs": videoIDs})
+		err = playerTemplate.Execute(out, map[string]any{"VideoIDs": videoIDs})
 		if err != nil {
 			log.Fatalf("error executing template: %s", err)
 		}
 
-		c.Data(http.StatusOK, "text/html; charset=utf-8", out.Bytes())
+		w.Write(out.Bytes())
 	})
 
-	err := r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
-	if err != nil {
-		log.Fatal(err)
-	}
+	http.ListenAndServe(":"+os.Getenv("PORT"), r)
 }
 
 func getNotes(db *sqlx.DB, nick string) ([]notes.Note, error) {
