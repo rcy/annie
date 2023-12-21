@@ -149,7 +149,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 		go bot.RunHandlers(e)
 	})
 	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
-		if e.Nick != nick {
+		if e.Nick != bot.Conn.GetNick() {
 			go func() {
 				time.Sleep(10 * time.Second)
 				bot.SendLaters(channel, e.Nick)
