@@ -2,7 +2,10 @@ package notes
 
 import (
 	"errors"
+	"fmt"
+	"goirc/internal/idstr"
 	"goirc/model"
+	"os"
 )
 
 type Note struct {
@@ -34,4 +37,12 @@ func Create(p CreateParams) (*Note, error) {
 		return nil, err
 	}
 	return &note, nil
+}
+
+func (n Note) Link() (string, error) {
+	str, err := idstr.Encode(n.Id)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", os.Getenv("ROOT_URL"), str), nil
 }

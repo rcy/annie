@@ -2,14 +2,11 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"goirc/bot"
 	"goirc/durfmt"
-	"goirc/internal/idstr"
 	"goirc/model"
 	"goirc/model/notes"
 	"goirc/util"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -98,11 +95,10 @@ func FeedMe(params bot.HandlerParams) error {
 
 	var text string
 	if note.Kind == "link" {
-		str, err := idstr.Encode(note.Id)
+		text, err = note.Link()
 		if err != nil {
 			return err
 		}
-		text = fmt.Sprintf("%s/%s", os.Getenv("ROOT_URL"), str)
 	} else {
 		text = note.Text
 	}
