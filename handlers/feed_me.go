@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"goirc/bot"
 	"goirc/durfmt"
+	"goirc/internal/idstr"
 	"goirc/model"
 	"goirc/model/notes"
 	"goirc/util"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -89,7 +92,18 @@ func FeedMe(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s (%s ago) [pipe=%d+%d]", note.Text, util.Since(note.CreatedAt), ready, fermenting)
+	var text string
+	if note.Kind == "link" {
+		str, err := idstr.Encode(note.Id)
+		if err != nil {
+			return err
+		}
+		text = fmt.Sprintf("%s/%s", os.Getenv("ROOT_URL"), str)
+	} else {
+		text = note.Text
+	}
+
+	params.Privmsgf(params.Target, "%s (%s ago) [pipe=%d+%d]", text, util.Since(note.CreatedAt), ready, fermenting)
 
 	lastSentAt = time.Now()
 

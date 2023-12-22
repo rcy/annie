@@ -6,9 +6,11 @@ import (
 	"github.com/sqids/sqids-go"
 )
 
-func Decode(str string) (int64, error) {
-	s, _ := sqids.New()
+var s = must(sqids.New(sqids.Options{
+	Alphabet: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+}))
 
+func Decode(str string) (int64, error) {
 	n := s.Decode(str)
 
 	if len(n) != 1 {
@@ -18,7 +20,12 @@ func Decode(str string) (int64, error) {
 }
 
 func Encode(id int64) (string, error) {
-	s, _ := sqids.New()
-
 	return s.Encode([]uint64{uint64(id)})
+}
+
+func must(s *sqids.Sqids, err error) *sqids.Sqids {
+	if err != nil {
+		panic(err)
+	}
+	return s
 }

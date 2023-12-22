@@ -9,6 +9,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/kljensen/snowball v0.9.0
+	github.com/sqids/sqids-go v0.4.1
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
 	github.com/xhit/go-str2duration/v2 v2.1.0
 	golang.org/x/text v0.9.0
