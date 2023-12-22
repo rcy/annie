@@ -1,7 +1,7 @@
 include .env
 
-start:
-	go run main.go
+watch:
+	air
 
 fmt:
 	go fmt main.go

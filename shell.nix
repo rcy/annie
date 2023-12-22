@@ -4,6 +4,7 @@ in
 { nixpkgs ? import <nixpkgs> {} }:
 with nixpkgs; mkShell {
   buildInputs = [
+    air
     unstable.go_1_21
     unstable.golint
     unstable.gopls

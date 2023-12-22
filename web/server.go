@@ -2,7 +2,10 @@ package web
 
 import (
 	"bytes"
+	"database/sql"
 	_ "embed"
+	"errors"
+	"goirc/internal/idstr"
 	"goirc/model/notes"
 	"goirc/util"
 	"html/template"
@@ -126,6 +129,28 @@ func Serve(db *sqlx.DB) {
 		}
 
 		w.Write(out.Bytes())
+	})
+
+	r.Get("/{sqid}", func(w http.ResponseWriter, r *http.Request) {
+		sqid := chi.URLParam(r, "sqid")
+		id, err := idstr.Decode(sqid)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var text string
+		err = db.Get(&text, `select text from notes where id = ? and kind = 'link'`, id)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+			return
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, text, http.StatusSeeOther)
 	})
 
 	http.ListenAndServe(":"+os.Getenv("PORT"), r)
