@@ -15,6 +15,9 @@ func TestFeedMe(t *testing.T) {
 		createdAt time.Time
 	}
 
+	threshold = 5
+	cooloff = time.Hour * 5
+
 	for _, tc := range []struct {
 		name     string
 		messages []message
@@ -205,7 +208,6 @@ func TestPipeHealth(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			reset(t)
-
 			for _, x := range tc.messages {
 				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, datetime(?))`
 				createdAt := x.createdAt.UTC().Format("2006-01-02T15:04:05Z")

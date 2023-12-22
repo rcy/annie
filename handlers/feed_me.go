@@ -36,15 +36,19 @@ func candidateLinks(age time.Duration) ([]notes.Note, error) {
 }
 
 const (
-	MINAGE    = time.Hour * 24
-	THRESHOLD = 5
-	COOLOFF   = time.Hour * 5
+	MINAGE = time.Hour * 24
+)
+
+// these are vars so they can be changed in the tests
+var (
+	threshold = 40
+	cooloff   = time.Hour
 )
 
 var lastSentAt = time.Unix(0, 0)
 
 func canSendIn(startTime time.Time) time.Duration {
-	return startTime.Add(COOLOFF).Sub(time.Now())
+	return startTime.Add(cooloff).Sub(time.Now())
 }
 
 func FeedMe(params bot.HandlerParams) error {
@@ -67,7 +71,7 @@ func FeedMe(params bot.HandlerParams) error {
 		return err
 	}
 
-	if len(notes) < THRESHOLD {
+	if len(notes) < threshold {
 		if params.Nick != "" {
 			params.Privmsgf(params.Target, "not enough links to feed the channel")
 		}
