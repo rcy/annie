@@ -35,6 +35,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
 		for _, h := range b.Handlers {
 			params.Privmsgf(params.Target, "%s", h.String())
+			time.Sleep(100 * time.Millisecond) // prevent flooding
 		}
 		return nil
 	})
