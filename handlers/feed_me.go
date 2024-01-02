@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"goirc/bot"
-	"goirc/durfmt"
 	"goirc/model"
 	"goirc/model/notes"
 	"goirc/util"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/kljensen/snowball"
 	"github.com/kljensen/snowball/english"
+	"github.com/rcy/durfmt"
 )
 
 func candidateLinks(age time.Duration) ([]notes.Note, error) {

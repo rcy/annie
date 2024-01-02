@@ -1,12 +1,13 @@
 package util
 
 import (
-	"goirc/durfmt"
 	"log"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/rcy/durfmt"
 )
 
 func ParseTime(str string) (time.Time, error) {

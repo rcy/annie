@@ -1,6 +1,8 @@
 module goirc
 
-go 1.20
+go 1.21.1
+
+toolchain go1.21.5
 
 require (
 	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335
@@ -9,6 +11,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/kljensen/snowball v0.9.0
+	github.com/rcy/durfmt v0.0.0-20240102082646-83cc8efdab91
 	github.com/sqids/sqids-go v0.4.1
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
 	github.com/xhit/go-str2duration/v2 v2.1.0
