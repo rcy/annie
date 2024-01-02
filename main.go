@@ -3,6 +3,7 @@ package main
 import (
 	"goirc/bot"
 	"goirc/handlers"
+	"goirc/handlers/epigram"
 	"goirc/handlers/mlb"
 	"goirc/model"
 	"goirc/util"
@@ -54,4 +55,5 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^\?(\S+)`, handlers.Seen)
 	b.Handle(`world.?cup`, handlers.Worldcup)
 	b.Handle(`^!left`, handlers.TimeLeft)
+	b.Handle(`^!epi`, epigram.Handle)
 }

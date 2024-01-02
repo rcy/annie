@@ -9,6 +9,7 @@ with nixpkgs; mkShell {
     unstable.golint
     unstable.gopls
     pup
+    html2text
     sqlite
     flyctl
     unstable.golangci-lint
