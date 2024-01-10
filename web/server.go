@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jmoiron/sqlx"
@@ -37,7 +38,7 @@ var rssTemplate string
 var playerTemplateContent string
 var playerTemplate = template.Must(template.New("").Parse(playerTemplateContent))
 
-const sessionKey = "annie-session"
+const sessionKey = "annie"
 
 func Serve(db *sqlx.DB) {
 	r := chi.NewRouter()
@@ -52,6 +53,7 @@ func Serve(db *sqlx.DB) {
 					Path:     "/",
 					Secure:   true,
 					HttpOnly: true,
+					Expires:  time.Now().Add(time.Hour * 24 * 400),
 				})
 				http.Redirect(w, r, "", http.StatusSeeOther)
 				return
