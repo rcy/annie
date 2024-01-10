@@ -56,3 +56,10 @@ type Rev struct {
 	CreatedAt time.Time
 	Sha       string
 }
+
+type Visit struct {
+	ID        int64
+	CreatedAt time.Time
+	Session   string
+	NoteID    int64
+}

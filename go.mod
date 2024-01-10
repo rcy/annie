@@ -8,6 +8,7 @@ require (
 	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/go-chi/chi/v5 v5.0.11
+	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/kljensen/snowball v0.9.0

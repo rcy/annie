@@ -23,3 +23,9 @@ CREATE TABLE revs(
   created_at datetime not null default current_timestamp,
   sha text not null
 );
+CREATE TABLE visits(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  session text not null,
+  note_id integer references notes not null
+);

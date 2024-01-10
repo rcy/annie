@@ -9,29 +9,34 @@ import (
 	"context"
 )
 
-const allLinks = `-- name: AllLinks :many
-select created_at, nick, text from links order by created_at
+const insertVisit = `-- name: InsertVisit :exec
+insert into visits(session, note_id) values(?,?)
 `
 
-func (q *Queries) AllLinks(ctx context.Context) ([]Link, error) {
-	rows, err := q.db.QueryContext(ctx, allLinks)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Link
-	for rows.Next() {
-		var i Link
-		if err := rows.Scan(&i.CreatedAt, &i.Nick, &i.Text); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+type InsertVisitParams struct {
+	Session string
+	NoteID  int64
+}
+
+func (q *Queries) InsertVisit(ctx context.Context, arg InsertVisitParams) error {
+	_, err := q.db.ExecContext(ctx, insertVisit, arg.Session, arg.NoteID)
+	return err
+}
+
+const link = `-- name: Link :one
+select id, created_at, nick, text, kind, target from notes where id = ? and kind = 'link'
+`
+
+func (q *Queries) Link(ctx context.Context, id int64) (Note, error) {
+	row := q.db.QueryRowContext(ctx, link, id)
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Text,
+		&i.Kind,
+		&i.Target,
+	)
+	return i, err
 }

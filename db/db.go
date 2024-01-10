@@ -159,6 +159,18 @@ alter table notes rename column targetx to target;
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: create visits")
+			_, err := tx.Exec(`
+create table visits(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  session text not null,
+  note_id integer references notes not null
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)

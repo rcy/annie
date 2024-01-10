@@ -2,9 +2,11 @@ package web
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	_ "embed"
 	"errors"
+	"goirc/db/model"
 	"goirc/internal/idstr"
 	"goirc/model/notes"
 	"goirc/util"
@@ -13,6 +15,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/kkdai/youtube/v2"
 
@@ -34,8 +37,31 @@ var rssTemplate string
 var playerTemplateContent string
 var playerTemplate = template.Must(template.New("").Parse(playerTemplateContent))
 
+const sessionKey = "annie-session"
+
 func Serve(db *sqlx.DB) {
 	r := chi.NewRouter()
+
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			c, err := r.Cookie(sessionKey)
+			if errors.Is(err, http.ErrNoCookie) {
+				http.SetCookie(w, &http.Cookie{
+					Name:     sessionKey,
+					Value:    uuid.Must(uuid.NewV7()).String(),
+					Path:     "/",
+					Secure:   true,
+					HttpOnly: true,
+				})
+				http.Redirect(w, r, "", http.StatusSeeOther)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), sessionKey, c.Value)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
 
 	r.Get("/snapshot.db", func(w http.ResponseWriter, r *http.Request) {
 		os.Remove("/tmp/snapshot.db")
@@ -132,6 +158,8 @@ func Serve(db *sqlx.DB) {
 	})
 
 	r.Get("/{sqid}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		sqid := chi.URLParam(r, "sqid")
 		id, err := idstr.Decode(sqid)
 		if err != nil {
@@ -139,8 +167,10 @@ func Serve(db *sqlx.DB) {
 			return
 		}
 
-		var text string
-		err = db.Get(&text, `select text from notes where id = ? and kind = 'link'`, id)
+		sess := r.Context().Value(sessionKey).(string)
+		m := model.New(db.DB)
+
+		note, err := m.Link(ctx, id)
 		if errors.Is(err, sql.ErrNoRows) {
 			http.NotFound(w, r)
 			return
@@ -150,10 +180,18 @@ func Serve(db *sqlx.DB) {
 			return
 		}
 
-		http.Redirect(w, r, text, http.StatusSeeOther)
+		err = m.InsertVisit(r.Context(), model.InsertVisitParams{Session: sess, NoteID: note.ID})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, note.Text.String, http.StatusSeeOther)
 	})
 
-	http.ListenAndServe(":"+os.Getenv("PORT"), r)
+	addr := ":" + os.Getenv("PORT")
+	log.Printf("web server listening on %s", addr)
+	http.ListenAndServe(addr, r)
 }
 
 func getNotes(db *sqlx.DB, nick string) ([]notes.Note, error) {
