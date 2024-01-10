@@ -55,7 +55,7 @@ func Serve(db *sqlx.DB) {
 					HttpOnly: true,
 					Expires:  time.Now().Add(time.Hour * 24 * 400),
 				})
-				http.Redirect(w, r, "", http.StatusSeeOther)
+				http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
 				return
 			}
 
