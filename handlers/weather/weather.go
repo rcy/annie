@@ -54,7 +54,11 @@ type response struct {
 }
 
 func (r *response) String() string {
-	return fmt.Sprintf("%s, %s %.1f°C %v", r.Name, r.Sys.Country, r.Main.Temp, r.Weather[0].Description)
+	return fmt.Sprintf("%s, %s %.1f°C (feels like %.1f°C) (humidity %d%%) %v",
+		r.Name, r.Sys.Country,
+		r.Main.Temp, r.Main.FeelsLike,
+		r.Main.Humidity,
+		r.Weather[0].Description)
 }
 
 const iconURLFmt = "https://openweathermap.org/img/wn/%s@2x.png"
