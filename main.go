@@ -5,6 +5,7 @@ import (
 	"goirc/handlers"
 	"goirc/handlers/epigram"
 	"goirc/handlers/mlb"
+	"goirc/handlers/weather"
 	"goirc/model"
 	"goirc/util"
 	"goirc/web"
@@ -14,6 +15,9 @@ import (
 
 func main() {
 	go web.Serve(model.DB)
+
+	result, err := weather.Weather("Creston, ca")
+	log.Println(result.Main.Temp)
 
 	b, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
@@ -56,4 +60,5 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`world.?cup`, handlers.Worldcup)
 	b.Handle(`^!left`, handlers.TimeLeft)
 	b.Handle(`^!epi`, epigram.Handle)
+	b.Handle(`^!weather (.+)$`, weather.Handle)
 }
