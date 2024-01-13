@@ -8,6 +8,7 @@ import (
 	"errors"
 	"goirc/db/model"
 	"goirc/internal/idstr"
+	"goirc/internal/nitter"
 	"goirc/model/notes"
 	"goirc/util"
 	"html/template"
@@ -188,7 +189,9 @@ func Serve(db *sqlx.DB) {
 			return
 		}
 
-		http.Redirect(w, r, note.Text.String, http.StatusSeeOther)
+		target := nitter.Rewrite(note.Text.String)
+
+		http.Redirect(w, r, target, http.StatusSeeOther)
 	})
 
 	addr := ":" + os.Getenv("PORT")
