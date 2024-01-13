@@ -71,6 +71,10 @@ func Weather(q string) (*response, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == 404 {
+		return nil, fmt.Errorf("city not found")
+	}
+
 	var data response
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
