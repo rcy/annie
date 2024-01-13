@@ -87,7 +87,7 @@ func Handle(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, fmt.Sprintf("%.1f°C", resp.Main.Temp))
+	params.Privmsgf(params.Target, resp.String())
 
 	return nil
 }
