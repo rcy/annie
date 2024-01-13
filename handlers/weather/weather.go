@@ -53,6 +53,10 @@ type response struct {
 	Cod      int    `json:"cod"`
 }
 
+func (r *response) String() string {
+	return fmt.Sprintf("%s, %s %.1f°C %v", r.Name, r.Sys.Country, r.Main.Temp, r.Weather[0].Description)
+}
+
 const iconURLFmt = "https://openweathermap.org/img/wn/%s@2x.png"
 
 func Weather(q string) (*response, error) {
@@ -83,7 +87,7 @@ func Handle(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, fmt.Sprintf("%f", resp.Main.Temp))
+	params.Privmsgf(params.Target, fmt.Sprintf("%.1f°C", resp.Main.Temp))
 
 	return nil
 }
