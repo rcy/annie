@@ -6,6 +6,7 @@ import (
 	"goirc/bot"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type response struct {
@@ -54,10 +55,17 @@ type response struct {
 }
 
 func (r *response) String() string {
-	return fmt.Sprintf("%s, %s %.1f°C (feels like %.1f°C) %v",
-		r.Name, r.Sys.Country,
-		r.Main.Temp, r.Main.FeelsLike,
-		r.Weather[0].Description)
+	str := fmt.Sprintf("%s, %s %.1f°C ", r.Name, r.Sys.Country, r.Main.Temp)
+	if r.Main.FeelsLike != r.Main.Temp {
+		str += fmt.Sprintf("(feels like %.1f°C) ", r.Main.FeelsLike)
+	}
+	descs := []string{}
+	for _, w := range r.Weather {
+		descs = append(descs, w.Description)
+	}
+	str += strings.Join(descs, ", ")
+
+	return str
 }
 
 const iconURLFmt = "https://openweathermap.org/img/wn/%s@2x.png"
