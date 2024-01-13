@@ -16,9 +16,6 @@ import (
 func main() {
 	go web.Serve(model.DB)
 
-	result, err := weather.Weather("Creston, ca")
-	log.Println(result.Main.Temp)
-
 	b, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
