@@ -6,7 +6,7 @@ import (
 )
 
 func NationalDay(params bot.HandlerParams) error {
-	r, err := shell.Command(`curl -s https://nationaltoday.com/ | pup '.holiday-title-text json{}' | jq -r .[0].text`)
+	r, err := shell.Command(`curl -s https://nationaltoday.com/ | pup 'meta[name=description] json{}' | jq -r .[].content | cut -f1 -d.`)
 	if err != nil {
 		params.Privmsgf(params.Target, "error: %v", err)
 	}
