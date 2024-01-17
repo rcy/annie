@@ -58,4 +58,5 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!left`, handlers.TimeLeft)
 	b.Handle(`^!epi`, epigram.Handle)
 	b.Handle(`^!weather (.+)$`, weather.Handle)
+	b.Handle(`^!xweather (.+)$`, weather.XHandle)
 }

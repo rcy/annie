@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"goirc/bot"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -94,6 +95,25 @@ func Weather(q string) (*response, error) {
 	return &data, nil
 }
 
+func XWeather(q string) ([]byte, error) {
+	key := os.Getenv("OPENWEATHERMAP_API_KEY")
+	if key == "" {
+		return nil, fmt.Errorf("bad api key")
+	}
+
+	resp, err := http.Get(fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?units=metric&q=%s&appid=%s", q, key))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return nil, fmt.Errorf("city not found")
+	}
+
+	return io.ReadAll(resp.Body)
+}
+
 func Handle(params bot.HandlerParams) error {
 	q := params.Matches[1]
 
@@ -105,4 +125,35 @@ func Handle(params bot.HandlerParams) error {
 	params.Privmsgf(params.Target, resp.String())
 
 	return nil
+}
+
+func XHandle(params bot.HandlerParams) error {
+	q := params.Matches[1]
+
+	resp, err := XWeather(q)
+	if err != nil {
+		return err
+	}
+
+	chunks := splitBytes(resp, 420)
+
+	for _, chunk := range chunks {
+		params.Privmsgf(params.Target, string(chunk))
+	}
+
+	return nil
+}
+
+func splitBytes(data []byte, chunkSize int) [][]byte {
+	var chunks [][]byte
+
+	for len(data) > 0 {
+		if len(data) < chunkSize {
+			chunkSize = len(data)
+		}
+		chunks = append(chunks, data[:chunkSize])
+		data = data[chunkSize:]
+	}
+
+	return chunks
 }
