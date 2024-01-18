@@ -41,10 +41,19 @@ type response struct {
 	Clouds struct {
 		All int `json:"all"`
 	} `json:"clouds"`
+	Rain struct {
+		OneH   float64 `json:"1h"`
+		ThreeH float64 `json:"3h"`
+	} `json:"snow"`
+	Snow struct {
+		OneH   float64 `json:"1h"`
+		ThreeH float64 `json:"3h"`
+	} `json:"snow"`
 	Dt  int `json:"dt"`
 	Sys struct {
 		Type    int    `json:"type"`
 		ID      int    `json:"id"`
+		Message int    `json:"message"`
 		Country string `json:"country"`
 		Sunrise int    `json:"sunrise"`
 		Sunset  int    `json:"sunset"`
