@@ -50,7 +50,7 @@ func TestWeather(t *testing.T) {
 			got := w.String()
 
 			if tc.want != got {
-				t.Errorf("expected '%s', got '%s'", tc.want, got)
+				t.Errorf("expected:\n%s\ngot:\n%s", tc.want, got)
 			}
 		})
 	}

@@ -44,7 +44,7 @@ type weather struct {
 	Rain struct {
 		OneH   float64 `json:"1h"`
 		ThreeH float64 `json:"3h"`
-	} `json:"snow"`
+	} `json:"rain"`
 	Snow struct {
 		OneH   float64 `json:"1h"`
 		ThreeH float64 `json:"3h"`
@@ -65,18 +65,31 @@ type weather struct {
 }
 
 func (w weather) String() string {
-	str := fmt.Sprintf("%s, %s %.1f°C ", w.Name, w.Sys.Country, w.Main.Temp)
+	components := []string{}
+
+	temp := fmt.Sprintf("%s, %s %.1f°C", w.Name, w.Sys.Country, w.Main.Temp)
 	if w.Main.FeelsLike != w.Main.Temp {
-		str += fmt.Sprintf("(feels like %.1f°C) ", w.Main.FeelsLike)
+		temp += fmt.Sprintf(" (feels like %.1f°C)", w.Main.FeelsLike)
 	}
+	components = append(components, temp)
 
 	descs := []string{}
 	for _, w := range w.Weather {
 		descs = append(descs, w.Description)
 	}
-	str += strings.Join(descs, ", ")
+	components = append(components, strings.Join(descs, ", "))
 
-	return str
+	var snow string
+	if w.Snow.ThreeH > 0 {
+		snow = fmt.Sprintf("%.1fmm snow last 3hr", w.Snow.ThreeH)
+	} else if w.Snow.OneH > 0 {
+		snow = fmt.Sprintf("%.1fmm snow last hr", w.Snow.OneH)
+	}
+	if snow != "" {
+		components = append(components, snow)
+	}
+
+	return strings.Join(components, ", ")
 }
 
 const iconURLFmt = "https://openweathermap.org/img/wn/%s@2x.png"
