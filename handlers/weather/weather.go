@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type response struct {
+type weather struct {
 	Coord struct {
 		Lon float64 `json:"lon"`
 		Lat float64 `json:"lat"`
@@ -64,13 +64,14 @@ type response struct {
 	Cod      int    `json:"cod"`
 }
 
-func (r *response) String() string {
-	str := fmt.Sprintf("%s, %s %.1f°C ", r.Name, r.Sys.Country, r.Main.Temp)
-	if r.Main.FeelsLike != r.Main.Temp {
-		str += fmt.Sprintf("(feels like %.1f°C) ", r.Main.FeelsLike)
+func (w weather) String() string {
+	str := fmt.Sprintf("%s, %s %.1f°C ", w.Name, w.Sys.Country, w.Main.Temp)
+	if w.Main.FeelsLike != w.Main.Temp {
+		str += fmt.Sprintf("(feels like %.1f°C) ", w.Main.FeelsLike)
 	}
+
 	descs := []string{}
-	for _, w := range r.Weather {
+	for _, w := range w.Weather {
 		descs = append(descs, w.Description)
 	}
 	str += strings.Join(descs, ", ")
@@ -80,7 +81,7 @@ func (r *response) String() string {
 
 const iconURLFmt = "https://openweathermap.org/img/wn/%s@2x.png"
 
-func Weather(q string) (*response, error) {
+func fetchWeather(q string) (*weather, error) {
 	key := os.Getenv("OPENWEATHERMAP_API_KEY")
 	if key == "" {
 		return nil, fmt.Errorf("bad api key")
@@ -96,15 +97,15 @@ func Weather(q string) (*response, error) {
 		return nil, fmt.Errorf("city not found")
 	}
 
-	var data response
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	var w weather
+	err = json.NewDecoder(resp.Body).Decode(&w)
 	if err != nil {
 		return nil, err
 	}
-	return &data, nil
+	return &w, nil
 }
 
-func XWeather(q string) ([]byte, error) {
+func fetchXWeather(q string) ([]byte, error) {
 	key := os.Getenv("OPENWEATHERMAP_API_KEY")
 	if key == "" {
 		return nil, fmt.Errorf("bad api key")
@@ -126,7 +127,7 @@ func XWeather(q string) ([]byte, error) {
 func Handle(params bot.HandlerParams) error {
 	q := params.Matches[1]
 
-	resp, err := Weather(q)
+	resp, err := fetchWeather(q)
 	if err != nil {
 		return err
 	}
@@ -139,7 +140,7 @@ func Handle(params bot.HandlerParams) error {
 func XHandle(params bot.HandlerParams) error {
 	q := params.Matches[1]
 
-	resp, err := XWeather(q)
+	resp, err := fetchXWeather(q)
 	if err != nil {
 		return err
 	}
