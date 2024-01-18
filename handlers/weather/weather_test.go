@@ -13,7 +13,7 @@ func TestWeather(t *testing.T) {
 	}{
 		{
 			filename: "testdata/chicago,us.json",
-			want:     "Chicago, US -6.8°C (feels like -11.2°C), snow, mist, 1.1mm snow last hr",
+			want:     "Chicago, US -6.8°C (feels like -11.2°C), snow, mist, 1.1mm snow over last hour",
 		},
 		{
 			filename: "testdata/creston,ca.json",
@@ -22,6 +22,10 @@ func TestWeather(t *testing.T) {
 		{
 			filename: "testdata/gibsons,ca.json",
 			want:     "Gibsons, CA -0.6°C (feels like -4.9°C), overcast clouds",
+		},
+		{
+			filename: "testdata/shanghai,cn.json",
+			want:     "Shanghai, CN 9.2°C (feels like 7.5°C), moderate rain, 1.9mm rain over last hour",
 		},
 		{
 			filename: "testdata/toronto,ca.json",

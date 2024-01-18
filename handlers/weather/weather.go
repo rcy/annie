@@ -81,12 +81,22 @@ func (w weather) String() string {
 
 	var snow string
 	if w.Snow.ThreeH > 0 {
-		snow = fmt.Sprintf("%.1fmm snow last 3hr", w.Snow.ThreeH)
+		snow = fmt.Sprintf("%.1fmm snow over last 3 hours", w.Snow.ThreeH)
 	} else if w.Snow.OneH > 0 {
-		snow = fmt.Sprintf("%.1fmm snow last hr", w.Snow.OneH)
+		snow = fmt.Sprintf("%.1fmm snow over last hour", w.Snow.OneH)
 	}
 	if snow != "" {
 		components = append(components, snow)
+	}
+
+	var rain string
+	if w.Rain.ThreeH > 0 {
+		rain = fmt.Sprintf("%.1fmm rain over last 3 hours", w.Rain.ThreeH)
+	} else if w.Rain.OneH > 0 {
+		rain = fmt.Sprintf("%.1fmm rain over last hour", w.Rain.OneH)
+	}
+	if rain != "" {
+		components = append(components, rain)
 	}
 
 	return strings.Join(components, ", ")
