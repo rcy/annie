@@ -73,11 +73,17 @@ func (w weather) String() string {
 	}
 	components = append(components, temp)
 
+	descs := []string{}
+	for _, w := range w.Weather {
+		descs = append(descs, w.Description)
+	}
+	components = append(components, strings.Join(descs, ", "))
+
 	var snow string
 	if w.Snow.ThreeH > 0 {
-		snow = fmt.Sprintf("%.1fmm snow over last 3 hours", w.Snow.ThreeH)
+		snow = fmt.Sprintf("%.1fmm pcpn over last 3 hours", w.Snow.ThreeH)
 	} else if w.Snow.OneH > 0 {
-		snow = fmt.Sprintf("%.1fmm snow over last hour", w.Snow.OneH)
+		snow = fmt.Sprintf("%.1fmm pcpn over last hour", w.Snow.OneH)
 	}
 	if snow != "" {
 		components = append(components, snow)
@@ -85,20 +91,12 @@ func (w weather) String() string {
 
 	var rain string
 	if w.Rain.ThreeH > 0 {
-		rain = fmt.Sprintf("%.1fmm rain over last 3 hours", w.Rain.ThreeH)
+		rain = fmt.Sprintf("%.1fmm pcpn over last 3 hours", w.Rain.ThreeH)
 	} else if w.Rain.OneH > 0 {
-		rain = fmt.Sprintf("%.1fmm rain over last hour", w.Rain.OneH)
+		rain = fmt.Sprintf("%.1fmm pcpn over last hour", w.Rain.OneH)
 	}
 	if rain != "" {
 		components = append(components, rain)
-	}
-
-	if snow == "" && rain == "" {
-		descs := []string{}
-		for _, w := range w.Weather {
-			descs = append(descs, w.Description)
-		}
-		components = append(components, strings.Join(descs, ", "))
 	}
 
 	if w.Visibility > 0 && w.Visibility < 10000 {
