@@ -99,6 +99,10 @@ func (w weather) String() string {
 		components = append(components, rain)
 	}
 
+	if w.Visibility > 0 && w.Visibility < 10000 {
+		components = append(components, fmt.Sprintf("visibility %.1fkm", float64(w.Visibility)/1000))
+	}
+
 	return strings.Join(components, ", ")
 }
 
