@@ -35,7 +35,7 @@ type weather struct {
 	Visibility int `json:"visibility"`
 	Wind       struct {
 		Speed float64 `json:"speed"`
-		Deg   int     `json:"deg"`
+		Deg   uint    `json:"deg"`
 		Gust  float64 `json:"gust"`
 	} `json:"wind"`
 	Clouds struct {
@@ -101,6 +101,14 @@ func (w weather) String() string {
 
 	if w.Visibility > 0 && w.Visibility < 10000 {
 		components = append(components, fmt.Sprintf("visibility %.1fkm", float64(w.Visibility)/1000))
+	}
+
+	if w.Wind.Deg > 0 {
+		wind := fmt.Sprintf("wind %.1fm/s %s", w.Wind.Speed, compass16(w.Wind.Deg))
+		if w.Wind.Gust > 0 {
+			wind += fmt.Sprintf(" (gust %.1fm/s)", w.Wind.Gust)
+		}
+		components = append(components, wind)
 	}
 
 	return strings.Join(components, ", ")
