@@ -29,3 +29,11 @@ CREATE TABLE visits(
   session text not null,
   note_id integer references notes not null
 );
+CREATE TABLE nick_weather_requests(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  query text not null,
+  city text not null,
+  country text not null
+);

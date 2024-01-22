@@ -171,6 +171,20 @@ create table visits(
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: create nick_weather_requests")
+			_, err := tx.Exec(`
+create table nick_weather_requests(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  query text not null,
+  city text not null,
+  country text not null
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)

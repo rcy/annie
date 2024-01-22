@@ -1,9 +1,14 @@
 package weather
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"goirc/bot"
+	db "goirc/db/model"
+	"goirc/model"
 	"io"
 	"net/http"
 	"os"
@@ -160,9 +165,40 @@ func fetchXWeather(q string) ([]byte, error) {
 }
 
 func Handle(params bot.HandlerParams) error {
-	q := params.Matches[1]
+	ctx := context.TODO()
+	queries := db.New(model.DB)
+
+	var q string
+	if len(params.Matches) > 1 {
+		q = params.Matches[1]
+	}
+
+	if q == "" {
+		last, err := queries.LastNickWeatherRequest(ctx, params.Nick)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return errors.New("no previous weather station to report on")
+			}
+			return err
+		}
+		if params.Nick == last.Nick {
+			if strings.HasPrefix(last.City, q) {
+				q = last.City + "," + last.Country
+			}
+		}
+	}
 
 	resp, err := fetchWeather(q)
+	if err != nil {
+		return err
+	}
+
+	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
+		Nick:    params.Nick,
+		Query:   q,
+		City:    resp.Name,
+		Country: resp.Sys.Country,
+	})
 	if err != nil {
 		return err
 	}
