@@ -57,6 +57,9 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`world.?cup`, handlers.Worldcup)
 	b.Handle(`^!left`, handlers.TimeLeft)
 	b.Handle(`^!epi`, epigram.Handle)
-	b.Handle(`^!weather (.+)$`, weather.Handle)
+	b.Handle(`^!weather (.*)$`, weather.Handle)
+	b.Handle(`^!weather$`, weather.Handle)
+	b.Handle(`^!w (.*)$`, weather.Handle)
+	b.Handle(`^!w$`, weather.Handle)
 	b.Handle(`^!xweather (.+)$`, weather.XHandle)
 }
