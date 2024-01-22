@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/pariz/gountries"
 )
 
 type weather struct {
@@ -72,7 +74,15 @@ type weather struct {
 func (w weather) String() string {
 	components := []string{}
 
-	temp := fmt.Sprintf("%s, %s %.1f°C", w.Name, w.Sys.Country, w.Main.Temp)
+	var countryStr string
+	country, err := gountries.New().FindCountryByAlpha(w.Sys.Country)
+	if err != nil {
+		countryStr = "??"
+	} else {
+		countryStr = country.Name.Common
+	}
+
+	temp := fmt.Sprintf("%s, %s %.1f°C", w.Name, countryStr, w.Main.Temp)
 	if w.Main.FeelsLike != w.Main.Temp {
 		temp += fmt.Sprintf(" (feels like %.1f°C)", w.Main.FeelsLike)
 	}
