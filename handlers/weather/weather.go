@@ -196,6 +196,16 @@ func Handle(params bot.HandlerParams) error {
 				q = last.City + "," + last.Country
 			}
 		}
+	} else {
+		last, err := queries.LastWeatherRequestByPrefix(ctx, q)
+		if err != nil {
+			if !errors.Is(err, sql.ErrNoRows) {
+				return err
+			}
+		}
+		if last.ID != 0 {
+			q = last.City + "," + last.Country
+		}
 	}
 
 	resp, err := fetchWeather(q)

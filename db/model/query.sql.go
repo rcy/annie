@@ -62,6 +62,24 @@ func (q *Queries) LastNickWeatherRequest(ctx context.Context, nick string) (Nick
 	return i, err
 }
 
+const lastWeatherRequestByPrefix = `-- name: LastWeatherRequestByPrefix :one
+select id, created_at, nick, "query", city, country from nick_weather_requests where city like ? || '%' order by created_at desc limit 1
+`
+
+func (q *Queries) LastWeatherRequestByPrefix(ctx context.Context, city string) (NickWeatherRequest, error) {
+	row := q.db.QueryRowContext(ctx, lastWeatherRequestByPrefix, city)
+	var i NickWeatherRequest
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Query,
+		&i.City,
+		&i.Country,
+	)
+	return i, err
+}
+
 const link = `-- name: Link :one
 select id, created_at, nick, text, kind, target from notes where id = ? and kind = 'link'
 `
