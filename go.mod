@@ -11,7 +11,6 @@ require (
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
-	github.com/kljensen/snowball v0.9.0
 	github.com/pariz/gountries v0.1.6
 	github.com/rcy/durfmt v0.0.0-20240102082646-83cc8efdab91
 	github.com/sqids/sqids-go v0.4.1

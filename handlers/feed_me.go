@@ -6,13 +6,8 @@ import (
 	"goirc/model"
 	"goirc/model/notes"
 	"goirc/util"
-	"regexp"
-	"sort"
-	"strings"
 	"time"
 
-	"github.com/kljensen/snowball"
-	"github.com/kljensen/snowball/english"
 	"github.com/rcy/durfmt"
 )
 
@@ -58,11 +53,6 @@ func FeedMe(params bot.HandlerParams) error {
 		return nil
 	}
 
-	target := ""
-	if params.LastEvent != nil {
-		target = params.LastEvent.Message()
-	}
-
 	notes, err := candidateLinks(MINAGE)
 	if err != nil {
 		return err
@@ -79,9 +69,8 @@ func FeedMe(params bot.HandlerParams) error {
 	for i, n := range notes {
 		candidates[i] = n.Text
 	}
-	bestIndex := bestMatch(target, candidates)
 
-	note := notes[bestIndex]
+	note := notes[0]
 
 	_, err = model.DB.Exec(`update notes set target = ? where id = ?`, params.Target, note.Id)
 	if err != nil {
@@ -136,63 +125,4 @@ func health() (int, int, error) {
 	fermenting := len(totalNotes) - ready
 
 	return ready, fermenting, nil
-}
-
-// Return the index of the match between s and candidates
-func bestMatch(s string, candidates []string) int {
-	target := stemMessage(cleanMessage(s))
-
-	type cand struct {
-		index int
-		score int
-	}
-
-	cas := []cand{}
-
-	for i, c := range candidates {
-		stems := stemMessage(cleanMessage(c))
-		score := compareArray(target, stems)
-		cas = append(cas, cand{i, score})
-	}
-
-	sort.Slice(cas, func(i, j int) bool {
-		return cas[i].score > cas[j].score
-	})
-
-	return cas[0].index
-}
-
-var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
-
-func cleanMessage(msg string) string {
-	return nonAlphanumericRegex.ReplaceAllString(msg, " ")
-}
-
-func stemMessage(msg string) []string {
-	stems := []string{}
-
-	for _, word := range strings.Fields(msg) {
-		if !english.IsStopWord(word) {
-			stem, _ := snowball.Stem(word, "english", false)
-			stems = append(stems, stem)
-		}
-	}
-
-	return stems
-}
-
-func compareArray(arr1, arr2 []string) int {
-	matches := 0
-
-outer:
-	for _, e1 := range arr1 {
-		for _, e2 := range arr2 {
-			if e1 == e2 {
-				matches += 1
-				continue outer
-			}
-		}
-	}
-
-	return matches
 }
