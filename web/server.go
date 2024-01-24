@@ -9,8 +9,6 @@ import (
 	"goirc/db/model"
 	"goirc/internal/idstr"
 	"goirc/internal/nitter"
-	"goirc/model/notes"
-	"goirc/util"
 	"html/template"
 	"log"
 	"net/http"
@@ -23,11 +21,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 )
-
-type NickWithNoteCount struct {
-	Nick  string
-	Count int
-}
 
 //go:embed "templates/index.gohtml"
 var indexTemplate string
@@ -47,6 +40,8 @@ const cookieKey = "annie"
 
 func Serve(db *sqlx.DB) {
 	r := chi.NewRouter()
+
+	q := model.New(db.DB)
 
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -83,12 +78,12 @@ func Serve(db *sqlx.DB) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		nick := r.URL.Query().Get("nick")
 
-		notes, err := getNotes(db, nick)
+		notes, err := getNotes(r.Context(), q, nick)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		nicks, err := getNicks(db)
+		nicks, err := q.NicksWithNoteCount(r.Context())
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -113,7 +108,7 @@ func Serve(db *sqlx.DB) {
 	r.Get("/rss.xml", func(w http.ResponseWriter, r *http.Request) {
 		nick := r.URL.Query().Get("nick")
 
-		notes, err := getNotes(db, nick)
+		notes, err := getNotes(r.Context(), q, nick)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -123,14 +118,9 @@ func Serve(db *sqlx.DB) {
 			log.Fatal("error parsing template")
 		}
 
-		fnotes, err := formatNotesDates(notes)
-		if err != nil {
-			log.Fatalf("error formatting notes: %v", err)
-		}
-
 		out := new(bytes.Buffer)
 		err = tmpl.Execute(out, map[string]any{
-			"notes": fnotes,
+			"notes": notes,
 		})
 		if err != nil {
 			log.Fatal("error executing template on data")
@@ -140,17 +130,16 @@ func Serve(db *sqlx.DB) {
 	})
 
 	r.Get("/player", func(w http.ResponseWriter, r *http.Request) {
-		var youtubeLinks []notes.Note
-		err := db.Select(&youtubeLinks, "select * from notes where kind = 'link' and text like '%youtube.com%' or text like '%youtu.be%'")
+		youtubeLinks, err := q.YoutubeLinks(r.Context())
 		if err != nil {
 			log.Fatal("could not select links")
 		}
 
 		var videoIDs []string
 		for _, link := range youtubeLinks {
-			id, err := youtube.ExtractVideoID(link.Text)
+			id, err := youtube.ExtractVideoID(link.Text.String)
 			if err != nil {
-				log.Fatalf("error extracting video id %s", link.Text)
+				log.Fatalf("error extracting video id %s", link.Text.String)
 			}
 			videoIDs = append(videoIDs, id)
 		}
@@ -206,35 +195,9 @@ func Serve(db *sqlx.DB) {
 	}
 }
 
-func getNotes(db *sqlx.DB, nick string) ([]notes.Note, error) {
-	result := []notes.Note{}
-	var err error
+func getNotes(ctx context.Context, q *model.Queries, nick string) ([]model.Note, error) {
 	if nick == "" {
-		err = db.Select(&result, `select created_at, text, nick, kind from notes where target != nick order by created_at desc limit 10000`)
-	} else {
-		err = db.Select(&result, `select created_at, text, nick, kind from notes where target != nick and nick = ? order by created_at desc limit 10000`, nick)
+		return q.AllNotes(ctx)
 	}
-	return result, err
-}
-
-func getNicks(db *sqlx.DB) ([]NickWithNoteCount, error) {
-	nicks := []NickWithNoteCount{}
-	err := db.Select(&nicks, `select nick, count(nick) as count from notes group by nick`)
-	return nicks, err
-}
-
-func formatNotesDates(narr []notes.Note) ([]notes.Note, error) {
-	result := []notes.Note{}
-	for _, n := range narr {
-		newNote := n
-
-		createdAt, err := util.ParseTime(n.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-
-		newNote.CreatedAt = createdAt.Format("Mon, 02 Jan 2006 15:04:05 -0700")
-		result = append(result, newNote)
-	}
-	return result, nil
+	return q.AllNickNotes(ctx, sql.NullString{String: nick, Valid: true})
 }

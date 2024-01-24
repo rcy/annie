@@ -1,7 +1,7 @@
 -include ../.env
 
 gen: schema.sql query.sql sqlc.yaml
-	sqlc generate
+	go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.23.0 generate
 
 schema.sql:
 	echo .schema | sqlite3 ${SQLITE_DB} > $@

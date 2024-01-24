@@ -2,8 +2,7 @@ package handlers
 
 import (
 	"goirc/bot"
-	"goirc/model"
-	"goirc/model/notes"
+	db "goirc/model"
 	"math"
 	"testing"
 	"time"
@@ -95,17 +94,12 @@ func TestFeedMe(t *testing.T) {
 			for _, x := range tc.messages {
 				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, datetime(?))`
 				createdAt := x.createdAt.UTC().Format("2006-01-02T15:04:05Z")
-				_, err := model.DB.Exec(query, "nick", "nick", "link", x.text, createdAt)
+				_, err := db.DB.Exec(query, "nick", "nick", "link", x.text, createdAt)
 				if err != nil {
 					t.Fatalf("error creating note %s", err)
 				}
 			}
-			var notes []notes.Note
-			err := model.DB.Select(&notes, "select * from notes")
-			if err != nil {
-				panic(err)
-			}
-			err = FeedMe(bot.HandlerParams{
+			err := FeedMe(bot.HandlerParams{
 				Privmsgf: dummyPrivmsgf,
 				Msg:      "",
 				Target:   "",
@@ -116,7 +110,7 @@ func TestFeedMe(t *testing.T) {
 			}
 
 			var count int
-			err = model.DB.Get(&count, `select count(*) from notes where nick = target`)
+			err = db.DB.Get(&count, `select count(*) from notes where nick = target`)
 			if err != nil {
 				t.Fatalf("error getting note count %s", err)
 			}
@@ -211,7 +205,7 @@ func TestPipeHealth(t *testing.T) {
 			for _, x := range tc.messages {
 				query := `insert into notes(target, nick, text, kind, created_at) values(?, ?, ?, ?, datetime(?))`
 				createdAt := x.createdAt.UTC().Format("2006-01-02T15:04:05Z")
-				_, err := model.DB.Exec(query, "nick", "nick", "link", x.text, createdAt)
+				_, err := db.DB.Exec(query, "nick", "nick", "link", x.text, createdAt)
 				if err != nil {
 					t.Fatalf("error creating note %s", err)
 				}
@@ -252,8 +246,7 @@ func TestCandidateLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var notes []notes.Note
-	notes, err = candidateLinks(0)
+	notes, err := candidateLinks(0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -276,7 +269,7 @@ func dummyPrivmsgf(x string, y string, z ...interface{}) {
 func reset(t *testing.T) {
 	lastSentAt = time.Unix(0, 0)
 
-	_, err := model.DB.Exec(`delete from notes`)
+	_, err := db.DB.Exec(`delete from notes`)
 	if err != nil {
 		t.Fatalf("error deleting notes %s", err)
 	}

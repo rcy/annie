@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"goirc/bot/idle"
 	"goirc/commit"
-	"goirc/model"
+	"goirc/db/model"
+	db "goirc/model"
 	"goirc/model/laters"
-	"goirc/model/notes"
 	"goirc/util"
 	"log"
 	"log/slog"
@@ -122,7 +122,7 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 	bot.Conn.AddCallback("001", func(e *irc.Event) { bot.Conn.Join(channel) })
 	bot.Conn.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
-		_, err := model.DB.Exec(`update channel_nicks set updated_at = current_timestamp, present = false where present = true`)
+		_, err := db.DB.Exec(`update channel_nicks set updated_at = current_timestamp, present = false where present = true`)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -132,7 +132,7 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 
 		// mark nicks as present and record timestamp which can be intepreted as 'last seen', or 'online since'
 		for _, nick := range strings.Split(nickStr, " ") {
-			_, err = model.DB.Exec(`
+			_, err = db.DB.Exec(`
 insert into channel_nicks(updated_at, channel, nick, present) values(current_timestamp, ?, ?, ?)
 on conflict(channel, nick) do update set updated_at = current_timestamp, present=excluded.present`,
 				channel, nick, true)
@@ -209,7 +209,7 @@ func (bot *Bot) SendLaters(channel string, nick string) {
 	}
 	for _, row := range rows {
 		if strings.Contains(nick, row.Target) {
-			_, err := model.DB.Exec(`delete from laters where rowid = ?`, row.RowId)
+			_, err := db.DB.Exec(`delete from laters where rowid = ?`, row.RowId)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -267,23 +267,23 @@ func (bot *Bot) SendMissed(channel string, nick string) error {
 	}
 
 	channelNick := model.ChannelNick{}
-	err := model.DB.Get(&channelNick, `select * from channel_nicks where present = 0 and channel = ? and nick = ?`, channel, nick)
+	err := db.DB.Get(&channelNick, `select * from channel_nicks where present = 0 and channel = ? and nick = ?`, channel, nick)
 	if err != nil {
 		return err
 	}
 
-	notes := []notes.Note{}
-	err = model.DB.Select(&notes, "select * from notes where created_at > ? and nick <> target order by created_at asc limit 69", channelNick.UpdatedAt)
+	notes := []model.Note{}
+	err = db.DB.Select(&notes, "select * from notes where created_at > ? and nick <> target order by created_at asc limit 69", channelNick.UpdatedAt)
 	if err != nil {
 		return err
 	}
 
 	if len(notes) > 0 {
 		bot.Conn.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
-			nick, len(notes), channel, channelNick.UpdatedAt)
+			nick, len(notes), channel, channelNick.UpdatedAt.String)
 
 		for _, note := range notes {
-			bot.Conn.Privmsgf(nick, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
+			bot.Conn.Privmsgf(nick, "%s (from %s %s ago)", note.Text.String, note.Nick.String, util.Ago(time.Since(note.CreatedAt).Round(time.Second)))
 			time.Sleep(1 * time.Second)
 		}
 	}
