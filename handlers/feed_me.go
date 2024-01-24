@@ -1,23 +1,22 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"goirc/bot"
-	"goirc/model"
-	"goirc/model/notes"
+	"goirc/db/model"
+	db "goirc/model"
 	"goirc/util"
 	"time"
 
 	"github.com/rcy/durfmt"
 )
 
-func candidateLinks(age time.Duration) ([]notes.Note, error) {
-	notes := []notes.Note{}
+func candidateLinks(age time.Duration) ([]model.Note, error) {
+	q := model.New(db.DB)
 
-	query := `select id, created_at, nick, text, kind from notes where created_at <= datetime(?) and nick = target order by random() limit 420`
-
-	t := time.Now().UTC().Add(-age).Format(time.RFC3339)
-	err := model.DB.Select(&notes, query, t)
+	t := time.Now().UTC().Add(-age)
+	notes, err := q.UnsentAnonymousNotes(context.TODO(), t)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -67,12 +66,12 @@ func FeedMe(params bot.HandlerParams) error {
 
 	candidates := make([]string, len(notes))
 	for i, n := range notes {
-		candidates[i] = n.Text
+		candidates[i] = n.Text.String
 	}
 
 	note := notes[0]
 
-	_, err = model.DB.Exec(`update notes set target = ? where id = ?`, params.Target, note.Id)
+	_, err = db.DB.Exec(`update notes set target = ? where id = ?`, params.Target, note.ID)
 	if err != nil {
 		return err
 	}
@@ -89,10 +88,10 @@ func FeedMe(params bot.HandlerParams) error {
 			return err
 		}
 	} else {
-		text = note.Text
+		text = note.Text.String
 	}
 
-	params.Privmsgf(params.Target, "%s (%s ago) [pipe=%d+%d]", text, util.Since(note.CreatedAt), ready, fermenting)
+	params.Privmsgf(params.Target, "%s (%s ago) [pipe=%d+%d]", text, util.Ago(time.Since(note.CreatedAt)), ready, fermenting)
 
 	lastSentAt = time.Now()
 

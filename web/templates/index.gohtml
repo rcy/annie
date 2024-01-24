@@ -12,7 +12,7 @@
     <div>
       <a href="/">all</a>
       {{range .nicks}}
-        <a href="?nick={{.Nick}}">{{.Nick}}</a>
+        <a href="?nick={{.Nick.String}}">{{.Nick.String}}</a>
       {{end}}
       -- <a href="/snapshot.db">db</a>
     </div>
@@ -24,13 +24,13 @@
             {{.CreatedAt}}
           </td>
           <td>
-            {{.Nick}}
+            {{.Nick.String}}
           </td>
           <td>
             {{if eq .Kind "link"}}
-              <a href="{{.Text}}">{{.Text}}</a>
+              <a href="{{.Text.String}}">{{.Text.String}}</a>
             {{else}}
-              {{.Text}}
+              {{.Text.String}}
             {{end}}
           </td>
         </tr>

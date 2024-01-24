@@ -1,6 +1,9 @@
-package notes
+package model
 
 import (
+	"context"
+	"database/sql"
+	m "goirc/model"
 	"testing"
 )
 
@@ -36,11 +39,12 @@ func TestCreate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			note, err := Create(CreateParams{
+			q := New(m.DB)
+			note, err := q.InsertNote(context.TODO(), InsertNoteParams{
 				Target: tc.target,
-				Nick:   tc.nick,
+				Nick:   sql.NullString{String: tc.nick, Valid: true},
 				Kind:   tc.kind,
-				Text:   tc.text,
+				Text:   sql.NullString{String: tc.text, Valid: true},
 			})
 			if err != nil {
 				if err.Error() != tc.wantError {
@@ -52,11 +56,11 @@ func TestCreate(t *testing.T) {
 			if note.Kind != tc.kind {
 				t.Errorf("wanted kind '%s', got '%s'", tc.kind, note.Kind)
 			}
-			if note.Nick != tc.nick {
-				t.Errorf("wanted nick '%s', got '%s'", tc.nick, note.Nick)
+			if note.Nick.String != tc.nick {
+				t.Errorf("wanted nick '%s', got '%s'", tc.nick, note.Nick.String)
 			}
-			if note.Text != tc.text {
-				t.Errorf("wanted text '%s', got '%s'", tc.text, note.Text)
+			if note.Text.String != tc.text {
+				t.Errorf("wanted text '%s', got '%s'", tc.text, note.Text.String)
 			}
 			if note.Target != tc.target {
 				t.Errorf("wanted target '%s', got '%s'", tc.target, note.Target)

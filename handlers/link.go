@@ -1,14 +1,24 @@
 package handlers
 
 import (
+	"context"
+	"database/sql"
 	"goirc/bot"
-	"goirc/model/notes"
+	"goirc/db/model"
+	db "goirc/model"
 )
 
 func Link(params bot.HandlerParams) error {
+	q := model.New(db.DB)
+
 	url := params.Matches[1]
 
-	note, err := notes.Create(notes.CreateParams{Target: params.Target, Nick: params.Nick, Kind: "link", Text: url})
+	note, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
+		Target: params.Target,
+		Nick:   sql.NullString{String: params.Nick, Valid: true},
+		Kind:   "link",
+		Text:   sql.NullString{String: url, Valid: true},
+	})
 	if err != nil {
 		return err
 	}

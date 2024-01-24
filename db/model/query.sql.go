@@ -7,7 +7,77 @@ package model
 
 import (
 	"context"
+	"database/sql"
+	"time"
 )
+
+const allNickNotes = `-- name: AllNickNotes :many
+select id, created_at, nick, text, kind, target from notes where target != nick and nick = ? order by created_at desc limit 10000
+`
+
+func (q *Queries) AllNickNotes(ctx context.Context, nick sql.NullString) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, allNickNotes, nick)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Nick,
+			&i.Text,
+			&i.Kind,
+			&i.Target,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const allNotes = `-- name: AllNotes :many
+select id, created_at, nick, text, kind, target from notes where target != nick order by created_at desc limit 10000
+`
+
+func (q *Queries) AllNotes(ctx context.Context) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, allNotes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Nick,
+			&i.Text,
+			&i.Kind,
+			&i.Target,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const insertNickWeatherRequest = `-- name: InsertNickWeatherRequest :exec
 insert into nick_weather_requests(nick, query, city, country) values(?,?,?,?)
@@ -30,6 +100,36 @@ func (q *Queries) InsertNickWeatherRequest(ctx context.Context, arg InsertNickWe
 	return err
 }
 
+const insertNote = `-- name: InsertNote :one
+insert into notes(target, nick, kind, text) values(?,?,?,?) returning id, created_at, nick, text, kind, target
+`
+
+type InsertNoteParams struct {
+	Target string
+	Nick   sql.NullString
+	Kind   string
+	Text   sql.NullString
+}
+
+func (q *Queries) InsertNote(ctx context.Context, arg InsertNoteParams) (Note, error) {
+	row := q.db.QueryRowContext(ctx, insertNote,
+		arg.Target,
+		arg.Nick,
+		arg.Kind,
+		arg.Text,
+	)
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Text,
+		&i.Kind,
+		&i.Target,
+	)
+	return i, err
+}
+
 const insertVisit = `-- name: InsertVisit :exec
 insert into visits(session, note_id) values(?,?)
 `
@@ -42,6 +142,45 @@ type InsertVisitParams struct {
 func (q *Queries) InsertVisit(ctx context.Context, arg InsertVisitParams) error {
 	_, err := q.db.ExecContext(ctx, insertVisit, arg.Session, arg.NoteID)
 	return err
+}
+
+const lastDaysNotes = `-- name: LastDaysNotes :many
+select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc
+`
+
+type LastDaysNotesRow struct {
+	CreatedAt time.Time
+	Nick      sql.NullString
+	Text      sql.NullString
+	Kind      string
+}
+
+func (q *Queries) LastDaysNotes(ctx context.Context) ([]LastDaysNotesRow, error) {
+	rows, err := q.db.QueryContext(ctx, lastDaysNotes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []LastDaysNotesRow
+	for rows.Next() {
+		var i LastDaysNotesRow
+		if err := rows.Scan(
+			&i.CreatedAt,
+			&i.Nick,
+			&i.Text,
+			&i.Kind,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const lastNickWeatherRequest = `-- name: LastNickWeatherRequest :one
@@ -96,4 +235,104 @@ func (q *Queries) Link(ctx context.Context, id int64) (Note, error) {
 		&i.Target,
 	)
 	return i, err
+}
+
+const nicksWithNoteCount = `-- name: NicksWithNoteCount :many
+select nick, count(nick) as count from notes group by nick
+`
+
+type NicksWithNoteCountRow struct {
+	Nick  sql.NullString
+	Count int64
+}
+
+func (q *Queries) NicksWithNoteCount(ctx context.Context) ([]NicksWithNoteCountRow, error) {
+	rows, err := q.db.QueryContext(ctx, nicksWithNoteCount)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []NicksWithNoteCountRow
+	for rows.Next() {
+		var i NicksWithNoteCountRow
+		if err := rows.Scan(&i.Nick, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const unsentAnonymousNotes = `-- name: UnsentAnonymousNotes :many
+select id, created_at, nick, text, kind, target from notes where created_at <= ? and nick = target order by random() limit 420
+`
+
+func (q *Queries) UnsentAnonymousNotes(ctx context.Context, createdAt time.Time) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, unsentAnonymousNotes, createdAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Nick,
+			&i.Text,
+			&i.Kind,
+			&i.Target,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const youtubeLinks = `-- name: YoutubeLinks :many
+select id, created_at, nick, text, kind, target from notes where kind = 'link' and text like '%youtube.com%' or text like '%youtu.be%'
+`
+
+func (q *Queries) YoutubeLinks(ctx context.Context) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, youtubeLinks)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Nick,
+			&i.Text,
+			&i.Kind,
+			&i.Target,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

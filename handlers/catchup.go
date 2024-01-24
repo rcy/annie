@@ -1,24 +1,25 @@
 package handlers
 
 import (
+	"context"
 	"goirc/bot"
-	"goirc/model"
-	"goirc/model/notes"
+	"goirc/db/model"
+	db "goirc/model"
 	"goirc/util"
 	"time"
 )
 
 func Catchup(params bot.HandlerParams) error {
-	notes := []notes.Note{}
+	ctx := context.TODO()
+	q := model.New(db.DB)
 
-	// TODO: markAsSeen
-	err := model.DB.Select(&notes, `select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc`)
+	notes, err := q.LastDaysNotes(ctx)
 	if err != nil {
 		return err
 	}
 	if len(notes) >= 1 {
 		for _, note := range notes {
-			params.Privmsgf(params.Nick, "%s (from %s %s ago)", note.Text, note.Nick, util.Since(note.CreatedAt))
+			params.Privmsgf(params.Nick, "%s (from %s %s ago)", note.Text, note.Nick, util.Ago(time.Since(note.CreatedAt).Round(time.Second)))
 			time.Sleep(1 * time.Second)
 		}
 	}
