@@ -45,7 +45,7 @@ var (
 var lastSentAt = time.Unix(0, 0)
 
 func canSendIn(startTime time.Time) time.Duration {
-	return startTime.Add(cooloff).Sub(time.Now())
+	return time.Until(startTime.Add(cooloff))
 }
 
 func FeedMe(params bot.HandlerParams) error {

@@ -55,7 +55,7 @@ func DoRemind(params bot.HandlerParams) error {
 		return nil
 	}
 
-	ago := util.Ago(time.Now().Sub(row.CreatedAt).Round(time.Second))
+	ago := util.Ago(time.Since(row.CreatedAt).Round(time.Second))
 	params.Privmsgf(params.Target, `%s: reminder (%s ago) "%s"`, row.Nick, ago, row.What)
 
 	err = reminders.Delete(row.ID)

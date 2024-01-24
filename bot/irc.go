@@ -155,7 +155,9 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 				bot.SendLaters(channel, e.Nick)
 			}()
 
-			go bot.SendMissed(channel, e.Nick)
+			go func() {
+				_ = bot.SendMissed(channel, e.Nick)
+			}()
 		} else {
 			go func() {
 				time.Sleep(1 * time.Second)
@@ -259,19 +261,22 @@ func isAltNick(nick string) bool {
 	return strings.HasSuffix(nick, "`") || strings.HasSuffix(nick, "_")
 }
 
-func (bot *Bot) SendMissed(channel string, nick string) {
+func (bot *Bot) SendMissed(channel string, nick string) error {
 	if isAltNick(nick) {
-		return
+		return nil
 	}
 
 	channelNick := model.ChannelNick{}
 	err := model.DB.Get(&channelNick, `select * from channel_nicks where present = 0 and channel = ? and nick = ?`, channel, nick)
 	if err != nil {
-		return
+		return err
 	}
 
 	notes := []notes.Note{}
-	model.DB.Select(&notes, "select * from notes where created_at > ? and nick <> target order by created_at asc limit 69", channelNick.UpdatedAt)
+	err = model.DB.Select(&notes, "select * from notes where created_at > ? and nick <> target order by created_at asc limit 69", channelNick.UpdatedAt)
+	if err != nil {
+		return err
+	}
 
 	if len(notes) > 0 {
 		bot.Conn.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
@@ -282,4 +287,6 @@ func (bot *Bot) SendMissed(channel string, nick string) {
 			time.Sleep(1 * time.Second)
 		}
 	}
+
+	return nil
 }
