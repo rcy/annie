@@ -129,8 +129,6 @@ func (w weather) String() string {
 	return strings.Join(components, ", ")
 }
 
-const iconURLFmt = "https://openweathermap.org/img/wn/%s@2x.png"
-
 func fetchWeather(q string) (*weather, error) {
 	key := os.Getenv("OPENWEATHERMAP_API_KEY")
 	if key == "" {

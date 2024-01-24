@@ -10,7 +10,7 @@ import (
 )
 
 func TimeLeft(params bot.HandlerParams) error {
-	left := time.Unix(2<<30, 0).Sub(time.Now())
+	left := time.Until(time.Unix(2<<30, 0))
 
 	years := int(math.Round(left.Hours() / 24 / 365))
 	months := int(math.Round(left.Hours() / 24 / 365 * 12))

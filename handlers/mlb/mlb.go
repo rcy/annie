@@ -97,7 +97,7 @@ func PlayoffOdds(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
-	lastUpdatedStr := fmt.Sprintf("%s ago", util.Ago(time.Now().Sub(*at)))
+	lastUpdatedStr := fmt.Sprintf("%s ago", util.Ago(time.Since(*at)))
 	params.Privmsgf(params.Target, "%s - %s - %s - %s", al, nl, lastUpdatedStr, "https://www.mlb.com/postseason")
 
 	return nil

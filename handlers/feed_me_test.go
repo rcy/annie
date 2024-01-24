@@ -271,7 +271,6 @@ func TestCandidateLinks(t *testing.T) {
 }
 
 func dummyPrivmsgf(x string, y string, z ...interface{}) {
-	return
 }
 
 func reset(t *testing.T) {

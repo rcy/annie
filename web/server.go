@@ -39,17 +39,21 @@ var rssTemplate string
 var playerTemplateContent string
 var playerTemplate = template.Must(template.New("").Parse(playerTemplateContent))
 
-const sessionKey = "annie"
+type keyType int
+
+var sessionKey keyType
+
+const cookieKey = "annie"
 
 func Serve(db *sqlx.DB) {
 	r := chi.NewRouter()
 
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			c, err := r.Cookie(sessionKey)
+			c, err := r.Cookie(cookieKey)
 			if errors.Is(err, http.ErrNoCookie) {
 				http.SetCookie(w, &http.Cookie{
-					Name:     sessionKey,
+					Name:     cookieKey,
 					Value:    uuid.Must(uuid.NewV7()).String(),
 					Path:     "/",
 					Secure:   true,
@@ -103,7 +107,7 @@ func Serve(db *sqlx.DB) {
 			log.Fatal("error executing template on data")
 		}
 
-		w.Write(out.Bytes())
+		_, _ = w.Write(out.Bytes())
 	})
 
 	r.Get("/rss.xml", func(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +136,7 @@ func Serve(db *sqlx.DB) {
 			log.Fatal("error executing template on data")
 		}
 
-		w.Write(out.Bytes())
+		_, _ = w.Write(out.Bytes())
 	})
 
 	r.Get("/player", func(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +161,7 @@ func Serve(db *sqlx.DB) {
 			log.Fatalf("error executing template: %s", err)
 		}
 
-		w.Write(out.Bytes())
+		_, _ = w.Write(out.Bytes())
 	})
 
 	r.Get("/{sqid}", func(w http.ResponseWriter, r *http.Request) {
@@ -196,7 +200,10 @@ func Serve(db *sqlx.DB) {
 
 	addr := ":" + os.Getenv("PORT")
 	log.Printf("web server listening on %s", addr)
-	http.ListenAndServe(addr, r)
+	err := http.ListenAndServe(addr, r)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getNotes(db *sqlx.DB, nick string) ([]notes.Note, error) {
