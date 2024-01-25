@@ -6,10 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"goirc/bot"
 	db "goirc/db/model"
 	"goirc/model"
-	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -17,7 +15,7 @@ import (
 	"github.com/pariz/gountries"
 )
 
-type weather struct {
+type Weather struct {
 	Coord struct {
 		Lon float64 `json:"lon"`
 		Lat float64 `json:"lat"`
@@ -71,7 +69,7 @@ type weather struct {
 	Cod      int    `json:"cod"`
 }
 
-func (w weather) String() string {
+func (w Weather) String() string {
 	components := []string{}
 
 	var countryStr string
@@ -129,7 +127,7 @@ func (w weather) String() string {
 	return strings.Join(components, ", ")
 }
 
-func fetchWeather(q string) (*weather, error) {
+func fetchWeather(q string) (*Weather, error) {
 	key := os.Getenv("OPENWEATHERMAP_API_KEY")
 	if key == "" {
 		return nil, fmt.Errorf("bad api key")
@@ -145,7 +143,7 @@ func fetchWeather(q string) (*weather, error) {
 		return nil, fmt.Errorf("city not found")
 	}
 
-	var w weather
+	var w Weather
 	err = json.NewDecoder(resp.Body).Decode(&w)
 	if err != nil {
 		return nil, err
@@ -153,43 +151,18 @@ func fetchWeather(q string) (*weather, error) {
 	return &w, nil
 }
 
-func fetchXWeather(q string) ([]byte, error) {
-	key := os.Getenv("OPENWEATHERMAP_API_KEY")
-	if key == "" {
-		return nil, fmt.Errorf("bad api key")
-	}
-
-	resp, err := http.Get(fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?units=metric&q=%s&appid=%s", q, key))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 404 {
-		return nil, fmt.Errorf("city not found")
-	}
-
-	return io.ReadAll(resp.Body)
-}
-
-func Handle(params bot.HandlerParams) error {
-	ctx := context.TODO()
+func Fetch(ctx context.Context, q string, nick string) (*Weather, error) {
 	queries := db.New(model.DB)
 
-	var q string
-	if len(params.Matches) > 1 {
-		q = params.Matches[1]
-	}
-
 	if q == "" {
-		last, err := queries.LastNickWeatherRequest(ctx, params.Nick)
+		last, err := queries.LastNickWeatherRequest(ctx, nick)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return errors.New("no previous weather station to report on")
+				return nil, errors.New("no previous weather station to report on")
 			}
-			return err
+			return nil, err
 		}
-		if params.Nick == last.Nick {
+		if nick == last.Nick {
 			if strings.HasPrefix(last.City, q) {
 				q = last.City + "," + last.Country
 			}
@@ -198,7 +171,7 @@ func Handle(params bot.HandlerParams) error {
 		last, err := queries.LastWeatherRequestByPrefix(ctx, q)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
-				return err
+				return nil, err
 			}
 		}
 		if last.ID != 0 {
@@ -206,53 +179,20 @@ func Handle(params bot.HandlerParams) error {
 		}
 	}
 
-	resp, err := fetchWeather(q)
+	w, err := fetchWeather(q)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
-		Nick:    params.Nick,
+		Nick:    nick,
 		Query:   q,
-		City:    resp.Name,
-		Country: resp.Sys.Country,
+		City:    w.Name,
+		Country: w.Sys.Country,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	params.Privmsgf(params.Target, resp.String())
-
-	return nil
-}
-
-func XHandle(params bot.HandlerParams) error {
-	q := params.Matches[1]
-
-	resp, err := fetchXWeather(q)
-	if err != nil {
-		return err
-	}
-
-	chunks := splitBytes(resp, 420)
-
-	for _, chunk := range chunks {
-		params.Privmsgf(params.Target, string(chunk))
-	}
-
-	return nil
-}
-
-func splitBytes(data []byte, chunkSize int) [][]byte {
-	var chunks [][]byte
-
-	for len(data) > 0 {
-		if len(data) < chunkSize {
-			chunkSize = len(data)
-		}
-		chunks = append(chunks, data[:chunkSize])
-		data = data[chunkSize:]
-	}
-
-	return chunks
+	return w, nil
 }

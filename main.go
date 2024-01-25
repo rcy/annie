@@ -3,9 +3,7 @@ package main
 import (
 	"goirc/bot"
 	"goirc/handlers"
-	"goirc/handlers/epigram"
 	"goirc/handlers/mlb"
-	"goirc/handlers/weather"
 	"goirc/model"
 	"goirc/util"
 	"goirc/web"
@@ -56,10 +54,9 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^\?(\S+)`, handlers.Seen)
 	b.Handle(`world.?cup`, handlers.Worldcup)
 	b.Handle(`^!left`, handlers.TimeLeft)
-	b.Handle(`^!epi`, epigram.Handle)
-	b.Handle(`^!weather (.*)$`, weather.Handle)
-	b.Handle(`^!weather$`, weather.Handle)
-	b.Handle(`^!w (.*)$`, weather.Handle)
-	b.Handle(`^!w$`, weather.Handle)
-	b.Handle(`^!xweather (.+)$`, weather.XHandle)
+	b.Handle(`^!epi`, handlers.EpigramHandler)
+	b.Handle(`^!weather (.*)$`, handlers.WeatherHandler)
+	b.Handle(`^!weather$`, handlers.WeatherHandler)
+	b.Handle(`^!w (.*)$`, handlers.WeatherHandler)
+	b.Handle(`^!w$`, handlers.WeatherHandler)
 }

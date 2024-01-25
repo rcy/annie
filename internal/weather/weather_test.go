@@ -45,7 +45,7 @@ func TestWeather(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			w := weather{}
+			w := Weather{}
 
 			err = json.Unmarshal(payload, &w)
 			if err != nil {
