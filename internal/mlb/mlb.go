@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"goirc/bot"
 	"goirc/fetch"
 	"goirc/util"
 	"sort"
@@ -14,23 +13,23 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-type TeamEndData struct {
+type teamEndData struct {
 	PoffTitle float64
 	WsWin     float64
 	CsWin     float64
 }
 
-type Team struct {
+type team struct {
 	TeamID   int `json:"teamId"`
 	AbbName  string
 	League   string
 	Division string
-	EndData  TeamEndData
+	EndData  teamEndData
 }
 
-type TeamList []Team
+type teamList []team
 
-func (tl TeamList) String() string {
+func (tl teamList) String() string {
 	arr := []string{}
 	for _, team := range tl {
 		if team.EndData.WsWin != 0.0 {
@@ -40,7 +39,7 @@ func (tl TeamList) String() string {
 	return strings.Join(arr, " ")
 }
 
-func fetchTeams() (TeamList, error) {
+func fetchTeams() (teamList, error) {
 	date := time.Now().Format(time.DateOnly)
 
 	url := fmt.Sprintf("https://www.fangraphs.com/api/playoff-odds/odds?dateEnd=%s&dateDelta=&projectionMode=2&standingsType=lg", date)
@@ -50,7 +49,7 @@ func fetchTeams() (TeamList, error) {
 		return nil, err
 	}
 
-	var teams TeamList
+	var teams teamList
 	err = json.Unmarshal(bytes, &teams)
 	if err != nil {
 		return nil, err
@@ -63,13 +62,13 @@ func fetchTeams() (TeamList, error) {
 	return teams, nil
 }
 
-func fetchLeagueTeams(league string) (TeamList, error) {
+func fetchLeagueTeams(league string) (teamList, error) {
 	teams, err := fetchTeams()
 	if err != nil {
 		return nil, err
 	}
 
-	var lt TeamList
+	var lt teamList
 
 	for _, t := range teams {
 		if t.League == league {
@@ -80,27 +79,26 @@ func fetchLeagueTeams(league string) (TeamList, error) {
 	return lt, nil
 }
 
-func PlayoffOdds(params bot.HandlerParams) error {
+func PlayoffOdds() (string, error) {
 	teams, err := fetchLeagueTeams("AL")
 	if err != nil {
-		return err
+		return "", err
 	}
 	al := fmt.Sprintf("AL %s", teams.String())
 
 	teams, err = fetchLeagueTeams("NL")
 	if err != nil {
-		return err
+		return "", err
 	}
 	nl := fmt.Sprintf("NL %s", teams.String())
 
 	at, err := lastUpdatedAt()
 	if err != nil {
-		return err
+		return "", err
 	}
 	lastUpdatedStr := fmt.Sprintf("%s ago", util.Ago(time.Since(*at)))
-	params.Privmsgf(params.Target, "%s - %s - %s - %s", al, nl, lastUpdatedStr, "https://www.mlb.com/postseason")
 
-	return nil
+	return fmt.Sprintf("%s - %s - %s - %s", al, nl, lastUpdatedStr, "https://www.mlb.com/postseason"), nil
 }
 
 func lastUpdatedAt() (*time.Time, error) {

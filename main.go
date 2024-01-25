@@ -3,7 +3,6 @@ package main
 import (
 	"goirc/bot"
 	"goirc/handlers"
-	"goirc/handlers/mlb"
 	"goirc/model"
 	"goirc/util"
 	"goirc/web"
@@ -47,7 +46,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, handlers.NationalDay)
 	b.Handle(`\b69[^0-9]*\b`, handlers.Nice)
-	b.Handle(`^!odds`, mlb.PlayoffOdds)
+	b.Handle(`^!odds`, handlers.MLBOddsHandler)
 	b.Handle(`^!pom`, handlers.POM)
 	b.Handle(`^("[^"]+)$`, handlers.Quote)
 	b.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
