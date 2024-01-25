@@ -1,8 +1,7 @@
-package epigram
+package epigrams
 
 import (
 	_ "embed"
-	"goirc/bot"
 	"math/rand"
 	"strings"
 )
@@ -13,10 +12,8 @@ var (
 	epigrams        []string = strings.Split(epigramsContent, "\n")
 )
 
-func Handle(params bot.HandlerParams) error {
+func Random() string {
 	ri := rand.Intn(len(epigrams))
 
-	params.Privmsgf(params.Target, epigrams[ri])
-
-	return nil
+	return epigrams[ri]
 }
