@@ -7,6 +7,7 @@ import (
 	"goirc/util"
 	"goirc/web"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -31,12 +32,12 @@ func addHandlers(b *bot.Bot) {
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
 	b.IdleRepeatAfterReset(1*time.Minute, handlers.FeedMe)
 
-	b.Handle(`^!help`, func(params bot.HandlerParams) error {
+	b.Handle(`^!help`, func(params bot.HandlerParams) (string, error) {
+		lines := []string{}
 		for _, h := range b.Handlers {
-			params.Privmsgf(params.Target, "%s", h.String())
-			time.Sleep(200 * time.Millisecond) // prevent flooding
+			lines = append(lines, h.String())
 		}
-		return nil
+		return strings.Join(lines, "\n"), nil
 	})
 	b.Handle(`^!catchup`, handlers.Catchup)
 	b.Handle(`^,(.+)$`, handlers.CreateNote)

@@ -5,7 +5,6 @@ import (
 	"goirc/internal/epigrams"
 )
 
-func EpigramHandler(params bot.HandlerParams) error {
-	params.Privmsgf(params.Target, "%s", epigrams.Random())
-	return nil
+func EpigramHandler(bot.HandlerParams) (string, error) {
+	return epigrams.Random(), nil
 }

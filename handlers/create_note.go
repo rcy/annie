@@ -8,7 +8,7 @@ import (
 	db "goirc/model"
 )
 
-func CreateNote(params bot.HandlerParams) error {
+func CreateNote(params bot.HandlerParams) (string, error) {
 	q := model.New(db.DB)
 
 	text := params.Matches[1]
@@ -20,12 +20,10 @@ func CreateNote(params bot.HandlerParams) error {
 		Text:   sql.NullString{String: text, Valid: true},
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 	if params.Target == params.Nick {
-		params.Privmsgf(params.Target, "recorded note to share later, maybe")
-	} else {
-		params.Privmsgf(params.Target, "recorded note")
+		return "recorded note to share later, maybe", nil
 	}
-	return nil
+	return "recorded note", nil
 }

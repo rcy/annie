@@ -1,15 +1,12 @@
 package handlers
 
 import (
+	"fmt"
 	"goirc/bot"
 	"time"
 )
 
-func Nice(params bot.HandlerParams) error {
-	go func() {
-		time.Sleep(10 * time.Second)
-		params.Privmsgf(params.Target, "%s: nice", params.Nick)
-	}()
-
-	return nil
+func Nice(params bot.HandlerParams) (string, error) {
+	time.Sleep(10 * time.Second)
+	return fmt.Sprintf("%s: nice", params.Nick), nil
 }

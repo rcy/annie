@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"goirc/bot"
 	"goirc/db/model"
 	db "goirc/model"
@@ -42,26 +43,26 @@ func canSendIn(startTime time.Time) time.Duration {
 	return time.Until(startTime.Add(cooloff))
 }
 
-func FeedMe(params bot.HandlerParams) error {
+func FeedMe(params bot.HandlerParams) (string, error) {
 	waitFor := canSendIn(lastSentAt)
 
 	if waitFor > 0 {
 		if params.Nick != "" {
-			params.Privmsgf(params.Target, "throttled for another %s", durfmt.Format(waitFor))
+			return fmt.Sprintf("throttled for another %s", durfmt.Format(waitFor)), nil
 		}
-		return nil
+		return "", nil
 	}
 
 	notes, err := candidateLinks(MINAGE)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if len(notes) < threshold {
 		if params.Nick != "" {
-			params.Privmsgf(params.Target, "not enough links to feed the channel")
+			return "not enough links to feed the channel", nil
 		}
-		return nil
+		return "", nil
 	}
 
 	candidates := make([]string, len(notes))
@@ -73,40 +74,36 @@ func FeedMe(params bot.HandlerParams) error {
 
 	_, err = db.DB.Exec(`update notes set target = ? where id = ?`, params.Target, note.ID)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	ready, fermenting, err := health()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var text string
 	if note.Kind == "link" {
 		text, err = note.Link()
 		if err != nil {
-			return err
+			return "", err
 		}
 	} else {
 		text = note.Text.String
 	}
 
-	params.Privmsgf(params.Target, "%s (%s ago) [pipe=%d+%d]", text, util.Ago(time.Since(note.CreatedAt)), ready, fermenting)
-
 	lastSentAt = time.Now()
 
-	return nil
+	return fmt.Sprintf("%s (%s ago) [pipe=%d+%d]", text, util.Ago(time.Since(note.CreatedAt)), ready, fermenting), nil
 }
 
-func PipeHealth(params bot.HandlerParams) error {
+func PipeHealth(params bot.HandlerParams) (string, error) {
 	ready, fermenting, err := health()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	params.Privmsgf(params.Target, "%d links ready to serve (%d fermenting)", ready, fermenting)
-
-	return nil
+	return fmt.Sprintf("%d links ready to serve (%d fermenting)", ready, fermenting), nil
 }
 
 // Return ready, fermenting, error

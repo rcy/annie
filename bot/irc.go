@@ -61,12 +61,13 @@ func (b *Bot) Repeat(timeout time.Duration, action HandlerFunction) {
 	go func() {
 		for {
 			time.Sleep(timeout)
-			err := action(HandlerParams{
-				Privmsgf: b.MakePrivmsgf(),
-				Target:   b.Channel,
-			})
+			reply, err := action(HandlerParams{Target: b.Channel})
 			if err != nil {
 				slog.Warn("Repeat", "err", err)
+				continue
+			}
+			for _, line := range strings.Split(reply, "\n") {
+				b.Conn.Privmsgf(b.Channel, "%s", line)
 			}
 		}
 	}()
@@ -74,12 +75,13 @@ func (b *Bot) Repeat(timeout time.Duration, action HandlerFunction) {
 
 func (b *Bot) IdleRepeat(timeout time.Duration, action HandlerFunction) {
 	reset := idle.Repeat(timeout, func() {
-		err := action(HandlerParams{
-			Privmsgf: b.MakePrivmsgf(),
-			Target:   b.Channel,
-		})
+		reply, err := action(HandlerParams{Target: b.Channel})
 		if err != nil {
 			slog.Warn("IdleRepeat", "err", err)
+			return
+		}
+		for _, line := range strings.Split(reply, "\n") {
+			b.Conn.Privmsgf(b.Channel, "%s", line)
 		}
 	})
 
@@ -88,12 +90,13 @@ func (b *Bot) IdleRepeat(timeout time.Duration, action HandlerFunction) {
 
 func (b *Bot) IdleRepeatAfterReset(timeout time.Duration, action HandlerFunction) {
 	reset := idle.RepeatAfterReset(timeout, func() {
-		err := action(HandlerParams{
-			Privmsgf: b.MakePrivmsgf(),
-			Target:   b.Channel,
-		})
+		reply, err := action(HandlerParams{Target: b.Channel})
 		if err != nil {
 			slog.Warn("IdleRepeatAfterReset", "err", err)
+			return
+		}
+		for _, line := range strings.Split(reply, "\n") {
+			b.Conn.Privmsgf(b.Channel, "%s", line)
 		}
 	})
 
@@ -239,8 +242,7 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 	for _, handler := range bot.Handlers {
 		matches := handler.regexp.FindStringSubmatch(msg)
 		if len(matches) > 0 {
-			err := handler.action(HandlerParams{
-				Privmsgf:  bot.MakePrivmsgf(),
+			reply, err := handler.action(HandlerParams{
 				Msg:       msg,
 				Nick:      nick,
 				Target:    target,
@@ -251,6 +253,10 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 			if err != nil {
 				bot.Conn.Privmsgf(target, "error: %s", err)
 				return
+			}
+			for _, line := range strings.Split(reply, "\n") {
+				bot.Conn.Privmsgf(target, "%s", line)
+				time.Sleep(time.Second)
 			}
 		}
 	}

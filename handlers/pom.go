@@ -6,17 +6,15 @@ import (
 	"strings"
 )
 
-func POM(params bot.HandlerParams) error {
+func POM(params bot.HandlerParams) (string, error) {
 	cmd := exec.Command("/usr/games/pom")
 
 	var out strings.Builder
 	cmd.Stdout = &out
 
 	if err := cmd.Run(); err != nil {
-		return err
+		return "", err
 	}
 
-	params.Privmsgf(params.Target, "%s", out.String())
-
-	return nil
+	return out.String(), nil
 }

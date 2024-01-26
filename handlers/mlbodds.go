@@ -5,11 +5,6 @@ import (
 	"goirc/internal/mlb"
 )
 
-func MLBOddsHandler(params bot.HandlerParams) error {
-	s, err := mlb.PlayoffOdds()
-	if err != nil {
-		return err
-	}
-	params.Privmsgf(params.Target, "%s", s)
-	return nil
+func MLBOddsHandler(params bot.HandlerParams) (string, error) {
+	return mlb.PlayoffOdds()
 }

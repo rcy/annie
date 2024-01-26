@@ -99,11 +99,10 @@ func TestFeedMe(t *testing.T) {
 					t.Fatalf("error creating note %s", err)
 				}
 			}
-			err := FeedMe(bot.HandlerParams{
-				Privmsgf: dummyPrivmsgf,
-				Msg:      "",
-				Target:   "",
-				Matches:  []string{},
+			_, err := FeedMe(bot.HandlerParams{
+				Msg:     "",
+				Target:  "",
+				Matches: []string{},
 			})
 			if err != nil {
 				t.Fatalf("error running FeedMe %s", err)
@@ -128,10 +127,9 @@ func TestPipeHealth(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		name           string
-		messages       []message
-		wantReady      int
-		wantFermenting int
+		name     string
+		messages []message
+		want     string
 	}{
 		{
 			name: "6 old messages",
@@ -143,7 +141,7 @@ func TestPipeHealth(t *testing.T) {
 				{"", time.Now().Add(-time.Hour * 24)},
 				{"", time.Now().Add(-time.Hour * 24)},
 			},
-			wantReady: 6,
+			want: "6 links ready to serve (0 fermenting)",
 		},
 		{
 			name: "5 old messages",
@@ -154,7 +152,7 @@ func TestPipeHealth(t *testing.T) {
 				{"", time.Now().Add(-time.Hour * 24)},
 				{"", time.Now().Add(-time.Hour * 24)},
 			},
-			wantReady: 5,
+			want: "5 links ready to serve (0 fermenting)",
 		},
 		{
 			name: "3 old messages and 2 new message",
@@ -165,8 +163,7 @@ func TestPipeHealth(t *testing.T) {
 				{"", time.Now().Add(-time.Hour * 1)},
 				{"", time.Now()},
 			},
-			wantReady:      3,
-			wantFermenting: 2,
+			want: "3 links ready to serve (2 fermenting)",
 		},
 		{
 			name: "3 old messages and 2 new message",
@@ -177,8 +174,7 @@ func TestPipeHealth(t *testing.T) {
 				{"", time.Now().Add(-time.Hour * 24)},
 				{"", time.Now()},
 			},
-			wantReady:      3,
-			wantFermenting: 2,
+			want: "3 links ready to serve (2 fermenting)",
 		},
 		{
 			name: "2 old messages",
@@ -186,18 +182,19 @@ func TestPipeHealth(t *testing.T) {
 				{"", time.Now().Add(-time.Hour * 24)},
 				{"", time.Now().Add(-time.Hour * 24)},
 			},
-			wantReady: 2,
+			want: "2 links ready to serve (0 fermenting)",
 		},
 		{
 			name: "1 old messages",
 			messages: []message{
 				{"", time.Now().Add(-time.Hour * 24)},
 			},
-			wantReady: 1,
+			want: "1 links ready to serve (0 fermenting)",
 		},
 		{
 			name:     "no messages",
 			messages: []message{},
+			want:     "0 links ready to serve (0 fermenting)",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -210,17 +207,7 @@ func TestPipeHealth(t *testing.T) {
 					t.Fatalf("error creating note %s", err)
 				}
 			}
-			err := PipeHealth(bot.HandlerParams{
-				Privmsgf: func(x string, y string, z ...interface{}) {
-					ready := z[0]
-					fermenting := z[1]
-					if ready != tc.wantReady {
-						t.Errorf("ready want %d got %d", tc.wantReady, ready)
-					}
-					if fermenting != tc.wantFermenting {
-						t.Errorf("fermenting want %d got %d", tc.wantFermenting, fermenting)
-					}
-				},
+			got, err := PipeHealth(bot.HandlerParams{
 				Msg:     "",
 				Target:  "",
 				Matches: []string{},
@@ -228,6 +215,10 @@ func TestPipeHealth(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error running PipeHealth %s", err)
 			}
+			if got != tc.want {
+				t.Errorf("want %s got %s", got, tc.want)
+			}
+
 		})
 	}
 }
@@ -235,11 +226,10 @@ func TestPipeHealth(t *testing.T) {
 func TestCandidateLinks(t *testing.T) {
 	reset(t)
 
-	err := Link(bot.HandlerParams{
-		Privmsgf: dummyPrivmsgf,
-		Matches:  []string{"", "http://www.example.com"},
-		Target:   "theguy",
-		Nick:     "theguy",
+	_, err := Link(bot.HandlerParams{
+		Matches: []string{"", "http://www.example.com"},
+		Target:  "theguy",
+		Nick:    "theguy",
 	})
 
 	if err != nil {
@@ -261,9 +251,6 @@ func TestCandidateLinks(t *testing.T) {
 	if len(notes) != 0 {
 		t.Fatalf("candidate links 1 hour: want 0 got %d", len(notes))
 	}
-}
-
-func dummyPrivmsgf(x string, y string, z ...interface{}) {
 }
 
 func reset(t *testing.T) {

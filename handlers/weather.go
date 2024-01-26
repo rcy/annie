@@ -6,7 +6,7 @@ import (
 	"goirc/internal/weather"
 )
 
-func WeatherHandler(params bot.HandlerParams) error {
+func WeatherHandler(params bot.HandlerParams) (string, error) {
 	var q string
 	if len(params.Matches) > 1 {
 		q = params.Matches[1]
@@ -14,10 +14,8 @@ func WeatherHandler(params bot.HandlerParams) error {
 
 	w, err := weather.Fetch(context.TODO(), q, params.Nick)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	params.Privmsgf(params.Target, "%s", w.String())
-
-	return nil
+	return w.String(), nil
 }

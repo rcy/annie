@@ -8,7 +8,7 @@ import (
 	db "goirc/model"
 )
 
-func Quote(params bot.HandlerParams) error {
+func Quote(params bot.HandlerParams) (string, error) {
 	q := model.New(db.DB)
 	text := params.Matches[1]
 
@@ -19,12 +19,12 @@ func Quote(params bot.HandlerParams) error {
 		Text:   sql.NullString{String: text, Valid: true},
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if params.Target == params.Nick {
-		params.Privmsgf(params.Target, "stored quote to share later, maybe")
+		return "stored quote to share later, maybe", nil
 	}
 
-	return nil
+	return "", nil
 }

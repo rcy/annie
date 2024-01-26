@@ -9,7 +9,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func TimeLeft(params bot.HandlerParams) error {
+func TimeLeft(params bot.HandlerParams) (string, error) {
 	left := time.Until(time.Unix(2<<30, 0))
 
 	years := int(math.Round(left.Hours() / 24 / 365))
@@ -22,9 +22,5 @@ func TimeLeft(params bot.HandlerParams) error {
 
 	p := message.NewPrinter(language.English)
 
-	str := p.Sprintf("%d years / %d months / %d weeks / %d days / %d hours / %d minutes / %d seconds\n", years, months, weeks, days, hours, minutes, seconds)
-
-	params.Privmsgf(params.Target, str)
-
-	return nil
+	return p.Sprintf("%d years / %d months / %d weeks / %d days / %d hours / %d minutes / %d seconds\n", years, months, weeks, days, hours, minutes, seconds), nil
 }
