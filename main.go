@@ -60,6 +60,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!weather (.*)$`, weather.Handle)
 	b.Handle(`^!weather$`, weather.Handle)
 	b.Handle(`^!w (.*)$`, weather.Handle)
+	b.Handle(`^!f (.*)$`, weather.HandleForecast)
 	b.Handle(`^!w$`, weather.Handle)
 	b.Handle(`^!xweather (.+)$`, weather.XHandle)
 }
