@@ -12,3 +12,5 @@ all:				\
 %.json:
 	wget "http://api.openweathermap.org/data/2.5/weather?units=metric&q=$*&appid=${OPENWEATHERMAP_API_KEY}" -O $@
 
+%.forecast.json:
+	wget "api.openweathermap.org/data/2.5/forecast?units=metric&lat={lat}&lon={lon}&appid=${OPENWEATHERMAP_API_KEY}" -O $@
