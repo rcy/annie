@@ -60,3 +60,11 @@ func TestWeather(t *testing.T) {
 	}
 
 }
+
+func TestMakeWeatherAPIURL(t *testing.T) {
+	got, _ := makeWeatherAPIURL("APIKEY", "san francisco")
+	want := "http://api.openweathermap.org/data/2.5/weather?appid=APIKEY&q=san+francisco&units=metric"
+	if want != got {
+		t.Errorf("want: %s, got: %s", want, got)
+	}
+}

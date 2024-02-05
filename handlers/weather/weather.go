@@ -11,6 +11,7 @@ import (
 	"goirc/model"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -129,13 +130,32 @@ func (w weather) String() string {
 	return strings.Join(components, ", ")
 }
 
-func fetchWeather(q string) (*weather, error) {
+func makeWeatherAPIURL(key string, city string) (string, error) {
+	u, err := url.Parse("http://api.openweathermap.org/data/2.5/weather")
+	if err != nil {
+		return "", err
+	}
+	q := u.Query()
+	q.Set("appid", key)
+	q.Set("units", "metric")
+	q.Set("q", city)
+	u.RawQuery = q.Encode()
+
+	return u.String(), nil
+}
+
+func fetchWeather(city string) (*weather, error) {
 	key := os.Getenv("OPENWEATHERMAP_API_KEY")
 	if key == "" {
 		return nil, fmt.Errorf("bad api key")
 	}
 
-	resp, err := http.Get(fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?units=metric&q=%s&appid=%s", q, key))
+	url, err := makeWeatherAPIURL(key, city)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -153,13 +173,17 @@ func fetchWeather(q string) (*weather, error) {
 	return &w, nil
 }
 
-func fetchXWeather(q string) ([]byte, error) {
+func fetchXWeather(city string) ([]byte, error) {
 	key := os.Getenv("OPENWEATHERMAP_API_KEY")
 	if key == "" {
 		return nil, fmt.Errorf("bad api key")
 	}
 
-	resp, err := http.Get(fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?units=metric&q=%s&appid=%s", q, key))
+	url, err := makeWeatherAPIURL(key, city)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
