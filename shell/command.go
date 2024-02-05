@@ -15,7 +15,7 @@ func Command(command string) (string, error) {
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("%s", stderr.String())
+		return "", fmt.Errorf("%s: stderr=%s", err.Error(), stderr.String())
 	}
 
 	return stdout.String(), nil
