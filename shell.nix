@@ -8,7 +8,6 @@ with nixpkgs; mkShell {
     unstable.go_1_21
     unstable.golint
     unstable.gopls
-    pup
     html2text
     sqlite
     flyctl
