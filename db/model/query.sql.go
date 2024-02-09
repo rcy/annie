@@ -79,6 +79,66 @@ func (q *Queries) AllNotes(ctx context.Context) ([]Note, error) {
 	return items, nil
 }
 
+const channelNick = `-- name: ChannelNick :one
+select channel, nick, present, updated_at from channel_nicks where present = 0 and channel = ? and nick = ?
+`
+
+type ChannelNickParams struct {
+	Channel string
+	Nick    string
+}
+
+func (q *Queries) ChannelNick(ctx context.Context, arg ChannelNickParams) (ChannelNick, error) {
+	row := q.db.QueryRowContext(ctx, channelNick, arg.Channel, arg.Nick)
+	var i ChannelNick
+	err := row.Scan(
+		&i.Channel,
+		&i.Nick,
+		&i.Present,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const channelNotesSince = `-- name: ChannelNotesSince :many
+select id, created_at, nick, text, kind, target from notes where target = ? and created_at > ? order by created_at asc limit 69
+`
+
+type ChannelNotesSinceParams struct {
+	Target    string
+	CreatedAt time.Time
+}
+
+func (q *Queries) ChannelNotesSince(ctx context.Context, arg ChannelNotesSinceParams) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, channelNotesSince, arg.Target, arg.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Nick,
+			&i.Text,
+			&i.Kind,
+			&i.Target,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertNickWeatherRequest = `-- name: InsertNickWeatherRequest :exec
 insert into nick_weather_requests(nick, query, city, country) values(?,?,?,?)
 `

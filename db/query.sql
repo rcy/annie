@@ -33,3 +33,9 @@ select * from notes where target != nick and nick = ? order by created_at desc l
 
 -- name: NicksWithNoteCount :many
 select nick, count(nick) as count from notes group by nick;
+
+-- name: ChannelNick :one
+select * from channel_nicks where present = 0 and channel = ? and nick = ?;
+
+-- name: ChannelNotesSince :many
+select * from notes where target = ? and created_at > ? order by created_at asc limit 69;

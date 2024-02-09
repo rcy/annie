@@ -3,7 +3,7 @@ CREATE TABLE migration_version (
 		);
 CREATE TABLE links(created_at text, nick text, text text);
 CREATE TABLE laters(created_at text, nick text, target text, message text, sent boolean default false);
-CREATE TABLE channel_nicks(channel text not null, nick text not null, present bool not null default false, updated_at text);
+CREATE TABLE channel_nicks(channel text not null, nick text not null, present bool not null default false, updated_at datetime not null);
 CREATE UNIQUE INDEX channel_nick_unique_index on channel_nicks(channel, nick);
 CREATE TABLE notes(
   id INTEGER not null primary key,

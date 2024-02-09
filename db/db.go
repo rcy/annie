@@ -185,6 +185,25 @@ create table nick_weather_requests(
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: fix channel_nicks.updated_at")
+			_, err := tx.Exec(`
+drop index channel_nick_unique_index;
+
+create table new_channel_nicks(
+  channel text not null,
+  nick text not null,
+  present bool not null default false,
+  updated_at datetime not null
+);
+create unique index channel_nick_unique_index on new_channel_nicks(channel, nick);
+
+insert into new_channel_nicks select * from channel_nicks;
+drop table channel_nicks;
+alter table new_channel_nicks rename to channel_nicks;
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)

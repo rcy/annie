@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"goirc/bot/idle"
@@ -156,7 +157,10 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 			}()
 
 			go func() {
-				_ = bot.SendMissed(channel, e.Nick)
+				err := bot.SendMissed(context.TODO(), channel, e.Nick)
+				if err != nil {
+					panic(err)
+				}
 			}()
 		} else {
 			go func() {
@@ -261,26 +265,26 @@ func isAltNick(nick string) bool {
 	return strings.HasSuffix(nick, "`") || strings.HasSuffix(nick, "_")
 }
 
-func (bot *Bot) SendMissed(channel string, nick string) error {
+func (bot *Bot) SendMissed(ctx context.Context, channel string, nick string) error {
+	q := model.New(db.DB)
+
 	if isAltNick(nick) {
 		return nil
 	}
 
-	channelNick := model.ChannelNick{}
-	err := db.DB.Get(&channelNick, `select * from channel_nicks where present = 0 and channel = ? and nick = ?`, channel, nick)
+	channelNick, err := q.ChannelNick(ctx, model.ChannelNickParams{Nick: nick, Channel: channel})
 	if err != nil {
-		return err
+		return fmt.Errorf("ChannelNick: %w", err)
 	}
 
-	notes := []model.Note{}
-	err = db.DB.Select(&notes, "select * from notes where created_at > ? and nick <> target order by created_at asc limit 69", channelNick.UpdatedAt)
+	notes, err := q.ChannelNotesSince(ctx, model.ChannelNotesSinceParams{Target: channel, CreatedAt: channelNick.UpdatedAt})
 	if err != nil {
-		return err
+		return fmt.Errorf("ChannelNotesSince: %w", err)
 	}
 
 	if len(notes) > 0 {
 		bot.Conn.Privmsgf(nick, "Hi %s, you missed %d thing(s) in %s since %s:",
-			nick, len(notes), channel, channelNick.UpdatedAt.String)
+			nick, len(notes), channel, channelNick.UpdatedAt)
 
 		for _, note := range notes {
 			bot.Conn.Privmsgf(nick, "%s (from %s %s ago)", note.Text.String, note.Nick.String, util.Ago(time.Since(note.CreatedAt).Round(time.Second)))
