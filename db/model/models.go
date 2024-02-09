@@ -13,7 +13,7 @@ type ChannelNick struct {
 	Channel   string
 	Nick      string
 	Present   bool
-	UpdatedAt sql.NullString
+	UpdatedAt time.Time
 }
 
 type Later struct {
