@@ -1,8 +1,6 @@
 module goirc
 
-go 1.21.1
-
-toolchain go1.21.5
+go 1.22.0
 
 require (
 	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335
