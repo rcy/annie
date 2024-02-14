@@ -22,7 +22,7 @@ type queries interface {
 	InsertNote(context.Context, model.InsertNoteParams) (model.Note, error)
 }
 
-func New(queries *model.Queries, threshold int, minAge time.Duration) pool {
+func New(queries queries, threshold int, minAge time.Duration) pool {
 	return pool{
 		queries:   queries,
 		rnd:       rand.New(rand.NewSource(time.Now().UnixNano())),
