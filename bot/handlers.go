@@ -1,6 +1,10 @@
 package bot
 
-import irc "github.com/thoj/go-ircevent"
+import (
+	"goirc/events"
+
+	irc "github.com/thoj/go-ircevent"
+)
 
 type HandlerParams struct {
 	Privmsgf  func(string, string, ...interface{})
@@ -9,6 +13,10 @@ type HandlerParams struct {
 	Target    string
 	Matches   []string
 	LastEvent *irc.Event
+}
+
+func (hp *HandlerParams) Publish(eventName string, payload any) {
+	events.Publish(eventName, payload)
 }
 
 type HandlerFunction func(HandlerParams) error

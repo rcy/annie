@@ -20,7 +20,10 @@ insert into notes(target, nick, kind, text) values(?,?,?,?) returning *;
 select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc;
 
 -- name: UnsentAnonymousNotes :many
-select * from notes where created_at <= ? and nick = target order by random() limit 420;
+select * from notes where created_at <= ? and nick = target order by id asc limit 420;
+
+-- name: MarkAnonymousNoteDelivered :one
+update notes set target = ? where id = ? returning *;
 
 -- name: YoutubeLinks :many
 select * from notes where kind = 'link' and text like '%youtube.com%' or text like '%youtu.be%';

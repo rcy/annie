@@ -30,6 +30,7 @@ func Link(params bot.HandlerParams) error {
 			return err
 		}
 		params.Privmsgf(params.Target, "%s will be shared later, maybe", link)
+		params.Publish("anonnoteposted", note)
 		return nil
 	}
 

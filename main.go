@@ -2,11 +2,12 @@ package main
 
 import (
 	"goirc/bot"
+	"goirc/events"
 	"goirc/handlers"
 	"goirc/handlers/epigram"
 	"goirc/handlers/mlb"
 	"goirc/handlers/weather"
-	"goirc/model"
+	db "goirc/model"
 	"goirc/util"
 	"goirc/web"
 	"log"
@@ -14,7 +15,7 @@ import (
 )
 
 func main() {
-	go web.Serve(model.DB)
+	go web.Serve(db.DB)
 
 	b, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
@@ -32,7 +33,13 @@ func main() {
 func addHandlers(b *bot.Bot) {
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
-	b.IdleRepeatAfterReset(1*time.Minute, handlers.FeedMe)
+
+	events.Subscribe("anonnoteposted", func(note any) {
+		handlers.AnonLink(bot.HandlerParams{
+			Target:   b.Channel,
+			Privmsgf: b.MakePrivmsgf(),
+		})
+	})
 
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
 		for _, h := range b.Handlers {
@@ -44,8 +51,8 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!catchup`, handlers.Catchup)
 	b.Handle(`^,(.+)$`, handlers.CreateNote)
 	b.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
-	b.Handle(`^!feedme`, handlers.FeedMe)
-	b.Handle(`^!pipehealth`, handlers.PipeHealth)
+	b.Handle(`^!feedme`, handlers.AnonLink)
+	b.Handle(`^!pipehealth\b`, handlers.AnonStatus)
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, handlers.NationalDay)
 	b.Handle(`\b69[^0-9]*\b`, handlers.Nice)

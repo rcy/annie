@@ -297,6 +297,29 @@ func (q *Queries) Link(ctx context.Context, id int64) (Note, error) {
 	return i, err
 }
 
+const markAnonymousNoteDelivered = `-- name: MarkAnonymousNoteDelivered :one
+update notes set target = ? where id = ? returning id, created_at, nick, text, kind, target
+`
+
+type MarkAnonymousNoteDeliveredParams struct {
+	Target string
+	ID     int64
+}
+
+func (q *Queries) MarkAnonymousNoteDelivered(ctx context.Context, arg MarkAnonymousNoteDeliveredParams) (Note, error) {
+	row := q.db.QueryRowContext(ctx, markAnonymousNoteDelivered, arg.Target, arg.ID)
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Text,
+		&i.Kind,
+		&i.Target,
+	)
+	return i, err
+}
+
 const nicksWithNoteCount = `-- name: NicksWithNoteCount :many
 select nick, count(nick) as count from notes group by nick
 `
@@ -330,7 +353,7 @@ func (q *Queries) NicksWithNoteCount(ctx context.Context) ([]NicksWithNoteCountR
 }
 
 const unsentAnonymousNotes = `-- name: UnsentAnonymousNotes :many
-select id, created_at, nick, text, kind, target from notes where created_at <= ? and nick = target order by random() limit 420
+select id, created_at, nick, text, kind, target from notes where created_at <= ? and nick = target order by id asc limit 420
 `
 
 func (q *Queries) UnsentAnonymousNotes(ctx context.Context, createdAt time.Time) ([]Note, error) {
