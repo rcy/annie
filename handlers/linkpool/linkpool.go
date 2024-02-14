@@ -31,11 +31,11 @@ func New(queries queries, threshold int, minAge time.Duration) pool {
 	}
 }
 
-func (p *pool) Seed(seed int64) {
+func (p pool) Seed(seed int64) {
 	p.rnd.Seed(seed)
 }
 
-func (p *pool) Notes(ctx context.Context) ([]model.Note, error) {
+func (p pool) Notes(ctx context.Context) ([]model.Note, error) {
 	olderThan := time.Now().UTC().Add(-p.minAge)
 	notes, err := p.queries.UnsentAnonymousNotes(ctx, olderThan)
 	if err != nil {
@@ -44,7 +44,7 @@ func (p *pool) Notes(ctx context.Context) ([]model.Note, error) {
 	return notes, nil
 }
 
-func (p *pool) PeekRandomNote(ctx context.Context) (model.Note, error) {
+func (p pool) PeekRandomNote(ctx context.Context) (model.Note, error) {
 	notes, err := p.Notes(ctx)
 	if err != nil {
 		return model.Note{}, err
@@ -56,7 +56,7 @@ func (p *pool) PeekRandomNote(ctx context.Context) (model.Note, error) {
 	return notes[r], nil
 }
 
-func (p *pool) PopRandomNote(ctx context.Context, target string) (model.Note, error) {
+func (p pool) PopRandomNote(ctx context.Context, target string) (model.Note, error) {
 	note, err := p.PeekRandomNote(ctx)
 	if err != nil {
 		return model.Note{}, err
@@ -75,7 +75,7 @@ type PushNoteParams struct {
 	Text   string
 }
 
-func (p *pool) PushNote(ctx context.Context, params PushNoteParams) (model.Note, error) {
+func (p pool) PushNote(ctx context.Context, params PushNoteParams) (model.Note, error) {
 	return p.queries.InsertNote(ctx, model.InsertNoteParams{
 		Target: params.Target,
 		Nick:   sql.NullString{String: params.Nick, Valid: true},
