@@ -13,7 +13,10 @@ func TestNotes(t *testing.T) {
 	ctx := context.Background()
 	q := model.New(db.DB)
 
-	db.DB.Exec("delete from notes")
+	_, err := db.DB.Exec("delete from notes")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	pool := New(q, 0, 0*time.Hour)
 
@@ -69,7 +72,10 @@ func TestPeekRandomNote(t *testing.T) {
 	q := model.New(db.DB)
 	pool := New(q, 0, 0*time.Hour)
 
-	db.DB.Exec("delete from notes")
+	_, err := db.DB.Exec("delete from notes")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for _, tc := range []struct {
 		seed      int64
@@ -128,7 +134,10 @@ func TestPopRandomNote(t *testing.T) {
 	ctx := context.Background()
 	q := model.New(db.DB)
 
-	db.DB.Exec("delete from notes")
+	_, err := db.DB.Exec("delete from notes")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	pool := New(q, 0, 0*time.Hour)
 

@@ -22,7 +22,7 @@ type queries interface {
 	InsertNote(context.Context, model.InsertNoteParams) (model.Note, error)
 }
 
-func New(queries *model.Queries, threshold int, minAge time.Duration) pool {
+func New(queries queries, threshold int, minAge time.Duration) pool {
 	return pool{
 		queries:   queries,
 		rnd:       rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -31,11 +31,11 @@ func New(queries *model.Queries, threshold int, minAge time.Duration) pool {
 	}
 }
 
-func (p *pool) Seed(seed int64) {
-	p.rnd = rand.New(rand.NewSource(seed))
+func (p pool) Seed(seed int64) {
+	p.rnd.Seed(seed)
 }
 
-func (p *pool) Notes(ctx context.Context) ([]model.Note, error) {
+func (p pool) Notes(ctx context.Context) ([]model.Note, error) {
 	olderThan := time.Now().UTC().Add(-p.minAge)
 	notes, err := p.queries.UnsentAnonymousNotes(ctx, olderThan)
 	if err != nil {
@@ -44,7 +44,7 @@ func (p *pool) Notes(ctx context.Context) ([]model.Note, error) {
 	return notes, nil
 }
 
-func (p *pool) PeekRandomNote(ctx context.Context) (model.Note, error) {
+func (p pool) PeekRandomNote(ctx context.Context) (model.Note, error) {
 	notes, err := p.Notes(ctx)
 	if err != nil {
 		return model.Note{}, err
@@ -56,7 +56,7 @@ func (p *pool) PeekRandomNote(ctx context.Context) (model.Note, error) {
 	return notes[r], nil
 }
 
-func (p *pool) PopRandomNote(ctx context.Context, target string) (model.Note, error) {
+func (p pool) PopRandomNote(ctx context.Context, target string) (model.Note, error) {
 	note, err := p.PeekRandomNote(ctx)
 	if err != nil {
 		return model.Note{}, err
@@ -65,6 +65,9 @@ func (p *pool) PopRandomNote(ctx context.Context, target string) (model.Note, er
 		ID:     note.ID,
 		Target: target,
 	})
+	if err != nil {
+		return model.Note{}, err
+	}
 	return note, nil
 }
 
@@ -75,7 +78,7 @@ type PushNoteParams struct {
 	Text   string
 }
 
-func (p *pool) PushNote(ctx context.Context, params PushNoteParams) (model.Note, error) {
+func (p pool) PushNote(ctx context.Context, params PushNoteParams) (model.Note, error) {
 	return p.queries.InsertNote(ctx, model.InsertNoteParams{
 		Target: params.Target,
 		Nick:   sql.NullString{String: params.Nick, Valid: true},

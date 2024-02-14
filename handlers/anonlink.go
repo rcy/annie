@@ -52,16 +52,3 @@ func AnonStatus(params bot.HandlerParams) error {
 	params.Privmsgf(params.Target, "ready=%d fermenting=%d", len(dayNotes), len(allNotes)-len(dayNotes))
 	return nil
 }
-
-func rot13(s string) string {
-	rot := ""
-	for _, r := range s {
-		if r >= 'a' && r <= 'z' {
-			r = 'a' + (r-'a'+13)%26
-		} else if r >= 'A' && r <= 'Z' {
-			r = 'A' + (r-'A'+13)%26
-		}
-		rot += string(r)
-	}
-	return rot
-}
