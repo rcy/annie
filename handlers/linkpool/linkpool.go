@@ -32,7 +32,7 @@ func New(queries queries, threshold int, minAge time.Duration) pool {
 }
 
 func (p *pool) Seed(seed int64) {
-	p.rnd = rand.New(rand.NewSource(seed))
+	p.rnd.Seed(seed)
 }
 
 func (p *pool) Notes(ctx context.Context) ([]model.Note, error) {
