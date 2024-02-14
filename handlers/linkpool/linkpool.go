@@ -65,6 +65,9 @@ func (p pool) PopRandomNote(ctx context.Context, target string) (model.Note, err
 		ID:     note.ID,
 		Target: target,
 	})
+	if err != nil {
+		return model.Note{}, err
+	}
 	return note, nil
 }
 
