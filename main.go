@@ -42,7 +42,9 @@ func addHandlers(b *bot.Bot) {
 				Target:   b.Channel,
 				Privmsgf: b.MakePrivmsgf(),
 			})
-			panic(err)
+			if err != nil {
+				panic(err)
+			}
 		}()
 	})
 
