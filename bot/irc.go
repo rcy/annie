@@ -3,6 +3,8 @@ package bot
 import (
 	"context"
 	"crypto/tls"
+	"database/sql"
+	"errors"
 	"fmt"
 	"goirc/bot/idle"
 	"goirc/commit"
@@ -274,6 +276,10 @@ func (bot *Bot) SendMissed(ctx context.Context, channel string, nick string) err
 
 	channelNick, err := q.ChannelNick(ctx, model.ChannelNickParams{Nick: nick, Channel: channel})
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// first time seeing this nick
+			return nil
+		}
 		return fmt.Errorf("ChannelNick: %w", err)
 	}
 
