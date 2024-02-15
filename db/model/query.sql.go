@@ -80,7 +80,7 @@ func (q *Queries) AllNotes(ctx context.Context) ([]Note, error) {
 }
 
 const channelNick = `-- name: ChannelNick :one
-select channel, nick, present, updated_at from channel_nicks where present = 0 and channel = ? and nick = ?
+select channel, nick, present, updated_at from channel_nicks where present = 0 and channel = ? and nick = ? collate nocase
 `
 
 type ChannelNickParams struct {
