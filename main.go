@@ -11,7 +11,6 @@ import (
 	"goirc/util"
 	"goirc/web"
 	"log"
-	"math/rand"
 	"time"
 )
 
@@ -37,7 +36,6 @@ func addHandlers(b *bot.Bot) {
 
 	events.Subscribe("anonnoteposted", func(note any) {
 		go func() {
-			time.Sleep(time.Duration(rand.Float64()*1000) * time.Second)
 			err := handlers.AnonLink(bot.HandlerParams{
 				Target:   b.Channel,
 				Privmsgf: b.MakePrivmsgf(),
