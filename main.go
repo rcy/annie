@@ -62,6 +62,8 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!pipehealth\b`, handlers.AnonStatus)
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, handlers.NationalDay)
+	b.Handle(`^!week`, handlers.NationalWeek)
+	b.Handle(`^!month`, handlers.NationalMonth)
 	b.Handle(`\b69[^0-9]*\b`, handlers.Nice)
 	b.Handle(`^!odds`, mlb.PlayoffOdds)
 	b.Handle(`^!pom`, handlers.POM)
