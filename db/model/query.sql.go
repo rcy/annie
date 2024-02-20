@@ -298,7 +298,7 @@ func (q *Queries) Link(ctx context.Context, id int64) (Note, error) {
 }
 
 const markAnonymousNoteDelivered = `-- name: MarkAnonymousNoteDelivered :one
-update notes set target = ? where id = ? returning id, created_at, nick, text, kind, target
+update notes set target = ?, created_at = current_timestamp where id = ? returning id, created_at, nick, text, kind, target
 `
 
 type MarkAnonymousNoteDeliveredParams struct {

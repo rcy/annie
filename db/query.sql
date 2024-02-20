@@ -23,7 +23,7 @@ select created_at, nick, text, kind from notes where created_at > datetime('now'
 select * from notes where created_at <= ? and nick = target order by id asc limit 420;
 
 -- name: MarkAnonymousNoteDelivered :one
-update notes set target = ? where id = ? returning *;
+update notes set target = ?, created_at = current_timestamp where id = ? returning *;
 
 -- name: YoutubeLinks :many
 select * from notes where kind = 'link' and text like '%youtube.com%' or text like '%youtu.be%';
