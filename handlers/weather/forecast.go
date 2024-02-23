@@ -138,7 +138,7 @@ func HandleForecast(params bot.HandlerParams) error {
 			}
 		}
 	} else {
-		last, err := queries.LastWeatherRequestByPrefix(ctx, q)
+		last, err := queries.LastWeatherRequestByPrefix(ctx, sql.NullString{String: q, Valid: true})
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
 				return err

@@ -204,6 +204,17 @@ alter table new_channel_nicks rename to channel_nicks;
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add opengraph_records")
+			_, err := tx.Exec(`
+create table opengraphs(
+  created_at datetime not null default current_timestamp,
+  url text not null,
+  data json
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)

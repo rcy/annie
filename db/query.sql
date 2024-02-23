@@ -42,3 +42,6 @@ select * from channel_nicks where present = 0 and channel = ? and nick = ? colla
 
 -- name: ChannelNotesSince :many
 select * from notes where target = ? and created_at > ? order by created_at asc limit 69;
+
+-- name: AddOpenGraphData :one
+insert into opengraphs(url, data) values(?,?) returning *;
