@@ -119,10 +119,10 @@ func (w weather) String() string {
 		components = append(components, fmt.Sprintf("visibility %.1fkm", float64(w.Visibility)/1000))
 	}
 
-	if w.Wind.Deg > 0 {
-		wind := fmt.Sprintf("wind %.1fm/s %s", w.Wind.Speed, compass16(w.Wind.Deg))
+	if w.Wind.Speed > 0 {
+		wind := fmt.Sprintf("wind %.0f KPH %s", w.Wind.Speed*3.6, compass16(w.Wind.Deg))
 		if w.Wind.Gust > 0 {
-			wind += fmt.Sprintf(" (gust %.1fm/s)", w.Wind.Gust)
+			wind += fmt.Sprintf(" (gust %.0f KPH)", w.Wind.Gust*3.6)
 		}
 		components = append(components, wind)
 	}

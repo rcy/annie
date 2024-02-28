@@ -13,31 +13,31 @@ func TestWeather(t *testing.T) {
 	}{
 		{
 			filename: "testdata/chicago,us.json",
-			want:     "Chicago, United States -6.8°C (feels like -11.2°C), snow, mist, 1.1mm pcpn over last hour, visibility 2.0km, wind 2.6m/s WSW",
+			want:     "Chicago, United States -6.8°C (feels like -11.2°C), snow, mist, 1.1mm pcpn over last hour, visibility 2.0km, wind 9 KPH WSW",
 		},
 		{
 			filename: "testdata/creston,ca.json",
-			want:     "Creston, Canada -10.9°C, overcast clouds, visibility 6.0km, wind 1.0m/s NNE (gust 1.1m/s)",
+			want:     "Creston, Canada -10.9°C, overcast clouds, visibility 6.0km, wind 4 KPH NNE (gust 4 KPH)",
 		},
 		{
 			filename: "testdata/gibsons,ca.json",
-			want:     "Gibsons, Canada -0.6°C (feels like -4.9°C), overcast clouds, wind 3.9m/s NNE (gust 4.4m/s)",
+			want:     "Gibsons, Canada -0.6°C (feels like -4.9°C), overcast clouds, wind 14 KPH NNE (gust 16 KPH)",
 		},
 		{
 			filename: "testdata/shanghai,cn.json",
-			want:     "Shanghai, China 9.2°C (feels like 7.5°C), moderate rain, 1.9mm pcpn over last hour, visibility 7.0km, wind 3.0m/s N",
+			want:     "Shanghai, China 9.2°C (feels like 7.5°C), moderate rain, 1.9mm pcpn over last hour, visibility 7.0km, wind 11 KPH N",
 		},
 		{
 			filename: "testdata/toronto,ca.json",
-			want:     "Toronto, Canada -8.1°C (feels like -15.1°C), overcast clouds, wind 8.2m/s WSW (gust 10.8m/s)",
+			want:     "Toronto, Canada -8.1°C (feels like -15.1°C), overcast clouds, wind 30 KPH WSW (gust 39 KPH)",
 		},
 		{
 			filename: "testdata/victoria,ca.json",
-			want:     "Victoria, Canada 0.6°C (feels like -5.9°C), overcast clouds, wind 8.8m/s N",
+			want:     "Victoria, Canada 0.6°C (feels like -5.9°C), overcast clouds, wind 32 KPH N",
 		},
 		{
 			filename: "testdata/vancouver,ca.json",
-			want:     "Vancouver, Canada -1.7°C (feels like -5.2°C), overcast clouds, wind 2.6m/s E",
+			want:     "Vancouver, Canada -1.7°C (feels like -5.2°C), overcast clouds, wind 9 KPH E",
 		},
 	} {
 		t.Run(tc.filename, func(t *testing.T) {
