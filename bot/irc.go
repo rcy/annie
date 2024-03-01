@@ -226,8 +226,28 @@ func (bot *Bot) SendLaters(channel string, nick string) {
 
 func (bot *Bot) MakePrivmsgf() func(string, string, ...interface{}) {
 	return func(target, message string, a ...interface{}) {
-		bot.Conn.Privmsgf(target, message, a...)
+		str := fmt.Sprintf(message, a...)
+
+		chunks := splitString(str, 420)
+
+		for _, chunk := range chunks {
+			bot.Conn.Privmsg(target, chunk)
+		}
 	}
+}
+
+func splitString(data string, chunkSize int) []string {
+	var chunks []string
+
+	for len(data) > 0 {
+		if len(data) < chunkSize {
+			chunkSize = len(data)
+		}
+		chunks = append(chunks, data[:chunkSize])
+		data = data[chunkSize:]
+	}
+
+	return chunks
 }
 
 func (bot *Bot) RunHandlers(e *irc.Event) {
