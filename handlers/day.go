@@ -31,7 +31,9 @@ func NationalDay(params bot.HandlerParams) error {
 		return err
 	}
 
-	for _, msg := range r {
+	r = strings.TrimSpace(r)
+	days := strings.Split(r, "\n")
+	for _, msg := range days {
 		params.Privmsgf(params.Target, "%s", msg)
 		time.Sleep(30 * time.Second)
 	}
