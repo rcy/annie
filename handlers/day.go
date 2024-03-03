@@ -5,6 +5,7 @@ import (
 	"goirc/bot"
 	"goirc/shell"
 	"strings"
+	"time"
 )
 
 var url = "https://www.daysoftheyear.com/today/"
@@ -30,11 +31,12 @@ func NationalDay(params bot.HandlerParams) error {
 		return err
 	}
 
-	r = strings.TrimSpace(r)
-	r = strings.Join(strings.Split(r, "\n"), ", ")
-	r += " (according to " + url + ")"
+	for _, msg := range r {
+		params.Privmsgf(params.Target, "%s", msg)
+		time.Sleep(30 * time.Second)
+	}
 
-	params.Privmsgf(params.Target, "%s", r)
+	params.Privmsgf(params.Target, "according to %s", url)
 
 	return nil
 }
