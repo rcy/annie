@@ -50,10 +50,13 @@ func NationalWeek(params bot.HandlerParams) error {
 	}
 
 	r = strings.TrimSpace(r)
-	r = strings.Join(strings.Split(r, "\n"), ", ")
-	r += " (according to " + url + ")"
+	weeks := strings.Split(r, "\n")
+	for _, msg := range weeks {
+		params.Privmsgf(params.Target, "%s", msg)
+		time.Sleep(30 * time.Second)
+	}
 
-	params.Privmsgf(params.Target, "%s", r)
+	params.Privmsgf(params.Target, "according to %s", url)
 
 	return nil
 }
@@ -65,10 +68,13 @@ func NationalMonth(params bot.HandlerParams) error {
 	}
 
 	r = strings.TrimSpace(r)
-	r = strings.Join(strings.Split(r, "\n"), ", ")
-	r += " (according to " + url + ")"
+	months := strings.Split(r, "\n")
+	for _, msg := range months {
+		params.Privmsgf(params.Target, "%s", msg)
+		time.Sleep(30 * time.Second)
+	}
 
-	params.Privmsgf(params.Target, "%s", r)
+	params.Privmsgf(params.Target, "according to %s", url)
 
 	return nil
 }
