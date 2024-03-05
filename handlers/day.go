@@ -10,29 +10,42 @@ import (
 
 var url = "https://www.daysoftheyear.com/today/"
 
-func fetchDay() (string, error) {
+func fetchDays() ([]string, error) {
 	cmd := fmt.Sprintf(`curl -s %s | pup 'body picture img json{}' | jq -r .[].alt | grep -E ' Day$'`, url)
-	return shell.Command(cmd)
+	r, err := shell.Command(cmd)
+	if err != nil {
+		return nil, err
+	}
+	r = strings.TrimSpace(r)
+	return strings.Split(r, "\n"), nil
 }
 
-func fetchWeek() (string, error) {
+func fetchWeeks() ([]string, error) {
 	cmd := fmt.Sprintf(`curl -s %s | pup 'body picture img json{}' | jq -r .[].alt | grep -E ' Week'`, url)
-	return shell.Command(cmd)
+	r, err := shell.Command(cmd)
+	if err != nil {
+		return nil, err
+	}
+	r = strings.TrimSpace(r)
+	return strings.Split(r, "\n"), nil
 }
 
-func fetchMonth() (string, error) {
+func fetchMonths() ([]string, error) {
 	cmd := fmt.Sprintf(`curl -s %s | pup 'body picture img json{}' | jq -r .[].alt | grep -E ' Month'`, url)
-	return shell.Command(cmd)
+	r, err := shell.Command(cmd)
+	if err != nil {
+		return nil, err
+	}
+	r = strings.TrimSpace(r)
+	return strings.Split(r, "\n"), nil
 }
 
 func NationalDay(params bot.HandlerParams) error {
-	r, err := fetchDay()
+	days, err := fetchDays()
 	if err != nil {
 		return err
 	}
 
-	r = strings.TrimSpace(r)
-	days := strings.Split(r, "\n")
 	for _, msg := range days {
 		params.Privmsgf(params.Target, "%s", msg)
 		time.Sleep(30 * time.Second)
@@ -44,13 +57,11 @@ func NationalDay(params bot.HandlerParams) error {
 }
 
 func NationalWeek(params bot.HandlerParams) error {
-	r, err := fetchWeek()
+	weeks, err := fetchWeeks()
 	if err != nil {
 		return err
 	}
 
-	r = strings.TrimSpace(r)
-	weeks := strings.Split(r, "\n")
 	for _, msg := range weeks {
 		params.Privmsgf(params.Target, "%s", msg)
 		time.Sleep(30 * time.Second)
@@ -62,13 +73,11 @@ func NationalWeek(params bot.HandlerParams) error {
 }
 
 func NationalMonth(params bot.HandlerParams) error {
-	r, err := fetchMonth()
+	months, err := fetchMonths()
 	if err != nil {
 		return err
 	}
 
-	r = strings.TrimSpace(r)
-	months := strings.Split(r, "\n")
 	for _, msg := range months {
 		params.Privmsgf(params.Target, "%s", msg)
 		time.Sleep(30 * time.Second)
