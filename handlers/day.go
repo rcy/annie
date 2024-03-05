@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"goirc/bot"
 	"goirc/shell"
+	"math/rand"
 	"strings"
-	"time"
 )
 
 var url = "https://www.daysoftheyear.com/today/"
@@ -46,12 +46,9 @@ func NationalDay(params bot.HandlerParams) error {
 		return err
 	}
 
-	for _, msg := range days {
-		params.Privmsgf(params.Target, "%s", msg)
-		time.Sleep(30 * time.Second)
-	}
+	day := days[rand.Intn(len(days))]
 
-	params.Privmsgf(params.Target, "according to %s", url)
+	params.Privmsgf(params.Target, "%s (according to %s)", day, url)
 
 	return nil
 }
@@ -62,12 +59,9 @@ func NationalWeek(params bot.HandlerParams) error {
 		return err
 	}
 
-	for _, msg := range weeks {
-		params.Privmsgf(params.Target, "%s", msg)
-		time.Sleep(30 * time.Second)
-	}
+	week := weeks[rand.Intn(len(weeks))]
 
-	params.Privmsgf(params.Target, "according to %s", url)
+	params.Privmsgf(params.Target, "%s (according to %s)", week, url)
 
 	return nil
 }
@@ -78,12 +72,9 @@ func NationalMonth(params bot.HandlerParams) error {
 		return err
 	}
 
-	for _, msg := range months {
-		params.Privmsgf(params.Target, "%s", msg)
-		time.Sleep(30 * time.Second)
-	}
+	month := months[rand.Intn(len(months))]
 
-	params.Privmsgf(params.Target, "according to %s", url)
+	params.Privmsgf(params.Target, "%s (according to %s)", month, url)
 
 	return nil
 }
