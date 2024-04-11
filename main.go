@@ -62,6 +62,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!day`, handlers.NationalDay)
 	b.Handle(`^!week`, handlers.NationalWeek)
 	b.Handle(`^!month`, handlers.NationalMonth)
+	b.Handle(`^!refs`, handlers.NationalRefs)
 	b.Handle(`\b69[^0-9]*\b`, handlers.Nice)
 	b.Handle(`^!odds`, mlb.PlayoffOdds)
 	b.Handle(`^!pom`, handlers.POM)

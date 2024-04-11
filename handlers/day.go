@@ -48,7 +48,7 @@ func NationalDay(params bot.HandlerParams) error {
 
 	day := days[rand.Intn(len(days))]
 
-	params.Privmsgf(params.Target, "%s (according to %s)", day, url)
+	params.Privmsgf(params.Target, "%s", day)
 
 	return nil
 }
@@ -61,7 +61,7 @@ func NationalWeek(params bot.HandlerParams) error {
 
 	week := weeks[rand.Intn(len(weeks))]
 
-	params.Privmsgf(params.Target, "%s (according to %s)", week, url)
+	params.Privmsgf(params.Target, "%s", week)
 
 	return nil
 }
@@ -74,7 +74,13 @@ func NationalMonth(params bot.HandlerParams) error {
 
 	month := months[rand.Intn(len(months))]
 
-	params.Privmsgf(params.Target, "%s (according to %s)", month, url)
+	params.Privmsgf(params.Target, "%s", month)
+
+	return nil
+}
+
+func NationalRefs(params bot.HandlerParams) error {
+	params.Privmsgf(params.Target, "%s", url)
 
 	return nil
 }
