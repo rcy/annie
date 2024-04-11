@@ -4,6 +4,7 @@ import (
 	"goirc/bot"
 	"goirc/events"
 	"goirc/handlers"
+	"goirc/handlers/day"
 	"goirc/handlers/epigram"
 	"goirc/handlers/mlb"
 	"goirc/handlers/weather"
@@ -59,10 +60,10 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!feedme`, handlers.AnonLink)
 	b.Handle(`^!pipehealth\b`, handlers.AnonStatus)
 	b.Handle(`(https?://\S+)`, handlers.Link)
-	b.Handle(`^!day`, handlers.NationalDay)
-	b.Handle(`^!week`, handlers.NationalWeek)
-	b.Handle(`^!month`, handlers.NationalMonth)
-	b.Handle(`^!refs`, handlers.NationalRefs)
+	b.Handle(`^!day`, day.NationalDay)
+	b.Handle(`^!week`, day.NationalWeek)
+	b.Handle(`^!month`, day.NationalMonth)
+	b.Handle(`^!refs`, day.NationalRefs)
 	b.Handle(`\b69[^0-9]*\b`, handlers.Nice)
 	b.Handle(`^!odds`, mlb.PlayoffOdds)
 	b.Handle(`^!pom`, handlers.POM)
