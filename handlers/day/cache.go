@@ -30,7 +30,7 @@ func (c *cache) Load() error {
 }
 
 func (c *cache) Pop() (string, error) {
-	if time.Now().Sub(c.ts) >= c.maxAge {
+	if time.Since(c.ts) >= c.maxAge {
 		err := c.Load()
 		if err != nil {
 			return "", err
