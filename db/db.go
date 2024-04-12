@@ -204,6 +204,13 @@ alter table new_channel_nicks rename to channel_nicks;
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add anon to notes")
+			_, err := tx.Exec(`
+alter table notes add column anon bool not null default false;
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)

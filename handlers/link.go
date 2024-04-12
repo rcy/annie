@@ -13,18 +13,21 @@ func Link(params bot.HandlerParams) error {
 
 	url := params.Matches[1]
 
+	// posted in a private message?
+	isAnonymous := params.Target == params.Nick
+
 	note, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
 		Target: params.Target,
 		Nick:   sql.NullString{String: params.Nick, Valid: true},
 		Kind:   "link",
 		Text:   sql.NullString{String: url, Valid: true},
+		Anon:   isAnonymous,
 	})
 	if err != nil {
 		return err
 	}
 
-	if params.Target == params.Nick {
-		// posted in a private message
+	if isAnonymous {
 		link, err := note.Link()
 		if err != nil {
 			return err

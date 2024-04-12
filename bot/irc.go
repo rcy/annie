@@ -313,7 +313,22 @@ func (bot *Bot) SendMissed(ctx context.Context, channel string, nick string) err
 			nick, len(notes), channel, channelNick.UpdatedAt)
 
 		for _, note := range notes {
-			bot.Conn.Privmsgf(nick, "%s (from %s %s ago)", note.Text.String, note.Nick.String, util.Ago(time.Since(note.CreatedAt).Round(time.Second)))
+			text := note.Text.String
+			meta := util.Ago(time.Since(note.CreatedAt).Round(time.Second)) + " ago"
+
+			if note.Anon {
+				if note.Kind == "link" {
+					var err error
+					text, err = note.Link()
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				meta = "from " + note.Nick.String + " " + meta
+			}
+
+			bot.Conn.Privmsgf(nick, "%s (%s)", text, meta)
 			time.Sleep(1 * time.Second)
 		}
 	}

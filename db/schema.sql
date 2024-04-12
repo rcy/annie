@@ -3,14 +3,12 @@ CREATE TABLE migration_version (
 		);
 CREATE TABLE links(created_at text, nick text, text text);
 CREATE TABLE laters(created_at text, nick text, target text, message text, sent boolean default false);
-CREATE TABLE channel_nicks(channel text not null, nick text not null, present bool not null default false, updated_at datetime not null);
-CREATE UNIQUE INDEX channel_nick_unique_index on channel_nicks(channel, nick);
 CREATE TABLE notes(
   id INTEGER not null primary key,
   created_at datetime not null default current_timestamp,
   nick text,
   text text,
-  kind text not null default 'note', target text not null default '');
+  kind text not null default 'note', target text not null default '', anon bool not null default false);
 CREATE TABLE reminders(
   id integer not null primary key,
   created_at datetime not null default current_timestamp,
@@ -37,3 +35,10 @@ CREATE TABLE nick_weather_requests(
   city text not null,
   country text not null
 );
+CREATE TABLE IF NOT EXISTS channel_nicks(
+  channel text not null,
+  nick text not null,
+  present bool not null default false,
+  updated_at datetime not null
+);
+CREATE UNIQUE INDEX channel_nick_unique_index on channel_nicks(channel, nick);

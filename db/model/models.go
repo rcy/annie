@@ -50,6 +50,7 @@ type Note struct {
 	Text      sql.NullString
 	Kind      string
 	Target    string
+	Anon      bool
 }
 
 type Reminder struct {

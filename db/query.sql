@@ -14,7 +14,7 @@ select * from nick_weather_requests where nick = ? order by created_at desc limi
 select * from nick_weather_requests where city like ? || '%' order by created_at desc limit 1;
 
 -- name: InsertNote :one
-insert into notes(target, nick, kind, text) values(?,?,?,?) returning *;
+insert into notes(target, nick, kind, text, anon) values(?,?,?,?,?) returning *;
 
 -- name: LastDaysNotes :many
 select created_at, nick, text, kind from notes where created_at > datetime('now', '-1 day') order by created_at asc;
