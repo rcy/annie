@@ -28,7 +28,7 @@ func Quote(params bot.HandlerParams) error {
 
 	if isAnonymous {
 		params.Privmsgf(params.Target, "stored quote to share later, maybe")
-		params.Publish("anonnoteposted", note)
+		params.Publish("anonquoteposted", note)
 	}
 
 	return nil

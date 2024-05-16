@@ -47,6 +47,18 @@ func addHandlers(b *bot.Bot) {
 		}()
 	})
 
+	events.Subscribe("anonquoteposted", func(note any) {
+		go func() {
+			err := handlers.AnonQuote(bot.HandlerParams{
+				Target:   b.Channel,
+				Privmsgf: b.MakePrivmsgf(),
+			})
+			if err != nil {
+				panic(err)
+			}
+		}()
+	})
+
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
 		for _, h := range b.Handlers {
 			params.Privmsgf(params.Target, "%s", h.String())
@@ -58,7 +70,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^,(.+)$`, handlers.CreateNote)
 	b.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
 	b.Handle(`^!feedme`, handlers.AnonLink)
-	b.Handle(`^!pipehealth\b`, handlers.AnonStatus)
+	//b.Handle(`^!pipehealth\b`, handlers.AnonStatus)
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, day.NationalDay)
 	b.Handle(`^!week`, day.NationalWeek)

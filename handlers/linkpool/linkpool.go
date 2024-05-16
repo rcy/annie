@@ -17,7 +17,7 @@ type pool struct {
 }
 
 type queries interface {
-	UnsentAnonymousNotes(context.Context, time.Time) ([]model.Note, error)
+	UnsentAnonymousNotes(context.Context, model.UnsentAnonymousNotesParams) ([]model.Note, error)
 	MarkAnonymousNoteDelivered(context.Context, model.MarkAnonymousNoteDeliveredParams) (model.Note, error)
 	InsertNote(context.Context, model.InsertNoteParams) (model.Note, error)
 }
@@ -35,17 +35,20 @@ func (p pool) Seed(seed int64) {
 	p.rnd.Seed(seed)
 }
 
-func (p pool) Notes(ctx context.Context) ([]model.Note, error) {
+func (p pool) Notes(ctx context.Context, kind string) ([]model.Note, error) {
 	olderThan := time.Now().UTC().Add(-p.minAge)
-	notes, err := p.queries.UnsentAnonymousNotes(ctx, olderThan)
+	notes, err := p.queries.UnsentAnonymousNotes(ctx, model.UnsentAnonymousNotesParams{
+		CreatedAt: olderThan,
+		Kind:      kind,
+	})
 	if err != nil {
 		return []model.Note{}, err
 	}
 	return notes, nil
 }
 
-func (p pool) PeekRandomNote(ctx context.Context) (model.Note, error) {
-	notes, err := p.Notes(ctx)
+func (p pool) PeekRandomNote(ctx context.Context, kind string) (model.Note, error) {
+	notes, err := p.Notes(ctx, kind)
 	if err != nil {
 		return model.Note{}, err
 	}
@@ -56,8 +59,8 @@ func (p pool) PeekRandomNote(ctx context.Context) (model.Note, error) {
 	return notes[r], nil
 }
 
-func (p pool) PopRandomNote(ctx context.Context, target string) (model.Note, error) {
-	note, err := p.PeekRandomNote(ctx)
+func (p pool) PopRandomNote(ctx context.Context, target string, kind string) (model.Note, error) {
+	note, err := p.PeekRandomNote(ctx, kind)
 	if err != nil {
 		return model.Note{}, err
 	}

@@ -361,11 +361,16 @@ func (q *Queries) NicksWithNoteCount(ctx context.Context) ([]NicksWithNoteCountR
 }
 
 const unsentAnonymousNotes = `-- name: UnsentAnonymousNotes :many
-select id, created_at, nick, text, kind, target, anon from notes where created_at <= ? and nick = target order by id asc limit 420
+select id, created_at, nick, text, kind, target, anon from notes where created_at <= ? and kind = ? and nick = target order by id asc limit 420
 `
 
-func (q *Queries) UnsentAnonymousNotes(ctx context.Context, createdAt time.Time) ([]Note, error) {
-	rows, err := q.db.QueryContext(ctx, unsentAnonymousNotes, createdAt)
+type UnsentAnonymousNotesParams struct {
+	CreatedAt time.Time
+	Kind      string
+}
+
+func (q *Queries) UnsentAnonymousNotes(ctx context.Context, arg UnsentAnonymousNotesParams) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, unsentAnonymousNotes, arg.CreatedAt, arg.Kind)
 	if err != nil {
 		return nil, err
 	}
