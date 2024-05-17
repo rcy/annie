@@ -42,7 +42,7 @@ func addHandlers(b *bot.Bot) {
 				Privmsgf: b.MakePrivmsgf(),
 			})
 			if err != nil {
-				panic(err)
+				b.Conn.Privmsg(b.Channel, "error: "+err.Error())
 			}
 		}()
 	})
@@ -54,7 +54,7 @@ func addHandlers(b *bot.Bot) {
 				Privmsgf: b.MakePrivmsgf(),
 			})
 			if err != nil {
-				panic(err)
+				b.Conn.Privmsg(b.Channel, "error: "+err.Error())
 			}
 		}()
 	})
