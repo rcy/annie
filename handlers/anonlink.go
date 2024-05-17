@@ -11,7 +11,7 @@ import (
 
 const (
 	minAge    = time.Hour * 24
-	threshold = 25
+	threshold = 1
 )
 
 func AnonLink(params bot.HandlerParams) error {
