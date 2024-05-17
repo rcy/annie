@@ -70,7 +70,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^,(.+)$`, handlers.CreateNote)
 	b.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
 	b.Handle(`^!feedme`, handlers.AnonLink)
-	//b.Handle(`^!pipehealth\b`, handlers.AnonStatus)
+	b.Handle(`^!pipehealth\b`, handlers.AnonStatus)
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day`, day.NationalDay)
 	b.Handle(`^!week`, day.NationalWeek)
