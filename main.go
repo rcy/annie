@@ -6,6 +6,7 @@ import (
 	"goirc/handlers"
 	"goirc/handlers/day"
 	"goirc/handlers/epigram"
+	"goirc/handlers/kinfonet"
 	"goirc/handlers/mlb"
 	"goirc/handlers/weather"
 	db "goirc/model"
@@ -91,4 +92,5 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!f (.*)$`, weather.HandleForecast)
 	b.Handle(`^!w$`, weather.Handle)
 	b.Handle(`^!xweather (.+)$`, weather.XHandle)
+	b.Handle(`^!k`, kinfonet.TodaysQuoteHandler)
 }
