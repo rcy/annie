@@ -1,3 +1,5 @@
+export BUILDKIT_PROGRESS=plain
+
 include .env
 
 watch:
@@ -20,4 +22,3 @@ build:
 
 run:
 	docker run --env-file=.env -e SQLITE_DB=:memory: annie
-
