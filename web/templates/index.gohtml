@@ -4,7 +4,7 @@
     <meta name="robots" content="noindex,nofollow">
     <style>
      .nowrap {
-         white-space: nowrap;
+       white-space: nowrap;
      }
     </style>
   </head>
@@ -24,7 +24,11 @@
             {{.CreatedAt}}
           </td>
           <td>
-            {{.Nick.String}}
+            {{if .Anon}}
+              ???
+            {{else}}
+              {{.Nick.String}}
+            {{end}}
           </td>
           <td>
             {{if eq .Kind "link"}}
