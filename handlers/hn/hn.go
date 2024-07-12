@@ -36,7 +36,7 @@ func Handle(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
-	params.Privmsgf(params.Target, "%s - %s", item.Title, item.URL)
+	params.Privmsgf(params.Target, "%s", item.Title)
 
 	return nil
 }
