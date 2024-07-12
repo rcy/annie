@@ -18,7 +18,7 @@ func TodaysQuoteHandler(params bot.HandlerParams) error {
 	return nil
 }
 
-type quote struct{ date, text, url string }
+type quote struct{ text, url string }
 
 type date string
 

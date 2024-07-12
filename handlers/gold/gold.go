@@ -50,7 +50,10 @@ func getGoldPrice(token string) (float64, error) {
 	defer resp.Body.Close()
 
 	var obj response
-	json.NewDecoder(resp.Body).Decode(&obj)
+	err = json.NewDecoder(resp.Body).Decode(&obj)
+	if err != nil {
+		return 0.0, err
+	}
 
 	fmt.Printf("Price: %f\n", obj.Price)
 
