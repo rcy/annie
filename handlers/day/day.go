@@ -2,14 +2,13 @@ package day
 
 import (
 	"goirc/bot"
-	"time"
 )
 
 var url = "https://www.daysoftheyear.com/today/"
 
-var dayCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Day$'`, time.Hour*12)
-var weekCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Week$'`, time.Hour*12)
-var monthCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Month$'`, time.Hour*12)
+var dayCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Day$'`)
+var weekCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Week$'`)
+var monthCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Month$'`)
 
 func NationalDay(params bot.HandlerParams) error {
 	str, err := dayCache.Pop()

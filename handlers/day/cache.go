@@ -8,14 +8,20 @@ import (
 )
 
 type cache struct {
-	cmd    string
-	data   []string
-	ts     time.Time
-	maxAge time.Duration
+	cmd      string
+	data     []string
+	ts       time.Time
+	location *time.Location
+	day      string
 }
 
-func NewCache(cmd string, maxAge time.Duration) cache {
-	return cache{cmd: cmd, maxAge: maxAge}
+func NewCache(cmd string) cache {
+	location, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		panic(err)
+	}
+
+	return cache{cmd: cmd, location: location}
 }
 
 func (c *cache) Load() error {
@@ -26,11 +32,17 @@ func (c *cache) Load() error {
 	r = strings.TrimSpace(r)
 	c.data = strings.Split(r, "\n")
 	c.ts = time.Now()
+	c.day = c.currentDay()
+
 	return nil
 }
 
+func (c *cache) currentDay() string {
+	return time.Now().In(c.location).Format("2006-01-02")
+}
+
 func (c *cache) Pop() (string, error) {
-	if time.Since(c.ts) >= c.maxAge {
+	if c.day != c.currentDay() {
 		err := c.Load()
 		if err != nil {
 			return "", err
