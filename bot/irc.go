@@ -252,7 +252,7 @@ func splitString(data string, chunkSize int) []string {
 
 func (bot *Bot) RunHandlers(e *irc.Event) {
 	channel := e.Arguments[0]
-	msg := e.Arguments[1]
+	msg := strings.ToLower(e.Arguments[1])
 	nick := e.Nick
 
 	var target string
