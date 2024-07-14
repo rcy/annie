@@ -252,7 +252,7 @@ func splitString(data string, chunkSize int) []string {
 
 func (bot *Bot) RunHandlers(e *irc.Event) {
 	channel := e.Arguments[0]
-	msg := strings.ToLower(e.Arguments[1])
+	msg := e.Arguments[1]
 	nick := e.Nick
 
 	var target string
@@ -263,7 +263,7 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 	}
 
 	for _, handler := range bot.Handlers {
-		matches := handler.regexp.FindStringSubmatch(msg)
+		matches := handler.regexp.FindStringSubmatch(strings.ToLower(msg))
 		if len(matches) > 0 {
 			err := handler.action(HandlerParams{
 				Privmsgf:  bot.MakePrivmsgf(),
