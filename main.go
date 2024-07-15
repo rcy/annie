@@ -76,7 +76,6 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!pipehealth\b`, handlers.AnonStatus)
 	b.Handle(`(https?://\S+)`, handlers.Link)
 	b.Handle(`^!day\b`, day.NationalDay)
-	b.Handle(`^!dayi`, day.DayImage)
 	b.Handle(`^!week`, day.NationalWeek)
 	b.Handle(`^!month`, day.NationalMonth)
 	b.Handle(`^!refs`, day.NationalRefs)

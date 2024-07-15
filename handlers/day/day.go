@@ -23,7 +23,11 @@ func NationalDay(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", str)
+	if str == "EOF" {
+		return DayImage(params)
+	} else {
+		params.Privmsgf(params.Target, "%s", str)
+	}
 
 	return nil
 }
@@ -65,8 +69,6 @@ func DayImage(params bot.HandlerParams) error {
 	}
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
-	params.Privmsgf(params.Target, "generating image using today's %d days", len(days))
-
 	prompt := fmt.Sprintf("a scene incorporating themes from all of the following days: %s", strings.Join(days, ","))
 	url, err := generateImage(context.Background(), prompt)
 	if err != nil {
@@ -90,7 +92,7 @@ func DayImage(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", link)
+	params.Privmsgf(params.Target, "Today's image: %s", link)
 
 	return nil
 }
