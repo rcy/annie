@@ -13,9 +13,13 @@ import (
 
 var url = "https://www.daysoftheyear.com/today/"
 
-var dayCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Day$'`)
-var weekCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Week$'`)
-var monthCache = NewCache(`curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Month$'`)
+var dayCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Day$'`
+var weekCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Week$'`
+var monthCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Month$'`
+
+var dayCache = NewCache(dayCmd)
+var weekCache = NewCache(weekCmd)
+var monthCache = NewCache(monthCmd)
 
 func NationalDay(params bot.HandlerParams) error {
 	str, err := dayCache.Pop()
@@ -24,7 +28,11 @@ func NationalDay(params bot.HandlerParams) error {
 	}
 
 	if str == "EOF" {
-		return DayImage(params)
+		link, err := dayImage(params, dayCmd)
+		if err != nil {
+			return err
+		}
+		params.Privmsgf(params.Target, "Today's image: %s", link)
 	} else {
 		params.Privmsgf(params.Target, "%s", str)
 	}
@@ -38,7 +46,15 @@ func NationalWeek(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", str)
+	if str == "EOF" {
+		link, err := dayImage(params, weekCmd)
+		if err != nil {
+			return err
+		}
+		params.Privmsgf(params.Target, "This week's image: %s", link)
+	} else {
+		params.Privmsgf(params.Target, "%s", str)
+	}
 
 	return nil
 }
@@ -49,7 +65,15 @@ func NationalMonth(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", str)
+	if str == "EOF" {
+		link, err := dayImage(params, monthCmd)
+		if err != nil {
+			return err
+		}
+		params.Privmsgf(params.Target, "This month's image: %s", link)
+	} else {
+		params.Privmsgf(params.Target, "%s", str)
+	}
 
 	return nil
 }
@@ -60,19 +84,17 @@ func NationalRefs(params bot.HandlerParams) error {
 	return nil
 }
 
-func DayImage(params bot.HandlerParams) error {
-	cmd := `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Day$'`
-
+func dayImage(params bot.HandlerParams, cmd string) (string, error) {
 	r, err := shell.Command(cmd)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
-	prompt := fmt.Sprintf("a scene incorporating themes from all of the following days: %s", strings.Join(days, ","))
+	prompt := fmt.Sprintf("a scene incorporating themes from: %s", strings.Join(days, ","))
 	url, err := generateImage(context.Background(), prompt)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	q := model.New(db.DB)
@@ -84,15 +106,13 @@ func DayImage(params bot.HandlerParams) error {
 		Anon:   true,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	link, err := note.Link()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	params.Privmsgf(params.Target, "Today's image: %s", link)
-
-	return nil
+	return link, nil
 }
