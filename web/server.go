@@ -7,6 +7,7 @@ import (
 	_ "embed"
 	"errors"
 	"goirc/db/model"
+	"goirc/image"
 	"goirc/internal/idstr"
 	"html/template"
 	"log"
@@ -183,6 +184,9 @@ func Serve(db *sqlx.DB) {
 
 		http.Redirect(w, r, note.Text.String, http.StatusSeeOther)
 	})
+
+	fs := http.FileServer(http.Dir(image.ImageFileBase))
+	r.Handle("/images/*", http.StripPrefix("/images/", fs))
 
 	addr := ":" + os.Getenv("PORT")
 	log.Printf("web server listening on %s", addr)

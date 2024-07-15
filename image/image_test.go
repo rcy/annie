@@ -1,4 +1,4 @@
-package day
+package image
 
 import (
 	"context"
@@ -6,12 +6,12 @@ import (
 	"testing"
 )
 
-func TestGenerateImage(t *testing.T) {
+func TestGenerate(t *testing.T) {
 	ctx := context.Background()
 	prompt := "A beautiful sunset over the mountains."
-	url, err := generateImage(ctx, prompt)
+	gi, err := Generate(ctx, prompt)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(url)
+	fmt.Println(gi)
 }

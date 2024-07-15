@@ -211,6 +211,19 @@ alter table notes add column anon bool not null default false;
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add generated_images table")
+			_, err := tx.Exec(`
+create table generated_images(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  filename text not null,
+  prompt text not null,
+  revised_prompt text not null
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)

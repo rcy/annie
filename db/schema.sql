@@ -42,3 +42,10 @@ CREATE TABLE IF NOT EXISTS channel_nicks(
   updated_at datetime not null
 );
 CREATE UNIQUE INDEX channel_nick_unique_index on channel_nicks(channel, nick);
+CREATE TABLE generated_images(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  filename text not null,
+  prompt text not null,
+  revised_prompt text not null
+);

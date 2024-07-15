@@ -2,11 +2,9 @@ package day
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"goirc/bot"
-	"goirc/db/model"
-	db "goirc/model"
+	"goirc/image"
 	"goirc/shell"
 	"strings"
 )
@@ -28,11 +26,11 @@ func NationalDay(params bot.HandlerParams) error {
 	}
 
 	if str == "EOF" {
-		link, err := dayImage(params, dayCmd)
+		img, err := dayImage(dayCmd)
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target, "Today's image: %s", link)
+		params.Privmsgf(params.Target, "Today's image: %s", img.URL())
 	} else {
 		params.Privmsgf(params.Target, "%s", str)
 	}
@@ -47,11 +45,11 @@ func NationalWeek(params bot.HandlerParams) error {
 	}
 
 	if str == "EOF" {
-		link, err := dayImage(params, weekCmd)
+		img, err := dayImage(weekCmd)
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target, "This week's image: %s", link)
+		params.Privmsgf(params.Target, "This week's image: %s", img.URL())
 	} else {
 		params.Privmsgf(params.Target, "%s", str)
 	}
@@ -66,11 +64,11 @@ func NationalMonth(params bot.HandlerParams) error {
 	}
 
 	if str == "EOF" {
-		link, err := dayImage(params, monthCmd)
+		img, err := dayImage(monthCmd)
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target, "This month's image: %s", link)
+		params.Privmsgf(params.Target, "This month's image: %s", img.URL())
 	} else {
 		params.Privmsgf(params.Target, "%s", str)
 	}
@@ -84,35 +82,30 @@ func NationalRefs(params bot.HandlerParams) error {
 	return nil
 }
 
-func dayImage(params bot.HandlerParams, cmd string) (string, error) {
+func dayImage(cmd string) (*image.GeneratedImage, error) {
 	r, err := shell.Command(cmd)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
 	prompt := fmt.Sprintf("a scene incorporating themes from: %s", strings.Join(days, ","))
-	url, err := generateImage(context.Background(), prompt)
+	gi, err := image.Generate(context.Background(), prompt)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	q := model.New(db.DB)
-	note, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
-		Target: params.Target,
-		Nick:   sql.NullString{String: params.Nick, Valid: true},
-		Kind:   "link",
-		Text:   sql.NullString{String: url, Valid: true},
-		Anon:   true,
-	})
+	return gi, nil
+}
+
+func Image(params bot.HandlerParams) error {
+	prompt := params.Matches[1]
+	gi, err := image.Generate(context.Background(), prompt)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	link, err := note.Link()
-	if err != nil {
-		return "", err
-	}
+	params.Privmsgf(params.Target, "Generated image: %s", gi.URL())
 
-	return link, nil
+	return nil
 }
