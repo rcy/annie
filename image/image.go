@@ -60,6 +60,9 @@ func Generate(ctx context.Context, prompt string) (*GeneratedImage, error) {
 		Prompt:        prompt,
 		RevisedPrompt: imgResp.Data[0].RevisedPrompt,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	resp, err := http.Get(imgResp.Data[0].URL)
 	if err != nil {
