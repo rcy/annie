@@ -75,6 +75,17 @@ func Serve(db *sqlx.DB) {
 		http.ServeFile(w, r, "/tmp/snapshot.db")
 	})
 
+	pacific, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	funcMap := template.FuncMap{
+		"time": func(t time.Time) string {
+			return t.In(pacific).Format("2006-01-02 15:04:05")
+		},
+	}
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		nick := r.URL.Query().Get("nick")
 
@@ -88,7 +99,7 @@ func Serve(db *sqlx.DB) {
 			log.Fatal(err)
 		}
 
-		tmpl, err := template.New("name").Parse(indexTemplate)
+		tmpl, err := template.New("name").Funcs(funcMap).Parse(indexTemplate)
 		if err != nil {
 			log.Fatal("error parsing template")
 		}
@@ -190,7 +201,7 @@ func Serve(db *sqlx.DB) {
 
 	addr := ":" + os.Getenv("PORT")
 	log.Printf("web server listening on %s", addr)
-	err := http.ListenAndServe(addr, r)
+	err = http.ListenAndServe(addr, r)
 	if err != nil {
 		log.Fatal(err)
 	}

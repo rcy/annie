@@ -21,7 +21,7 @@
       {{range .notes}}
         <tr>
           <td class="nowrap">
-            {{.CreatedAt}}
+            {{time .CreatedAt}}
           </td>
           <td>
             {{if .Anon}}
