@@ -92,10 +92,19 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 	prompt := fmt.Sprintf("a scene incorporating themes from: %s", strings.Join(days, ","))
 	gi, err := image.Generate(context.Background(), prompt)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("prompt: %s: %w", prompt, err)
 	}
 
 	return gi, nil
+}
+
+func Dayi(params bot.HandlerParams) error {
+	img, err := dayImage(dayCmd)
+	if err != nil {
+		return err
+	}
+	params.Privmsgf(params.Target, "Today's image: %s", img.URL())
+	return nil
 }
 
 func Image(params bot.HandlerParams) error {
