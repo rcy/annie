@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	minAge    = time.Hour * 24
+	minAge    = 7 * time.Hour * 24
 	threshold = 1
 )
 
