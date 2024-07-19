@@ -45,13 +45,15 @@ func (p pool) Notes(ctx context.Context, kind string) ([]model.Note, error) {
 	return notes, nil
 }
 
+var NoNoteFoundError = errors.New("no note found")
+
 func (p pool) PeekRandomNote(ctx context.Context, kind string) (model.Note, error) {
 	notes, err := p.Notes(ctx, kind)
 	if err != nil {
 		return model.Note{}, err
 	}
 	if len(notes) == 0 {
-		return model.Note{}, errors.New("no note found")
+		return model.Note{}, NoNoteFoundError
 	}
 	r := p.rnd.Intn(len(notes))
 	return notes[r], nil

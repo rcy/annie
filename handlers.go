@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"goirc/bot"
 	"goirc/events"
 	"goirc/handlers"
@@ -9,6 +10,7 @@ import (
 	"goirc/handlers/gold"
 	"goirc/handlers/hn"
 	"goirc/handlers/kinfonet"
+	"goirc/handlers/linkpool"
 	"goirc/handlers/mlb"
 	"goirc/handlers/weather"
 	"time"
@@ -56,7 +58,9 @@ func addHandlers(b *bot.Bot) {
 				Privmsgf: b.MakePrivmsgf(),
 			})
 			if err != nil {
-				b.Conn.Privmsg(b.Channel, "error: "+err.Error())
+				if !errors.Is(err, linkpool.NoNoteFoundError) {
+					b.Conn.Privmsg(b.Channel, "error: "+err.Error())
+				}
 			}
 		}()
 	})
@@ -68,7 +72,9 @@ func addHandlers(b *bot.Bot) {
 				Privmsgf: b.MakePrivmsgf(),
 			})
 			if err != nil {
-				b.Conn.Privmsg(b.Channel, "error: "+err.Error())
+				if !errors.Is(err, linkpool.NoNoteFoundError) {
+					b.Conn.Privmsg(b.Channel, "error: "+err.Error())
+				}
 			}
 		}()
 	})
