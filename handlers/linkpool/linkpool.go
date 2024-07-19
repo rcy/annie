@@ -10,10 +10,9 @@ import (
 )
 
 type pool struct {
-	rnd       *rand.Rand
-	threshold int
-	minAge    time.Duration
-	queries   queries
+	rnd     *rand.Rand
+	minAge  time.Duration
+	queries queries
 }
 
 type queries interface {
@@ -22,12 +21,11 @@ type queries interface {
 	InsertNote(context.Context, model.InsertNoteParams) (model.Note, error)
 }
 
-func New(queries queries, threshold int, minAge time.Duration) pool {
+func New(queries queries, minAge time.Duration) pool {
 	return pool{
-		queries:   queries,
-		rnd:       rand.New(rand.NewSource(time.Now().UnixNano())),
-		threshold: threshold,
-		minAge:    minAge,
+		queries: queries,
+		rnd:     rand.New(rand.NewSource(time.Now().UnixNano())),
+		minAge:  minAge,
 	}
 }
 
@@ -52,7 +50,7 @@ func (p pool) PeekRandomNote(ctx context.Context, kind string) (model.Note, erro
 	if err != nil {
 		return model.Note{}, err
 	}
-	if len(notes) <= p.threshold {
+	if len(notes) == 0 {
 		return model.Note{}, errors.New("no note found")
 	}
 	r := p.rnd.Intn(len(notes))

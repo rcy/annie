@@ -10,13 +10,12 @@ import (
 )
 
 const (
-	minAge    = 7 * time.Hour * 24
-	threshold = 1
+	minAge = 7 * time.Hour * 24
 )
 
 func AnonLink(params bot.HandlerParams) error {
 	q := model.New(db.DB)
-	pool := linkpool.New(q, threshold, minAge)
+	pool := linkpool.New(q, minAge)
 	note, err := pool.PopRandomNote(context.Background(), params.Target, "link")
 	if err != nil {
 		return err
@@ -33,7 +32,7 @@ func AnonLink(params bot.HandlerParams) error {
 
 func AnonQuote(params bot.HandlerParams) error {
 	q := model.New(db.DB)
-	pool := linkpool.New(q, threshold, minAge)
+	pool := linkpool.New(q, minAge)
 	note, err := pool.PopRandomNote(context.Background(), params.Target, "quote")
 	if err != nil {
 		return err
@@ -46,7 +45,7 @@ func AnonQuote(params bot.HandlerParams) error {
 func AnonStatus(params bot.HandlerParams) error {
 	ctx := context.TODO()
 	q := model.New(db.DB)
-	allPool := linkpool.New(q, 0, 0)
+	allPool := linkpool.New(q, 0)
 	allLinks, err := allPool.Notes(ctx, "link")
 	if err != nil {
 		return err
@@ -56,7 +55,7 @@ func AnonStatus(params bot.HandlerParams) error {
 		return err
 	}
 
-	dayPool := linkpool.New(q, 0, minAge)
+	dayPool := linkpool.New(q, minAge)
 	dayLinks, err := dayPool.Notes(ctx, "link")
 	if err != nil {
 		return err
