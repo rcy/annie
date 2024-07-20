@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"goirc/bot"
+	"goirc/db/model"
 	"goirc/events"
 	"goirc/handlers"
 	"goirc/handlers/day"
@@ -13,7 +15,10 @@ import (
 	"goirc/handlers/linkpool"
 	"goirc/handlers/mlb"
 	"goirc/handlers/weather"
+	db "goirc/model"
 	"time"
+
+	"github.com/robfig/cron"
 )
 
 func addHandlers(b *bot.Bot) {
@@ -50,6 +55,28 @@ func addHandlers(b *bot.Bot) {
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
+
+	location, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		panic(err)
+	}
+
+	c := cron.NewWithLocation(location)
+	err = c.AddFunc("16 14 15 * * *", func() {
+		q := model.New(db.DB.DB)
+		note, err := q.RandomHistoricalTodayNote(context.TODO())
+		if err != nil {
+			// TODO test no rows
+			b.Conn.Privmsg(b.Channel, err.Error())
+			return
+		}
+
+		b.Conn.Privmsgf(b.Channel, "on this day in %d, %s posted %s", note.CreatedAt.Year(), note.Nick.String, note.Text.String)
+	})
+	if err != nil {
+		panic(err)
+	}
+	c.Start()
 
 	events.Subscribe("anonnoteposted", func(note any) {
 		go func() {

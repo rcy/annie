@@ -11,6 +11,7 @@ require (
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/pariz/gountries v0.1.6
 	github.com/rcy/durfmt v0.0.0-20240102082646-83cc8efdab91
+	github.com/robfig/cron v1.2.0
 	github.com/sashabaranov/go-openai v1.26.3
 	github.com/sqids/sqids-go v0.4.1
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64

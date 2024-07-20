@@ -383,6 +383,25 @@ func (q *Queries) NicksWithNoteCount(ctx context.Context) ([]NicksWithNoteCountR
 	return items, nil
 }
 
+const randomHistoricalTodayNote = `-- name: RandomHistoricalTodayNote :one
+select id, created_at, nick, text, kind, target, anon from notes where strftime('%m-%d', created_at) = strftime('%m-%d', 'now') order by random() limit 1
+`
+
+func (q *Queries) RandomHistoricalTodayNote(ctx context.Context) (Note, error) {
+	row := q.db.QueryRowContext(ctx, randomHistoricalTodayNote)
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Text,
+		&i.Kind,
+		&i.Target,
+		&i.Anon,
+	)
+	return i, err
+}
+
 const unsentAnonymousNotes = `-- name: UnsentAnonymousNotes :many
 select id, created_at, nick, text, kind, target, anon from notes where created_at <= ? and kind = ? and nick = target order by id asc limit 420
 `

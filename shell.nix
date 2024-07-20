@@ -10,7 +10,6 @@ with nixpkgs; mkShell {
     unstable.golint
     unstable.gopls
     html2text
-    sqlite
     flyctl
     unstable.golangci-lint
     google-cloud-sdk
