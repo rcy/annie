@@ -33,7 +33,7 @@ func (gi *GeneratedImage) URL() string {
 	return fmt.Sprintf("%s/images/%d.png", rootURL, gi.ID)
 }
 
-func Generate(ctx context.Context, prompt string) (*GeneratedImage, error) {
+func GenerateDALLE(ctx context.Context, prompt string) (*GeneratedImage, error) {
 	client := openai.NewClient(openaiAPIKey)
 
 	req := openai.ImageRequest{

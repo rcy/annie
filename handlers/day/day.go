@@ -90,7 +90,7 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
 	prompt := fmt.Sprintf("a scene incorporating themes from: %s", strings.Join(days, ","))
-	gi, err := image.GenerateRunpod(context.Background(), prompt)
+	gi, err := image.GenerateDALLE(context.Background(), prompt)
 	if err != nil {
 		return nil, fmt.Errorf("prompt: %s: %w", prompt, err)
 	}
@@ -109,7 +109,7 @@ func Dayi(params bot.HandlerParams) error {
 
 func Image(params bot.HandlerParams) error {
 	prompt := params.Matches[1]
-	gi, err := image.GenerateRunpod(context.Background(), prompt)
+	gi, err := image.GenerateDALLE(context.Background(), prompt)
 	if err != nil {
 		return err
 	}
