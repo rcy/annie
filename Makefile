@@ -1,7 +1,5 @@
 export BUILDKIT_PROGRESS=plain
 
-include .env
-
 watch:
 	air
 
@@ -12,10 +10,10 @@ lint:
 	golangci-lint run
 
 sql:
-	sqlite3 ${SQLITE_DB}
+	. ./.env && sqlite3 ${SQLITE_DB}
 
 test:
-	SQLITE_DB=:memory: go test ./...
+	set -a && . ./.env.test && go test ./...
 
 build:
 	docker build -t annie .
