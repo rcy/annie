@@ -384,7 +384,13 @@ func (q *Queries) NicksWithNoteCount(ctx context.Context) ([]NicksWithNoteCountR
 }
 
 const randomHistoricalTodayNote = `-- name: RandomHistoricalTodayNote :one
-select id, created_at, nick, text, kind, target, anon from notes where strftime('%m-%d', created_at) = strftime('%m-%d', 'now') order by random() limit 1
+select id, created_at, nick, text, kind, target, anon from notes
+where
+  strftime('%m-%d', created_at) = strftime('%m-%d', 'now')
+and
+  strftime('%Y', created_at) != strftime('%Y', 'now')
+order by random()
+limit 1
 `
 
 func (q *Queries) RandomHistoricalTodayNote(ctx context.Context) (Note, error) {

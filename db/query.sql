@@ -47,4 +47,10 @@ select * from notes where target = ? and created_at > ? order by created_at asc 
 insert into generated_images(filename, prompt, revised_prompt) values(?,?,?) returning *;
 
 -- name: RandomHistoricalTodayNote :one
-select * from notes where strftime('%m-%d', created_at) = strftime('%m-%d', 'now') order by random() limit 1;
+select * from notes
+where
+  strftime('%m-%d', created_at) = strftime('%m-%d', 'now')
+and
+  strftime('%Y', created_at) != strftime('%Y', 'now')
+order by random()
+limit 1;
