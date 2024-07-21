@@ -18,7 +18,7 @@ func TestNotes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pool := New(q, 0, 0*time.Hour)
+	pool := New(q, 0*time.Hour)
 
 	for _, tc := range []struct {
 		numNotes       int
@@ -70,7 +70,7 @@ func TestPeekRandomNote(t *testing.T) {
 	ctx := context.Background()
 
 	q := model.New(db.DB)
-	pool := New(q, 0, 0*time.Hour)
+	pool := New(q, 0*time.Hour)
 
 	_, err := db.DB.Exec("delete from notes")
 	if err != nil {
@@ -200,7 +200,7 @@ func TestPopRandomNote(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			pool := New(q, 0, 0*time.Hour)
+			pool := New(q, 0*time.Hour)
 
 			pool.Seed(tc.seed)
 			for i := 0; i < tc.numLinks; i++ {

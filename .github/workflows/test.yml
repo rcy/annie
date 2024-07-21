@@ -14,6 +14,5 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-      - name: Setup Environment
-        run: echo "SQLITE_DB=:memory:" >> $GITHUB_ENV
-      - run: go test ./...
+      - name: Run tests
+        run: make test
