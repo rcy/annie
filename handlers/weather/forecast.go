@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pariz/gountries"
 )
@@ -91,7 +92,16 @@ func (f forecast) String() string {
 	return city + ": " + strings.Join(temps, ", ")
 }
 
-func fetchForecast(lat, lon float64) (*forecast, error) {
+func fetchForecast(q string) (*forecast, error) {
+	weather, err := fetchWeather(q)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(weather)
+	return fetchForecastByCoords(weather.Coord.Lat, weather.Coord.Lon)
+}
+
+func fetchForecastByCoords(lat, lon float64) (*forecast, error) {
 	key := os.Getenv("OPENWEATHERMAP_API_KEY")
 	if key == "" {
 		return nil, fmt.Errorf("bad api key")
@@ -149,26 +159,77 @@ func HandleForecast(params bot.HandlerParams) error {
 		}
 	}
 
-	weather, err := fetchWeather(q)
+	forecast, err := fetchForecast(q)
+	if err != nil {
+		return err
+	}
+	str, err := forecast.Format()
 	if err != nil {
 		return err
 	}
 
+	params.Privmsgf(params.Target, "%s, %s forecast: %s", forecast.City.Name, forecast.City.Country, str)
+
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
 		Nick:    params.Nick,
 		Query:   q,
-		City:    weather.Name,
-		Country: weather.Sys.Country,
+		City:    forecast.City.Name,
+		Country: forecast.City.Country,
 	})
 	if err != nil {
 		return err
 	}
 
-	forecast, err := fetchForecast(weather.Coord.Lat, weather.Coord.Lon)
-	if err != nil {
-		return err
-	}
-	params.Privmsgf(params.Target, forecast.String())
-
 	return nil
+}
+
+func (f *forecast) Format() (string, error) {
+	type report struct {
+		Temp float64
+		Time time.Time
+	}
+
+	reps := make([]report, len(f.List))
+
+	location := time.FixedZone("", f.City.Timezone)
+
+	for i, r := range f.List {
+		tp, err := time.Parse("2006-01-02 15:04:05", r.DtTxt)
+		if err != nil {
+			return "", err
+		}
+		reps[i] = report{Temp: r.Main.Temp, Time: tp}
+	}
+
+	type dayHighLow struct {
+		Day  time.Time
+		High float64
+		Low  float64
+	}
+
+	dhlsa := []dayHighLow{}
+	curr := ""
+	i := -1
+	for _, r := range reps {
+		date := r.Time.In(location).Format(time.DateOnly)
+		if curr != date {
+			curr = date
+			i++
+			dhl := dayHighLow{Day: r.Time, High: r.Temp, Low: r.Temp}
+			dhlsa = append(dhlsa, dhl)
+		} else {
+			if r.Temp > dhlsa[i].High {
+				dhlsa[i].High = r.Temp
+			}
+			if r.Temp < dhlsa[i].Low {
+				dhlsa[i].Low = r.Temp
+			}
+		}
+	}
+
+	arr := []string{}
+	for _, v := range dhlsa {
+		arr = append(arr, fmt.Sprintf("%s:%0.0f°/%0.0f°", v.Day.In(location).Format("Mon"), v.Low, v.High))
+	}
+	return strings.Join(arr, " "), nil
 }

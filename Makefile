@@ -1,7 +1,7 @@
 export BUILDKIT_PROGRESS=plain
 
 watch:
-	air
+	. ./.env && air
 
 fmt:
 	go fmt main.go
@@ -10,7 +10,7 @@ lint:
 	golangci-lint run
 
 sql:
-	. ./.env && sqlite3 ${SQLITE_DB}
+	set -a && . ./.env && sqlite3 ${SQLITE_DB}
 
 test:
 	set -a && . ./.env.test && go test ./...
