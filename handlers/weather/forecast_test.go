@@ -2,6 +2,7 @@ package weather
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -35,4 +36,16 @@ func TestForecast(t *testing.T) {
 		})
 	}
 
+}
+
+func TestFetchForecast(t *testing.T) {
+	if os.Getenv("NETWORK") == "" {
+		t.Skip("NETWORK env var not set")
+	}
+	forecast, err := fetchForecast("creston,ca")
+	if err != nil {
+		t.Fatal(err)
+	}
+	str, err := forecast.Format()
+	fmt.Println(str)
 }

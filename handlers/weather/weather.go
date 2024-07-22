@@ -235,6 +235,17 @@ func Handle(params bot.HandlerParams) error {
 		return err
 	}
 
+	cast, err := fetchForecast(q)
+	if err != nil {
+		return err
+	}
+	castStr, err := cast.Format()
+	if err != nil {
+		return err
+	}
+
+	params.Privmsgf(params.Target, "%s forecast %s", resp.String(), castStr)
+
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
 		Nick:    params.Nick,
 		Query:   q,
@@ -244,8 +255,6 @@ func Handle(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
-
-	params.Privmsgf(params.Target, resp.String())
 
 	return nil
 }
