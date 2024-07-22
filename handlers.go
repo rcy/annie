@@ -71,7 +71,7 @@ func addHandlers(b *bot.Bot) {
 			return
 		}
 
-		b.Conn.Privmsgf(b.Channel, "on this day in %d, %s posted %s", note.CreatedAt.Year(), note.Nick.String, note.Text.String)
+		b.Conn.Privmsgf(b.Channel, "on this day in %d, %s posted: %s", note.CreatedAt.Year(), note.Nick.String, note.Text.String)
 	})
 	if err != nil {
 		panic(err)
