@@ -10,7 +10,7 @@ lint:
 	golangci-lint run
 
 sql:
-	set -a && . ./.env && sqlite3 ${SQLITE_DB}
+	. ./.env && sqlite3 $$SQLITE_DB
 
 test:
 	set -a && . ./.env.test && go test ./...
