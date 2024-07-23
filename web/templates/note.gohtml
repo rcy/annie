@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+    <head>
+        <title>{{.note.ID}}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+
+    <body>
+        <h1>NOTE-{{.note.ID}}</h1>
+
+        <div>
+            {{if (eq .note.Kind "link")}}
+                <a href={{.note.Text.String}}>{{.note.Text.String}}</a>
+            {{end}}
+        </div>
+        <form action="/note/{{.note.ID}}" method="post">
+            <input style="width:100%" value={{.note.Text.String}} type=text name="text">
+            <button>save</button>
+        </form>
+    </body>
+</html>

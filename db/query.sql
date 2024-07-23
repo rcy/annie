@@ -54,3 +54,12 @@ and
   strftime('%Y', created_at) != strftime('%Y', 'now')
 order by random()
 limit 1;
+
+-- name: NoteByID :one
+select * from notes where id = ?;
+
+-- name: UpdateNoteTextByID :one
+update notes set text = ? where id = ? returning *;
+
+-- name: DeleteNoteByID :exec
+delete from notes where id = ?;

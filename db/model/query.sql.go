@@ -165,6 +165,15 @@ func (q *Queries) CreateGeneratedImage(ctx context.Context, arg CreateGeneratedI
 	return i, err
 }
 
+const deleteNoteByID = `-- name: DeleteNoteByID :exec
+delete from notes where id = ?
+`
+
+func (q *Queries) DeleteNoteByID(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteNoteByID, id)
+	return err
+}
+
 const insertNickWeatherRequest = `-- name: InsertNickWeatherRequest :exec
 insert into nick_weather_requests(nick, query, city, country) values(?,?,?,?)
 `
@@ -383,6 +392,25 @@ func (q *Queries) NicksWithNoteCount(ctx context.Context) ([]NicksWithNoteCountR
 	return items, nil
 }
 
+const noteByID = `-- name: NoteByID :one
+select id, created_at, nick, text, kind, target, anon from notes where id = ?
+`
+
+func (q *Queries) NoteByID(ctx context.Context, id int64) (Note, error) {
+	row := q.db.QueryRowContext(ctx, noteByID, id)
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Text,
+		&i.Kind,
+		&i.Target,
+		&i.Anon,
+	)
+	return i, err
+}
+
 const randomHistoricalTodayNote = `-- name: RandomHistoricalTodayNote :one
 select id, created_at, nick, text, kind, target, anon from notes
 where
@@ -446,6 +474,30 @@ func (q *Queries) UnsentAnonymousNotes(ctx context.Context, arg UnsentAnonymousN
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateNoteTextByID = `-- name: UpdateNoteTextByID :one
+update notes set text = ? where id = ? returning id, created_at, nick, text, kind, target, anon
+`
+
+type UpdateNoteTextByIDParams struct {
+	Text sql.NullString
+	ID   int64
+}
+
+func (q *Queries) UpdateNoteTextByID(ctx context.Context, arg UpdateNoteTextByIDParams) (Note, error) {
+	row := q.db.QueryRowContext(ctx, updateNoteTextByID, arg.Text, arg.ID)
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Text,
+		&i.Kind,
+		&i.Target,
+		&i.Anon,
+	)
+	return i, err
 }
 
 const youtubeLinks = `-- name: YoutubeLinks :many

@@ -13,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -24,6 +25,9 @@ import (
 
 //go:embed "templates/index.gohtml"
 var indexTemplate string
+
+//go:embed "templates/note.gohtml"
+var noteTemplate string
 
 //go:embed "templates/rss.gohtml"
 var rssTemplate string
@@ -114,6 +118,61 @@ func Serve(db *sqlx.DB) {
 		}
 
 		_, _ = w.Write(out.Bytes())
+	})
+
+	r.Get("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+
+		note, err := q.NoteByID(ctx, int64(id))
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+			return
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		tmpl, err := template.New("name").Funcs(funcMap).Parse(noteTemplate)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = tmpl.Execute(w, map[string]any{
+			"note": note,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
+	r.Post("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+		text := r.FormValue("text")
+
+		if text == "" {
+			err := q.DeleteNoteByID(ctx, int64(id))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			_, err := q.UpdateNoteTextByID(ctx, model.UpdateNoteTextByIDParams{
+				ID:   int64(id),
+				Text: sql.NullString{String: text, Valid: true},
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+		http.Redirect(w, r, r.URL.String(), http.StatusSeeOther)
 	})
 
 	r.Get("/rss.xml", func(w http.ResponseWriter, r *http.Request) {
