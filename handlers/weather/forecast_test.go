@@ -47,5 +47,8 @@ func TestFetchForecast(t *testing.T) {
 		t.Fatal(err)
 	}
 	str, err := forecast.Format()
+	if err != nil {
+		t.Fatal(err)
+	}
 	fmt.Println(str)
 }
