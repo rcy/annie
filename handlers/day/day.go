@@ -89,7 +89,7 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 	}
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
-	prompt := fmt.Sprintf("a scene incorporating themes from: %s", strings.Join(days, ","))
+	prompt := fmt.Sprintf("A single scene incorporating themes from: %s.  Do not include any text in the image.", strings.Join(days, ","))
 	gi, err := image.GenerateDALLE(context.Background(), prompt)
 	if err != nil {
 		return nil, fmt.Errorf("prompt: %s: %w", prompt, err)
