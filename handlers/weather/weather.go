@@ -244,7 +244,8 @@ func Handle(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s forecast %s", resp.String(), castStr)
+	params.Privmsgf(params.Target, "%s", resp.String())
+	params.Privmsgf(params.Target, "forecast: %s", castStr)
 
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
 		Nick:    params.Nick,
