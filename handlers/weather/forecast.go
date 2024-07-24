@@ -168,7 +168,15 @@ func HandleForecast(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s, %s forecast: %s", forecast.City.Name, forecast.City.Country, str)
+	var countryStr string
+	country, err := gountries.New().FindCountryByAlpha(forecast.City.Country)
+	if err != nil {
+		countryStr = "??"
+	} else {
+		countryStr = country.Name.Common
+	}
+
+	params.Privmsgf(params.Target, "%s, %s forecast: %s", forecast.City.Name, countryStr, str)
 
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
 		Nick:    params.Nick,
@@ -181,6 +189,14 @@ func HandleForecast(params bot.HandlerParams) error {
 	}
 
 	return nil
+}
+
+func HandleWeatherForecast(params bot.HandlerParams) error {
+	err := Handle(params)
+	if err != nil {
+		return err
+	}
+	return HandleForecast(params)
 }
 
 func (f *forecast) Format() (string, error) {
@@ -229,7 +245,7 @@ func (f *forecast) Format() (string, error) {
 
 	arr := []string{}
 	for _, v := range dhlsa {
-		arr = append(arr, fmt.Sprintf("%s:%0.0f°/%0.0f°", v.Day.In(location).Format("Mon"), v.Low, v.High))
+		arr = append(arr, fmt.Sprintf("%s %0.0f %0.0f", v.Day.In(location).Format("Mon"), v.Low, v.High))
 	}
-	return strings.Join(arr, " "), nil
+	return strings.Join(arr, ", "), nil
 }

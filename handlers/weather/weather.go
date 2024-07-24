@@ -75,15 +75,7 @@ type weather struct {
 func (w weather) String() string {
 	components := []string{}
 
-	var countryStr string
-	country, err := gountries.New().FindCountryByAlpha(w.Sys.Country)
-	if err != nil {
-		countryStr = "??"
-	} else {
-		countryStr = country.Name.Common
-	}
-
-	temp := fmt.Sprintf("%s, %s %.1f°C", w.Name, countryStr, w.Main.Temp)
+	temp := fmt.Sprintf("%.1f°C", w.Main.Temp)
 	if w.Main.FeelsLike != w.Main.Temp {
 		temp += fmt.Sprintf(" (feels like %.1f°C)", w.Main.FeelsLike)
 	}
@@ -230,28 +222,26 @@ func Handle(params bot.HandlerParams) error {
 		}
 	}
 
-	resp, err := fetchWeather(q)
+	weath, err := fetchWeather(q)
 	if err != nil {
 		return err
 	}
 
-	cast, err := fetchForecast(q)
+	var countryStr string
+	country, err := gountries.New().FindCountryByAlpha(weath.Sys.Country)
 	if err != nil {
-		return err
-	}
-	castStr, err := cast.Format()
-	if err != nil {
-		return err
+		countryStr = "??"
+	} else {
+		countryStr = country.Name.Common
 	}
 
-	params.Privmsgf(params.Target, "%s", resp.String())
-	params.Privmsgf(params.Target, "forecast: %s", castStr)
+	params.Privmsgf(params.Target, "%s, %s today: %s", weath.Name, countryStr, weath.String())
 
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
 		Nick:    params.Nick,
 		Query:   q,
-		City:    resp.Name,
-		Country: resp.Sys.Country,
+		City:    weath.Name,
+		Country: weath.Sys.Country,
 	})
 	if err != nil {
 		return err
