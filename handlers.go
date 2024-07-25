@@ -16,6 +16,7 @@ import (
 	"goirc/handlers/mlb"
 	"goirc/handlers/weather"
 	db "goirc/model"
+	"goirc/web"
 	"time"
 
 	"github.com/robfig/cron"
@@ -55,6 +56,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!k`, kinfonet.TodaysQuoteHandler)
 	b.Handle(`^!gold`, gold.Handle)
 	b.Handle(`^!hn`, hn.Handle)
+	b.Handle(`^!auth$`, web.HandleAuth)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)

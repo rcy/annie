@@ -61,6 +61,13 @@ type oneTimeCode struct {
 
 var codes = make(map[code]oneTimeCode)
 
+func HandleAuth(params bot.HandlerParams) error {
+	var c = code(strings.Split(uuid.Must(uuid.NewV4()).String(), "-")[0])
+	codes[c] = oneTimeCode{nick: params.Nick}
+	params.Privmsgf(params.Nick, "hi %s, login with this link: %s/login/code/%s", params.Nick, os.Getenv("ROOT_URL"), c)
+	return nil
+}
+
 func Serve(db *sqlx.DB, b *bot.Bot) {
 	r := chi.NewRouter()
 
@@ -97,7 +104,10 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			tmpl.ExecuteTemplate(w, "promptNick", nil)
+			tmpl.ExecuteTemplate(w, "promptNick", map[string]string{
+				"botNick": b.Conn.GetNick(),
+				"channel": b.Channel,
+			})
 		})
 		r.Post("/nick", func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -138,8 +148,10 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 
 			delete(codes, c)
 
+			sess := r.Context().Value(sessionKey).(string)
+
 			err := q.CreateNickSession(r.Context(), model.CreateNickSessionParams{
-				Session: otc.session,
+				Session: sess,
 				Nick:    otc.nick,
 			})
 			if err != nil {

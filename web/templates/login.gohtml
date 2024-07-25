@@ -1,9 +1,26 @@
 {{define "promptNick"}}
     <div>
-        <p>you need to login to access this premium content</p>
-        <form action="/login/nick" method="post">
-            irc nick: <input type=text name=nick />
-        </form>
+        <pre>
+
+                               "
+ mmmm    m mm   mmm   mmmmm  mmm    m   m  mmmmm
+ #" "#   #"  " #"  #  # # #    #    #   #  # # #
+ #   #   #     #""""  # # #    #    #   #  # # #
+ ##m#"   #     "#mm"  # # #  mm#mm  "mm"#  # # #
+ #
+ "
+        #                    #                      "             m
+  mmm   # mm    mmm    mmm   #   m  mmmm    mmm   mmm    m mm   mm#mm
+ #"  "  #"  #  #"  #  #"  "  # m"   #" "#  #" "#    #    #"  #    #
+ #      #   #  #""""  #      #"#    #   #  #   #    #    #   #    #
+ "#mm"  #   #  "#mm"  "#mm"  #  "m  ##m#"  "#m#"  mm#mm  #   #    "mm
+                                    #
+                                    "
+
+!!! YOU NEED TO LOGIN TO ACCESS THIS CONTENT !!!
+
+Type !auth in {{.channel}} on irc to get a login link from {{.botNick}}
+        </pre>
     </div>
 {{end}}
 
