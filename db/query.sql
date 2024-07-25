@@ -69,3 +69,6 @@ select * from nick_sessions where session = ?;
 
 -- name: CreateNickSession :exec
 insert into nick_sessions(nick, session) values(?,?);
+
+-- name: DeleteNickSessions :exec
+delete from nick_sessions where nick = ?;

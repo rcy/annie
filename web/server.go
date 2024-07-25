@@ -11,6 +11,7 @@ import (
 	"goirc/db/model"
 	"goirc/image"
 	"goirc/internal/idstr"
+	db "goirc/model"
 	"html/template"
 	"log"
 	"net/http"
@@ -65,6 +66,17 @@ func HandleAuth(params bot.HandlerParams) error {
 	var c = code(strings.Split(uuid.Must(uuid.NewV4()).String(), "-")[0])
 	codes[c] = oneTimeCode{nick: params.Nick}
 	params.Privmsgf(params.Nick, "hi %s, login with this link: %s/login/code/%s", params.Nick, os.Getenv("ROOT_URL"), c)
+	return nil
+}
+
+func HandleDeauth(params bot.HandlerParams) error {
+	q := model.New(db.DB.DB)
+
+	err := q.DeleteNickSessions(context.Background(), params.Nick)
+	if err != nil {
+		return err
+	}
+	params.Privmsgf(params.Nick, "%s: all your sessions have been destroyed on %s", params.Nick, os.Getenv("ROOT_URL"))
 	return nil
 }
 

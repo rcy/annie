@@ -57,6 +57,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!gold`, gold.Handle)
 	b.Handle(`^!hn`, hn.Handle)
 	b.Handle(`^!auth$`, web.HandleAuth)
+	b.Handle(`^!deauth$`, web.HandleDeauth)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)

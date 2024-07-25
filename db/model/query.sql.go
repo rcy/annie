@@ -180,6 +180,15 @@ func (q *Queries) CreateNickSession(ctx context.Context, arg CreateNickSessionPa
 	return err
 }
 
+const deleteNickSessions = `-- name: DeleteNickSessions :exec
+delete from nick_sessions where nick = ?
+`
+
+func (q *Queries) DeleteNickSessions(ctx context.Context, nick string) error {
+	_, err := q.db.ExecContext(ctx, deleteNickSessions, nick)
+	return err
+}
+
 const deleteNoteByID = `-- name: DeleteNoteByID :exec
 delete from notes where id = ?
 `
