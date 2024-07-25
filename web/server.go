@@ -49,21 +49,23 @@ func Serve(db *sqlx.DB) {
 
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var value string
 			c, err := r.Cookie(cookieKey)
-			if errors.Is(err, http.ErrNoCookie) {
+			if err != nil {
+				value = uuid.Must(uuid.NewV7()).String()
 				http.SetCookie(w, &http.Cookie{
 					Name:     cookieKey,
-					Value:    uuid.Must(uuid.NewV7()).String(),
+					Value:    value,
 					Path:     "/",
 					Secure:   true,
 					HttpOnly: true,
 					Expires:  time.Now().Add(time.Hour * 24 * 400),
 				})
-				http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
-				return
+			} else {
+				value = c.Value
 			}
 
-			ctx := context.WithValue(r.Context(), sessionKey, c.Value)
+			ctx := context.WithValue(r.Context(), sessionKey, value)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
