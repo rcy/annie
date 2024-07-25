@@ -63,6 +63,10 @@ type oneTimeCode struct {
 var codes = make(map[code]oneTimeCode)
 
 func HandleAuth(params bot.HandlerParams) error {
+	if params.Nick == params.Target {
+		params.Privmsgf(params.Nick, "cannot !auth privately, do it in channel")
+		return nil
+	}
 	var c = code(strings.Split(uuid.Must(uuid.NewV4()).String(), "-")[0])
 	codes[c] = oneTimeCode{nick: params.Nick}
 	params.Privmsgf(params.Nick, "hi %s, login with this link: %s/login/code/%s", params.Nick, os.Getenv("ROOT_URL"), c)
