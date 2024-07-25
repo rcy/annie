@@ -9,8 +9,6 @@ import (
 )
 
 func main() {
-	go web.Serve(db.DB)
-
 	b, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
@@ -18,6 +16,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	go web.Serve(db.DB, b)
 
 	addHandlers(b)
 

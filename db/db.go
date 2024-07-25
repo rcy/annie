@@ -224,6 +224,18 @@ create table generated_images(
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add nick_sessions table")
+			_, err := tx.Exec(`
+create table nick_sessions(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  session text not null
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)

@@ -294,7 +294,7 @@ func (bot *Bot) SendMissed(ctx context.Context, channel string, nick string) err
 		return nil
 	}
 
-	channelNick, err := q.ChannelNick(ctx, model.ChannelNickParams{Nick: nick, Channel: channel})
+	channelNick, err := q.ChannelNick(ctx, model.ChannelNickParams{Nick: nick, Channel: channel, Present: false})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// first time seeing this nick

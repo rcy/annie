@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	_ "embed"
 	"errors"
+	"fmt"
+	"goirc/bot"
 	"goirc/db/model"
 	"goirc/image"
 	"goirc/internal/idstr"
@@ -14,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -25,6 +28,9 @@ import (
 
 //go:embed "templates/index.gohtml"
 var indexTemplate string
+
+//go:embed "templates/login.gohtml"
+var loginTemplate string
 
 //go:embed "templates/note.gohtml"
 var noteTemplate string
@@ -38,11 +44,24 @@ var playerTemplate = template.Must(template.New("").Parse(playerTemplateContent)
 
 type keyType int
 
-var sessionKey keyType
+const (
+	sessionKey keyType = iota
+	nickKey
+)
 
-const cookieKey = "annie"
+const sessionCookieKey = "annie.session"
+const fromCookieKey = "annie.from"
 
-func Serve(db *sqlx.DB) {
+type code string
+
+type oneTimeCode struct {
+	session string
+	nick    string
+}
+
+var codes = make(map[code]oneTimeCode)
+
+func Serve(db *sqlx.DB, b *bot.Bot) {
 	r := chi.NewRouter()
 
 	q := model.New(db.DB)
@@ -50,11 +69,11 @@ func Serve(db *sqlx.DB) {
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var value string
-			c, err := r.Cookie(cookieKey)
+			c, err := r.Cookie(sessionCookieKey)
 			if err != nil {
 				value = uuid.Must(uuid.NewV7()).String()
 				http.SetCookie(w, &http.Cookie{
-					Name:     cookieKey,
+					Name:     sessionCookieKey,
 					Value:    value,
 					Path:     "/",
 					Secure:   true,
@@ -71,158 +90,79 @@ func Serve(db *sqlx.DB) {
 		})
 	})
 
-	r.Get("/snapshot.db", func(w http.ResponseWriter, r *http.Request) {
-		os.Remove("/tmp/snapshot.db")
-		if _, err := db.Exec(`vacuum into '/tmp/snapshot.db'`); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		http.ServeFile(w, r, "/tmp/snapshot.db")
-	})
-
-	pacific, err := time.LoadLocation("America/Los_Angeles")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	funcMap := template.FuncMap{
-		"time": func(t time.Time) string {
-			return t.In(pacific).Format("2006-01-02 15:04:05")
-		},
-	}
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		nick := r.URL.Query().Get("nick")
-
-		notes, err := getNotes(r.Context(), q, nick)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		nicks, err := q.NicksWithNoteCount(r.Context())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		tmpl, err := template.New("name").Funcs(funcMap).Parse(indexTemplate)
-		if err != nil {
-			log.Fatal("error parsing template")
-		}
-
-		out := new(bytes.Buffer)
-		err = tmpl.Execute(out, map[string]any{
-			"nicks": nicks,
-			"notes": notes,
-		})
-		if err != nil {
-			log.Fatal("error executing template on data")
-		}
-
-		_, _ = w.Write(out.Bytes())
-	})
-
-	r.Get("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-
-		id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-
-		note, err := q.NoteByID(ctx, int64(id))
-		if errors.Is(err, sql.ErrNoRows) {
-			http.NotFound(w, r)
-			return
-		}
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		tmpl, err := template.New("name").Funcs(funcMap).Parse(noteTemplate)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		err = tmpl.Execute(w, map[string]any{
-			"note": note,
-		})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
-
-	r.Post("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-
-		id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-		text := r.FormValue("text")
-
-		if text == "" {
-			err := q.DeleteNoteByID(ctx, int64(id))
+	r.Route("/login", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			tmpl, err := template.New("").Parse(loginTemplate)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-		} else {
-			_, err := q.UpdateNoteTextByID(ctx, model.UpdateNoteTextByIDParams{
-				ID:   int64(id),
-				Text: sql.NullString{String: text, Valid: true},
+			tmpl.ExecuteTemplate(w, "promptNick", nil)
+		})
+		r.Post("/nick", func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			nick := r.FormValue("nick")
+
+			skey := r.Context().Value(sessionKey).(string)
+
+			var c = code(strings.Split(uuid.Must(uuid.NewV4()).String(), "-")[0])
+			codes[c] = oneTimeCode{session: skey, nick: nick}
+
+			_, err := q.ChannelNick(ctx, model.ChannelNickParams{Nick: nick, Channel: b.Channel, Present: true})
+			if err != nil {
+				http.Error(w, fmt.Sprintf("couldn't find %s in %s: %s", nick, b.Channel, err.Error()), http.StatusForbidden)
+				return
+			}
+
+			b.Conn.Privmsgf(nick, "hi %s, login with this link: %s/login/code/%s", nick, os.Getenv("ROOT_URL"), c)
+
+			tmpl, err := template.New("").Parse(loginTemplate)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			tmpl.ExecuteTemplate(w, "promptCode", map[string]string{
+				"nick":    nick,
+				"botNick": b.Conn.GetNick(),
+				"channel": b.Channel,
+			})
+		})
+		r.Get("/code/{code}", func(w http.ResponseWriter, r *http.Request) {
+			c := code(chi.URLParam(r, "code"))
+			otc, ok := codes[c]
+			if !ok {
+				http.Error(w, "invalid code", http.StatusBadRequest)
+				return
+			}
+
+			delete(codes, c)
+
+			err := q.CreateNickSession(r.Context(), model.CreateNickSessionParams{
+				Session: otc.session,
+				Nick:    otc.nick,
 			})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-		}
-		http.Redirect(w, r, r.URL.String(), http.StatusSeeOther)
-	})
 
-	r.Get("/rss.xml", func(w http.ResponseWriter, r *http.Request) {
-		nick := r.URL.Query().Get("nick")
-
-		notes, err := getNotes(r.Context(), q, nick)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		tmpl, err := template.New("name").Parse(rssTemplate)
-		if err != nil {
-			log.Fatal("error parsing template")
-		}
-
-		out := new(bytes.Buffer)
-		err = tmpl.Execute(out, map[string]any{
-			"notes": notes,
-		})
-		if err != nil {
-			log.Fatal("error executing template on data")
-		}
-
-		_, _ = w.Write(out.Bytes())
-	})
-
-	r.Get("/player", func(w http.ResponseWriter, r *http.Request) {
-		youtubeLinks, err := q.YoutubeLinks(r.Context())
-		if err != nil {
-			log.Fatal("could not select links")
-		}
-
-		var videoIDs []string
-		for _, link := range youtubeLinks {
-			id, err := youtube.ExtractVideoID(link.Text.String)
+			cookie, err := r.Cookie(fromCookieKey)
 			if err != nil {
-				log.Fatalf("error extracting video id %s", link.Text.String)
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+				return
 			}
-			videoIDs = append(videoIDs, id)
-		}
-
-		out := new(bytes.Buffer)
-		err = playerTemplate.Execute(out, map[string]any{"VideoIDs": videoIDs})
-		if err != nil {
-			log.Fatalf("error executing template: %s", err)
-		}
-
-		_, _ = w.Write(out.Bytes())
+			// expire "from" cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     fromCookieKey,
+				Value:    r.URL.Path,
+				Path:     "/",
+				Secure:   true,
+				HttpOnly: true,
+				Expires:  time.Unix(0, 0),
+			})
+			http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
+		})
 	})
 
 	r.Get("/{sqid}", func(w http.ResponseWriter, r *http.Request) {
@@ -257,12 +197,190 @@ func Serve(db *sqlx.DB) {
 		http.Redirect(w, r, note.Text.String, http.StatusSeeOther)
 	})
 
-	fs := http.FileServer(http.Dir(image.ImageFileBase))
-	r.Handle("/images/*", http.StripPrefix("/images/", fs))
+	r.Group(func(r chi.Router) {
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ctx := r.Context()
+				key := r.Context().Value(sessionKey).(string)
+				session, err := q.NickBySession(ctx, key)
+				if err != nil {
+					http.SetCookie(w, &http.Cookie{
+						Name:     fromCookieKey,
+						Value:    r.URL.Path,
+						Path:     "/",
+						Secure:   true,
+						HttpOnly: true,
+						Expires:  time.Now().Add(time.Hour),
+					})
+					http.Redirect(w, r, "/login", http.StatusFound)
+					return
+				}
+				ctx = context.WithValue(ctx, nickKey, session.Nick)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			})
+		})
+
+		r.Get("/snapshot.db", func(w http.ResponseWriter, r *http.Request) {
+			os.Remove("/tmp/snapshot.db")
+			if _, err := db.Exec(`vacuum into '/tmp/snapshot.db'`); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			http.ServeFile(w, r, "/tmp/snapshot.db")
+		})
+
+		pacific, err := time.LoadLocation("America/Los_Angeles")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		funcMap := template.FuncMap{
+			"time": func(t time.Time) string {
+				return t.In(pacific).Format("2006-01-02 15:04:05")
+			},
+		}
+
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			nick := r.URL.Query().Get("nick")
+
+			notes, err := getNotes(r.Context(), q, nick)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			nicks, err := q.NicksWithNoteCount(r.Context())
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			tmpl, err := template.New("name").Funcs(funcMap).Parse(indexTemplate)
+			if err != nil {
+				log.Fatal("error parsing template")
+			}
+
+			out := new(bytes.Buffer)
+			err = tmpl.Execute(out, map[string]any{
+				"nicks": nicks,
+				"notes": notes,
+			})
+			if err != nil {
+				log.Fatal("error executing template on data")
+			}
+
+			_, _ = w.Write(out.Bytes())
+		})
+
+		r.Get("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+
+			note, err := q.NoteByID(ctx, int64(id))
+			if errors.Is(err, sql.ErrNoRows) {
+				http.NotFound(w, r)
+				return
+			}
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			tmpl, err := template.New("name").Funcs(funcMap).Parse(noteTemplate)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			err = tmpl.Execute(w, map[string]any{
+				"note": note,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+
+		r.Post("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+			text := r.FormValue("text")
+
+			if text == "" {
+				err := q.DeleteNoteByID(ctx, int64(id))
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			} else {
+				_, err := q.UpdateNoteTextByID(ctx, model.UpdateNoteTextByIDParams{
+					ID:   int64(id),
+					Text: sql.NullString{String: text, Valid: true},
+				})
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			}
+			http.Redirect(w, r, r.URL.String(), http.StatusSeeOther)
+		})
+
+		r.Get("/rss.xml", func(w http.ResponseWriter, r *http.Request) {
+			nick := r.URL.Query().Get("nick")
+
+			notes, err := getNotes(r.Context(), q, nick)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			tmpl, err := template.New("name").Parse(rssTemplate)
+			if err != nil {
+				log.Fatal("error parsing template")
+			}
+
+			out := new(bytes.Buffer)
+			err = tmpl.Execute(out, map[string]any{
+				"notes": notes,
+			})
+			if err != nil {
+				log.Fatal("error executing template on data")
+			}
+
+			_, _ = w.Write(out.Bytes())
+		})
+
+		r.Get("/player", func(w http.ResponseWriter, r *http.Request) {
+			youtubeLinks, err := q.YoutubeLinks(r.Context())
+			if err != nil {
+				log.Fatal("could not select links")
+			}
+
+			var videoIDs []string
+			for _, link := range youtubeLinks {
+				id, err := youtube.ExtractVideoID(link.Text.String)
+				if err != nil {
+					log.Fatalf("error extracting video id %s", link.Text.String)
+				}
+				videoIDs = append(videoIDs, id)
+			}
+
+			out := new(bytes.Buffer)
+			err = playerTemplate.Execute(out, map[string]any{"VideoIDs": videoIDs})
+			if err != nil {
+				log.Fatalf("error executing template: %s", err)
+			}
+
+			_, _ = w.Write(out.Bytes())
+		})
+
+		fs := http.FileServer(http.Dir(image.ImageFileBase))
+		r.Handle("/images/*", http.StripPrefix("/images/", fs))
+	})
 
 	addr := ":" + os.Getenv("PORT")
 	log.Printf("web server listening on %s", addr)
-	err = http.ListenAndServe(addr, r)
+	err := http.ListenAndServe(addr, r)
 	if err != nil {
 		log.Fatal(err)
 	}

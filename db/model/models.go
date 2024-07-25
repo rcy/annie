@@ -42,6 +42,13 @@ type MigrationVersion struct {
 	Version sql.NullInt64
 }
 
+type NickSession struct {
+	ID        int64
+	CreatedAt time.Time
+	Nick      string
+	Session   string
+}
+
 type NickWeatherRequest struct {
 	ID        int64
 	CreatedAt time.Time

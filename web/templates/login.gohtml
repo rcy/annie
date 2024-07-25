@@ -1,0 +1,14 @@
+{{define "promptNick"}}
+    <div>
+        <p>you need to login to access this premium content</p>
+        <form action="/login/nick" method="post">
+            irc nick: <input type=text name=nick />
+        </form>
+    </div>
+{{end}}
+
+{{define "promptCode"}}
+    <div>
+        Hi {{.nick}}, {{.botNick}} sent you a private message in irc with an authentication link
+    </div>
+{{end}}

@@ -82,16 +82,17 @@ func (q *Queries) AllNotes(ctx context.Context) ([]Note, error) {
 }
 
 const channelNick = `-- name: ChannelNick :one
-select channel, nick, present, updated_at from channel_nicks where present = 0 and channel = ? and nick = ? collate nocase
+select channel, nick, present, updated_at from channel_nicks where present = ? and channel = ? and nick = ? collate nocase
 `
 
 type ChannelNickParams struct {
+	Present bool
 	Channel string
 	Nick    string
 }
 
 func (q *Queries) ChannelNick(ctx context.Context, arg ChannelNickParams) (ChannelNick, error) {
-	row := q.db.QueryRowContext(ctx, channelNick, arg.Channel, arg.Nick)
+	row := q.db.QueryRowContext(ctx, channelNick, arg.Present, arg.Channel, arg.Nick)
 	var i ChannelNick
 	err := row.Scan(
 		&i.Channel,
@@ -163,6 +164,20 @@ func (q *Queries) CreateGeneratedImage(ctx context.Context, arg CreateGeneratedI
 		&i.RevisedPrompt,
 	)
 	return i, err
+}
+
+const createNickSession = `-- name: CreateNickSession :exec
+insert into nick_sessions(nick, session) values(?,?)
+`
+
+type CreateNickSessionParams struct {
+	Nick    string
+	Session string
+}
+
+func (q *Queries) CreateNickSession(ctx context.Context, arg CreateNickSessionParams) error {
+	_, err := q.db.ExecContext(ctx, createNickSession, arg.Nick, arg.Session)
+	return err
 }
 
 const deleteNoteByID = `-- name: DeleteNoteByID :exec
@@ -356,6 +371,22 @@ func (q *Queries) MarkAnonymousNoteDelivered(ctx context.Context, arg MarkAnonym
 		&i.Kind,
 		&i.Target,
 		&i.Anon,
+	)
+	return i, err
+}
+
+const nickBySession = `-- name: NickBySession :one
+select id, created_at, nick, session from nick_sessions where session = ?
+`
+
+func (q *Queries) NickBySession(ctx context.Context, session string) (NickSession, error) {
+	row := q.db.QueryRowContext(ctx, nickBySession, session)
+	var i NickSession
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Session,
 	)
 	return i, err
 }

@@ -38,7 +38,7 @@ select * from notes where target != nick and nick = ? order by created_at desc l
 select nick, count(nick) as count from notes group by nick;
 
 -- name: ChannelNick :one
-select * from channel_nicks where present = 0 and channel = ? and nick = ? collate nocase;
+select * from channel_nicks where present = ? and channel = ? and nick = ? collate nocase;
 
 -- name: ChannelNotesSince :many
 select * from notes where target = ? and created_at > ? order by created_at asc limit 69;
@@ -63,3 +63,9 @@ update notes set text = ? where id = ? returning *;
 
 -- name: DeleteNoteByID :exec
 delete from notes where id = ?;
+
+-- name: NickBySession :one
+select * from nick_sessions where session = ?;
+
+-- name: CreateNickSession :exec
+insert into nick_sessions(nick, session) values(?,?);
