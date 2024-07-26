@@ -31,6 +31,9 @@
             {{end}}
           </td>
           <td>
+            <a href="/note/{{.ID}}">edit</a>
+          </td>
+          <td>
             {{if eq .Kind "link"}}
               <a href="{{.Text.String}}">{{.Text.String}}</a>
             {{else}}
