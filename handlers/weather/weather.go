@@ -2,9 +2,7 @@ package weather
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"goirc/bot"
 	db "goirc/db/model"
@@ -197,29 +195,9 @@ func Handle(params bot.HandlerParams) error {
 		q = params.Matches[1]
 	}
 
-	if q == "" {
-		last, err := queries.LastNickWeatherRequest(ctx, params.Nick)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return errors.New("no previous weather station to report on")
-			}
-			return err
-		}
-		if params.Nick == last.Nick {
-			if strings.HasPrefix(last.City, q) {
-				q = last.City + "," + last.Country
-			}
-		}
-	} else {
-		last, err := queries.LastWeatherRequestByPrefix(ctx, sql.NullString{String: q, Valid: true})
-		if err != nil {
-			if !errors.Is(err, sql.ErrNoRows) {
-				return err
-			}
-		}
-		if last.ID != 0 {
-			q = last.City + "," + last.Country
-		}
+	q, err := weatherQueryByNick(ctx, q, params.Nick)
+	if err != nil {
+		return err
 	}
 
 	weath, err := fetchWeather(q)
@@ -235,8 +213,6 @@ func Handle(params bot.HandlerParams) error {
 		countryStr = country.Name.Common
 	}
 
-	params.Privmsgf(params.Target, "%s, %s today: %s", weath.Name, countryStr, weath.String())
-
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
 		Nick:    params.Nick,
 		Query:   q,
@@ -246,6 +222,8 @@ func Handle(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
+
+	params.Privmsgf(params.Target, "%s, %s today: %s", weath.Name, countryStr, weath.String())
 
 	return nil
 }

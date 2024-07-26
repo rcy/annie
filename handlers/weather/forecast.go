@@ -2,9 +2,7 @@ package weather
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"goirc/bot"
 	db "goirc/db/model"
@@ -97,7 +95,6 @@ func fetchForecast(q string) (*forecast, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(weather)
 	return fetchForecastByCoords(weather.Coord.Lat, weather.Coord.Lon)
 }
 
@@ -134,29 +131,9 @@ func HandleForecast(params bot.HandlerParams) error {
 		q = params.Matches[1]
 	}
 
-	if q == "" {
-		last, err := queries.LastNickWeatherRequest(ctx, params.Nick)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return errors.New("no previous weather station to report on")
-			}
-			return err
-		}
-		if params.Nick == last.Nick {
-			if strings.HasPrefix(last.City, q) {
-				q = last.City + "," + last.Country
-			}
-		}
-	} else {
-		last, err := queries.LastWeatherRequestByPrefix(ctx, sql.NullString{String: q, Valid: true})
-		if err != nil {
-			if !errors.Is(err, sql.ErrNoRows) {
-				return err
-			}
-		}
-		if last.ID != 0 {
-			q = last.City + "," + last.Country
-		}
+	q, err := weatherQueryByNick(ctx, q, params.Nick)
+	if err != nil {
+		return err
 	}
 
 	forecast, err := fetchForecast(q)
