@@ -120,10 +120,14 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			tmpl.ExecuteTemplate(w, "promptNick", map[string]string{
+			err = tmpl.ExecuteTemplate(w, "promptNick", map[string]string{
 				"botNick": b.Conn.GetNick(),
 				"channel": b.Channel,
 			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		})
 		r.Post("/nick", func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -148,11 +152,15 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			tmpl.ExecuteTemplate(w, "promptCode", map[string]string{
+			err = tmpl.ExecuteTemplate(w, "promptCode", map[string]string{
 				"nick":    nick,
 				"botNick": b.Conn.GetNick(),
 				"channel": b.Channel,
 			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		})
 		r.Get("/code/{code}", func(w http.ResponseWriter, r *http.Request) {
 			c := code(chi.URLParam(r, "code"))
