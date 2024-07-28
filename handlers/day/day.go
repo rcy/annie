@@ -82,6 +82,48 @@ func NationalRefs(params bot.HandlerParams) error {
 	return nil
 }
 
+func stripPhrases(days []string) []string {
+	removes := []string{
+		"and",
+		"day",
+		"for",
+		"international",
+		"month",
+		"national",
+		"the",
+		"week",
+		"weekend",
+		"world",
+		"year",
+	}
+	result := make([]string, len(days))
+
+	var kept []string
+
+	for d, day := range days {
+		day = strings.ToLower(day)
+
+		kept = []string{}
+
+		for _, word := range strings.Fields(day) {
+			keep := true
+
+			for _, remove := range removes {
+				if word == remove {
+					keep = false
+					break
+				}
+			}
+
+			if keep {
+				kept = append(kept, word)
+			}
+		}
+		result[d] = strings.Join(kept, " ")
+	}
+	return result
+}
+
 func dayImage(cmd string) (*image.GeneratedImage, error) {
 	r, err := shell.Command(cmd)
 	if err != nil {
@@ -89,7 +131,8 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 	}
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
-	prompt := fmt.Sprintf("A single scene incorporating themes from: %s.  Do not include any text in the image.", strings.Join(days, ","))
+	days = stripPhrases(days)
+	prompt := strings.Join(days, ",")
 	gi, err := image.GenerateDALLE(context.Background(), prompt)
 	if err != nil {
 		return nil, fmt.Errorf("prompt: %s: %w", prompt, err)
