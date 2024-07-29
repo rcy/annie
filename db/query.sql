@@ -72,3 +72,6 @@ insert into nick_sessions(nick, session) values(?,?);
 
 -- name: DeleteNickSessions :exec
 delete from nick_sessions where nick = ?;
+
+-- name: GeneratedImageByID :one
+select * from generated_images where id = ?;

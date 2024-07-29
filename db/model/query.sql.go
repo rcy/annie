@@ -198,6 +198,23 @@ func (q *Queries) DeleteNoteByID(ctx context.Context, id int64) error {
 	return err
 }
 
+const generatedImageByID = `-- name: GeneratedImageByID :one
+select id, created_at, filename, prompt, revised_prompt from generated_images where id = ?
+`
+
+func (q *Queries) GeneratedImageByID(ctx context.Context, id int64) (GeneratedImage, error) {
+	row := q.db.QueryRowContext(ctx, generatedImageByID, id)
+	var i GeneratedImage
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Filename,
+		&i.Prompt,
+		&i.RevisedPrompt,
+	)
+	return i, err
+}
+
 const insertNickWeatherRequest = `-- name: InsertNickWeatherRequest :exec
 insert into nick_weather_requests(nick, query, city, country) values(?,?,?,?)
 `

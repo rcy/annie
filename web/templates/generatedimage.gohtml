@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <title>generated image {{.image.ID}}</title>
+        <style>
+         body {
+             font-family: monospace;
+             background: black;
+             color: white;
+             max-width: 1000px;
+             margin: auto;
+         }
+        </style>
+    </head>
+    <body>
+        <h1>generated image {{.image.ID}}</h1>
+
+        <ul>
+            <li>created_at: {{.image.CreatedAt}}</li>
+            <li>prompt: {{.image.Prompt}}</li>
+            <li>revised_prompt: {{.image.RevisedPrompt}}</li>
+        </ul>
+
+        <img src="/images/{{.image.ID}}.png">
+    </body>
+</html>

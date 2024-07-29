@@ -132,7 +132,7 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
 	days = stripPhrases(days)
-	prompt := strings.Join(days, ",")
+	prompt := strings.Join(days, ", ")
 	gi, err := image.GenerateDALLE(context.Background(), prompt)
 	if err != nil {
 		return nil, fmt.Errorf("prompt: %s: %w", prompt, err)

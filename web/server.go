@@ -43,6 +43,10 @@ var rssTemplate string
 var playerTemplateContent string
 var playerTemplate = template.Must(template.New("").Parse(playerTemplateContent))
 
+//go:embed "templates/generatedimage.gohtml"
+var generatedImageTemplateContent string
+var generatedImageTemplate = template.Must(template.New("").Parse(generatedImageTemplateContent))
+
 type keyType int
 
 const (
@@ -409,10 +413,28 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 
 			_, _ = w.Write(out.Bytes())
 		})
-
-		fs := http.FileServer(http.Dir(image.ImageFileBase))
-		r.Handle("/images/*", http.StripPrefix("/images/", fs))
 	})
+
+	r.Get("/generated_images/{id}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		q := model.New(db.DB)
+		id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+		image, err := q.GeneratedImageByID(ctx, int64(id))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = generatedImageTemplate.Execute(w, map[string]any{
+			"image": image,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
+	fs := http.FileServer(http.Dir(image.ImageFileBase))
+	r.Handle("/images/*", http.StripPrefix("/images/", fs))
 
 	addr := ":" + os.Getenv("PORT")
 	log.Printf("web server listening on %s", addr)
