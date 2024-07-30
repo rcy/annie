@@ -425,7 +425,8 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			return
 		}
 		err = generatedImageTemplate.Execute(w, map[string]any{
-			"image": image,
+			"image":            image,
+			"absoluteImageURL": fmt.Sprintf("%s/images/%d.png", os.Getenv("ROOT_URL"), image.ID),
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

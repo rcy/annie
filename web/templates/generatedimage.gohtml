@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>generated image {{.image.ID}}</title>
+        <title>{{.image.Prompt}}</title>
         <style>
          body {
              font-family: monospace;
@@ -10,14 +10,17 @@
              margin: auto;
          }
         </style>
+        <meta property="og:image" content="{{.absoluteImageURL}}" />
+        <meta property="og:title" content="{{.image.Prompt}}" />
     </head>
     <body>
-        <h1>generated image {{.image.ID}}</h1>
+        <h1>celebration of: {{.image.Prompt}}</h1>
 
         <ul>
             <li>created_at: {{.image.CreatedAt}}</li>
-            <li>prompt: {{.image.Prompt}}</li>
+            <li>model: dall-e-3</li>
             <li>revised_prompt: {{.image.RevisedPrompt}}</li>
+            <li>data from: <a href="https://www.daysoftheyear.com/today/">https://www.daysoftheyear.com/today/</a></li>
         </ul>
 
         <img src="/images/{{.image.ID}}.png">
