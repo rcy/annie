@@ -30,7 +30,7 @@ type GeneratedImage struct {
 }
 
 func (gi *GeneratedImage) URL() string {
-	return fmt.Sprintf("%s/generated_images/%d.png", rootURL, gi.ID)
+	return fmt.Sprintf("%s/generated_images/%d", rootURL, gi.ID)
 }
 
 func GenerateDALLE(ctx context.Context, prompt string) (*GeneratedImage, error) {
