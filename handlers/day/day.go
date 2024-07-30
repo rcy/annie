@@ -11,9 +11,9 @@ import (
 
 var url = "https://www.daysoftheyear.com/today/"
 
-var dayCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Day$'`
-var weekCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Week$'`
-var monthCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E ' Month$'`
+var dayCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E '\bDay\b'`
+var weekCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E '\bWeek\b'`
+var monthCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E '\bMonth\b'`
 
 var dayCache = NewCache(dayCmd)
 var weekCache = NewCache(weekCmd)

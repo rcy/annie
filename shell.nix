@@ -13,5 +13,6 @@ with nixpkgs; mkShell {
     flyctl
     unstable.golangci-lint
     google-cloud-sdk
+    pup
   ];
 }
