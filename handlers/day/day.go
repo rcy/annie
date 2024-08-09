@@ -25,6 +25,8 @@ func NationalDay(params bot.HandlerParams) error {
 		return err
 	}
 
+	str = strings.ReplaceAll(str, "&amp;", "&")
+
 	if str == "EOF" {
 		img, err := dayImage(dayCmd)
 		if err != nil {
@@ -44,6 +46,8 @@ func NationalWeek(params bot.HandlerParams) error {
 		return err
 	}
 
+	str = strings.ReplaceAll(str, "&amp;", "&")
+
 	if str == "EOF" {
 		img, err := dayImage(weekCmd)
 		if err != nil {
@@ -62,6 +66,8 @@ func NationalMonth(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
+
+	str = strings.ReplaceAll(str, "&amp;", "&")
 
 	if str == "EOF" {
 		img, err := dayImage(monthCmd)
@@ -129,6 +135,8 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	r = strings.ReplaceAll(r, "&amp;", "&")
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
 	days = stripPhrases(days)
