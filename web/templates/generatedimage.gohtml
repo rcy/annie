@@ -26,6 +26,8 @@
         <meta property="og:title" content="{{.image.Prompt}}" />
     </head>
     <body>
+        <img src="/images/{{.image.ID}}.png" alt="{{.image.Prompt}}">
+
         <h1>{{.image.Prompt}}</h1>
 
         <ul>
@@ -35,6 +37,5 @@
             <li>data from: <a href="https://www.daysoftheyear.com/today/">https://www.daysoftheyear.com/today/</a></li>
         </ul>
 
-        <img src="/images/{{.image.ID}}.png" alt="{{.image.Prompt}}">
     </body>
 </html>
