@@ -8,13 +8,25 @@
              color: white;
              max-width: 1000px;
              margin: auto;
+             min-height: 150vh;
+         }
+         img {
+             display: block;
+             max-height: 60vh;
+             margin: auto;
+             transition: max-height 100ms;
+             transition-timing-function: ease-in-out;
+         }
+         img:hover {
+             max-height: 100vh;
          }
         </style>
+
         <meta property="og:image" content="{{.absoluteImageURL}}" />
         <meta property="og:title" content="{{.image.Prompt}}" />
     </head>
     <body>
-        <h1>celebrations: {{.image.Prompt}}</h1>
+        <h1>{{.image.Prompt}}</h1>
 
         <ul>
             <li>created_at: {{.image.CreatedAt}}</li>
@@ -23,6 +35,6 @@
             <li>data from: <a href="https://www.daysoftheyear.com/today/">https://www.daysoftheyear.com/today/</a></li>
         </ul>
 
-        <img src="/images/{{.image.ID}}.png">
+        <img src="/images/{{.image.ID}}.png" alt="{{.image.Prompt}}">
     </body>
 </html>
