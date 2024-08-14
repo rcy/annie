@@ -140,7 +140,7 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 
 	days := strings.Split(strings.TrimSpace(r), "\n")
 	days = stripPhrases(days)
-	prompt := strings.Join(days, ", ")
+	prompt := "create a single scene with representations of " + strings.Join(days, ", ")
 	gi, err := image.GenerateDALLE(context.Background(), prompt)
 	if err != nil {
 		return nil, fmt.Errorf("prompt: %s: %w", prompt, err)
@@ -155,6 +155,24 @@ func Dayi(params bot.HandlerParams) error {
 		return err
 	}
 	params.Privmsgf(params.Target, "Today's image: %s", img.URL())
+	return nil
+}
+
+func Weeki(params bot.HandlerParams) error {
+	img, err := dayImage(weekCmd)
+	if err != nil {
+		return err
+	}
+	params.Privmsgf(params.Target, "This week's image: %s", img.URL())
+	return nil
+}
+
+func Monthi(params bot.HandlerParams) error {
+	img, err := dayImage(monthCmd)
+	if err != nil {
+		return err
+	}
+	params.Privmsgf(params.Target, "This month's image: %s", img.URL())
 	return nil
 }
 
