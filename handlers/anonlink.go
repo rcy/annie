@@ -5,6 +5,7 @@ import (
 	"goirc/bot"
 	"goirc/db/model"
 	"goirc/handlers/linkpool"
+	"goirc/image"
 	db "goirc/model"
 	"time"
 )
@@ -38,7 +39,13 @@ func AnonQuote(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, note.Text.String)
+	img, err := image.GenerateDALLE(context.TODO(), note.Text.String)
+	if err != nil {
+		return err
+	}
+
+	params.Privmsgf(params.Target, "%s %s", note.Text.String, img.URL)
+
 	return nil
 }
 
