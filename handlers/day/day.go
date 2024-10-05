@@ -183,7 +183,7 @@ func Image(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "Generated image: %s", gi.URL())
+	params.Privmsgf(params.Target, "%s", gi.URL())
 
 	return nil
 }

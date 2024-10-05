@@ -30,7 +30,7 @@ type GeneratedImage struct {
 }
 
 func (gi *GeneratedImage) URL() string {
-	return fmt.Sprintf("%s/generated_images/%d", rootURL, gi.ID)
+	return fmt.Sprintf("%s/i/%d", rootURL, gi.ID)
 }
 
 func GenerateDALLE(ctx context.Context, prompt string) (*GeneratedImage, error) {
@@ -41,6 +41,7 @@ func GenerateDALLE(ctx context.Context, prompt string) (*GeneratedImage, error) 
 		Model:          openai.CreateImageModelDallE3,
 		N:              1,
 		Size:           "1024x1024",
+		Style:          openai.CreateImageStyleNatural,
 		ResponseFormat: "url",
 	}
 

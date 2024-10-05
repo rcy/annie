@@ -416,6 +416,10 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 	})
 
 	r.Get("/generated_images/{id}", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/i/"+chi.URLParam(r, "id"), http.StatusSeeOther)
+	})
+
+	r.Get("/i/{id}", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		q := model.New(db.DB)
 		id, _ := strconv.Atoi(chi.URLParam(r, "id"))
