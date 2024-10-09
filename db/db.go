@@ -236,6 +236,18 @@ create table nick_sessions(
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add bedtimes table")
+			_, err := tx.Exec(`
+create table bedtimes(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  message text
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
