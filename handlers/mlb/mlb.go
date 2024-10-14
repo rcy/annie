@@ -27,6 +27,21 @@ type Team struct {
 type TeamList []Team
 
 func (tl TeamList) String() string {
+	return tl.stringWorldSeriesWin()
+}
+
+func (tl TeamList) stringWorldSeriesWin() string {
+	arr := []string{}
+	for _, team := range tl {
+		odds := team.EndData.WsWin
+		if odds > 0 {
+			arr = append(arr, fmt.Sprintf("%s:%.0f%%", team.AbbName, 100*odds))
+		}
+	}
+	return strings.Join(arr, " ")
+}
+
+func (tl TeamList) stringPlayoffs() string {
 	arr := []string{}
 	for i, team := range tl {
 		arr = append(arr, fmt.Sprintf("%s:%.0f%%", team.AbbName, 100*team.EndData.PoffTitle))
@@ -54,7 +69,7 @@ func fetchTeams() (TeamList, error) {
 	}
 
 	sort.Slice(teams, func(i, j int) bool {
-		return teams[i].EndData.PoffTitle > teams[j].EndData.PoffTitle
+		return teams[i].EndData.WsWin > teams[j].EndData.WsWin
 	})
 
 	return teams, nil
