@@ -9,6 +9,7 @@ import (
 	"goirc/handlers"
 	"goirc/handlers/bedtime"
 	"goirc/handlers/day"
+	"goirc/handlers/election"
 	"goirc/handlers/epigram"
 	"goirc/handlers/gold"
 	"goirc/handlers/hn"
@@ -62,6 +63,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!auth$`, web.HandleAuth)
 	b.Handle(`^!deauth$`, web.HandleDeauth)
 	b.Handle(`night`, bedtime.Handle)
+	b.Handle(`^!election`, election.Handle)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
