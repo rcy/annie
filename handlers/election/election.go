@@ -199,8 +199,8 @@ func partyResults() ([]string, error) {
 		if party.ElectedSeats+party.LeadingSeats == 0 {
 			continue
 		}
-		rows = append(rows, p.Sprintf("%s: elected %d, leading %d, votes %d, share %.1f%%",
-			party.EnglishName,
+		rows = append(rows, p.Sprintf("%s: elected %02d, leading %02d, votes %d, share %04.1f%%",
+			party.EnglishCode,
 			party.ElectedSeats,
 			party.LeadingSeats,
 			party.TotalVotes,
