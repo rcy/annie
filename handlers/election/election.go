@@ -6,6 +6,8 @@ import (
 	"goirc/bot"
 	"io"
 	"net/http"
+
+	"golang.org/x/text/message"
 )
 
 type PartyE struct {
@@ -191,11 +193,19 @@ func partyResults() ([]string, error) {
 
 	rows = append(rows, fmt.Sprintf("%s | %s", data.Data.Config.Headline, data.Data.Config.HeadlineBody))
 
+	p := message.NewPrinter(message.MatchLanguage("en"))
+
 	for _, party := range data.Data.Parties {
 		if party.ElectedSeats+party.LeadingSeats == 0 {
 			continue
 		}
-		rows = append(rows, fmt.Sprintf("%s: elected %d, leading %d", party.EnglishName, party.ElectedSeats, party.LeadingSeats))
+		rows = append(rows, p.Sprintf("%s: elected %d, leading %d, votes %d, share %.1f%%",
+			party.EnglishName,
+			party.ElectedSeats,
+			party.LeadingSeats,
+			party.TotalVotes,
+			party.TotalVotesPercentage*100,
+		))
 	}
 	//rows = append(rows, fmt.Sprintf("timestamp %s", time.Unix(int64(data.Timestamp), 0)))
 	return rows, nil
