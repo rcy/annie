@@ -65,7 +65,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!deauth$`, web.HandleDeauth)
 	b.Handle(`night`, bedtime.Handle)
 	b.Handle(`^!election`, election.Handle)
-	b.Handle(`\bannie\b`, annie.Handle)
+	b.Handle(`^annie\b`, annie.Handle)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)

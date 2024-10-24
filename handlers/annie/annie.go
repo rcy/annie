@@ -18,7 +18,7 @@ func Handle(params bot.HandlerParams) error {
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a personal assistant named Annie.  You are very terse, but friendly, with dry humour.  Answer in once sentence always.  Sometimes your name will be mentioned in the third person, as you exist in a group chat with multiple humans.",
+					Content: "You are a personal assistant named Annie.  You are very terse, but friendly, with dry humour.  Answer in once sentence always.",
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
