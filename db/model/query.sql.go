@@ -216,7 +216,7 @@ func (q *Queries) GeneratedImageByID(ctx context.Context, id int64) (GeneratedIm
 }
 
 const generatedImages = `-- name: GeneratedImages :many
-select id, created_at, filename, prompt, revised_prompt from generated_images
+select id, created_at, filename, prompt, revised_prompt from generated_images order by created_at desc
 `
 
 func (q *Queries) GeneratedImages(ctx context.Context) ([]GeneratedImage, error) {

@@ -77,4 +77,4 @@ delete from nick_sessions where nick = ?;
 select * from generated_images where id = ?;
 
 -- name: GeneratedImages :many
-select * from generated_images;
+select * from generated_images order by created_at desc;
