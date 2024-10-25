@@ -9,21 +9,13 @@
              max-width: 1000px;
              margin: auto;
          }
-         img {
-             display: block;
-             max-height: 60vh;
-             margin: auto;
-             transition: max-height 100ms;
-             transition-timing-function: ease-in-out;
-         }
-         img:hover {
-             max-height: 100vh;
-         }
         </style>
     </head>
     <body>
       {{range .images}}
-        <img src="/images/{{.ID}}.png" alt="{{.Prompt}}">
+        <a href="/i/{{.ID}}">
+          <img src="/images/{{.ID}}.png" alt="{{.Prompt}}" width="128" height="128" loading="lazy">
+        </a>
       {{end}}
     </body>
 </html>
