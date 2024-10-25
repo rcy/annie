@@ -53,10 +53,10 @@
       var done = false;
       function onPlayerStateChange(event) {
         if (event.data == YT.PlayerState.PLAYING && !done) {
-          const position = Math.random()*(player.getDuration()-5)
+          const position = Math.random()*(player.getDuration()-10000)
           console.log({ position })
           player.seekTo(position)
-          setTimeout(stopVideo, 5000);
+          setTimeout(stopVideo, 10000);
           done = true;
         }
         console.log('onPlayerStateChange', JSON.stringify(YT.PlayerState))

@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <title>{{.image.Prompt}}</title>
+        <style>
+         body {
+             font-family: monospace;
+             background: black;
+             color: white;
+             max-width: 1000px;
+             margin: auto;
+         }
+         img {
+             display: block;
+             max-height: 60vh;
+             margin: auto;
+             transition: max-height 100ms;
+             transition-timing-function: ease-in-out;
+         }
+         img:hover {
+             max-height: 100vh;
+         }
+        </style>
+    </head>
+    <body>
+      {{range .images}}
+        <img src="/images/{{.ID}}.png" alt="{{.Prompt}}">
+      {{end}}
+    </body>
+</html>

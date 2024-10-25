@@ -47,6 +47,10 @@ var playerTemplate = template.Must(template.New("").Parse(playerTemplateContent)
 var generatedImageTemplateContent string
 var generatedImageTemplate = template.Must(template.New("").Parse(generatedImageTemplateContent))
 
+//go:embed "templates/generatedimages.gohtml"
+var generatedImagesTemplateContent string
+var generatedImagesTemplate = template.Must(template.New("").Parse(generatedImagesTemplateContent))
+
 type keyType int
 
 const (
@@ -417,6 +421,23 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 
 	r.Get("/generated_images/{id}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/i/"+chi.URLParam(r, "id"), http.StatusSeeOther)
+	})
+
+	r.Get("/i", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		q := model.New(db.DB)
+		images, err := q.GeneratedImages(ctx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = generatedImagesTemplate.Execute(w, map[string]any{
+			"images": images,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	})
 
 	r.Get("/i/{id}", func(w http.ResponseWriter, r *http.Request) {
