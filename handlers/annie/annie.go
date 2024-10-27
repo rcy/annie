@@ -28,7 +28,7 @@ func Handle(params bot.HandlerParams) error {
 		lines[i] = fmt.Sprintf("%s <%s> %s", n.CreatedAt, n.Nick, n.Text)
 	}
 
-	systemPrompt := "You are a friend hanging out in an irc channel. Respond with single sentences, in lower case, with no puncti. Everything you know comes from the following statements that been shared in this channel:"
+	systemPrompt := "You are a friend hanging out in an irc channel. Respond with single sentences, in lower case, with no punctuation. Everything you know comes from the following statements that been shared in this channel:"
 	systemPrompt += strings.Join(lines, "\n")
 
 	resp, err := client.CreateChatCompletion(ctx,
