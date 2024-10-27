@@ -78,3 +78,6 @@ select * from generated_images where id = ?;
 
 -- name: GeneratedImages :many
 select * from generated_images order by created_at desc;
+
+-- name: Notes :many
+select * from notes where kind='note' order by created_at desc;

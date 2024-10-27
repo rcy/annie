@@ -2,8 +2,12 @@ package annie
 
 import (
 	"context"
+	"fmt"
 	"goirc/bot"
+	"goirc/db/model"
+	db "goirc/model"
 	"os"
+	"strings"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -12,13 +16,28 @@ func Handle(params bot.HandlerParams) error {
 	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 	ctx := context.TODO()
 
+	q := model.New(db.DB.DB)
+
+	notes, err := q.Notes(ctx)
+	if err != nil {
+		return err
+	}
+
+	lines := make([]string, len(notes))
+	for i, n := range notes {
+		lines[i] = fmt.Sprintf("%s <%s> %s", n.CreatedAt, n.Nick, n.Text)
+	}
+
+	systemPrompt := "You are a friend hanging out in an irc channel. Respond with single sentences. Everything you know comes from the following statements have read in this channel:"
+	systemPrompt += strings.Join(lines, "\n")
+
 	resp, err := client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			Model: openai.GPT4o,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a personal assistant named Annie.  You are very terse, but friendly, with dry humour.  Answer in once sentence always.",
+					Content: systemPrompt,
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
