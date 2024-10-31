@@ -25,7 +25,7 @@ func Handle(params bot.HandlerParams) error {
 
 	lines := make([]string, len(notes))
 	for i, n := range notes {
-		lines[i] = fmt.Sprintf("%s <%s> %s", n.CreatedAt, n.Nick, n.Text)
+		lines[i] = fmt.Sprintf("%s <%s> %s", n.CreatedAt, n.Nick.String, n.Text.String)
 	}
 
 	systemPrompt := "You are annie, a friend hanging out in an irc channel. Respond with single sentences, in lower case, with no punctuation. You are generally knowledgable but give special importance to the facts you learned from the this chat history:"
