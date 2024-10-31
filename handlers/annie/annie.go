@@ -2,6 +2,7 @@ package annie
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"goirc/bot"
 	"goirc/db/model"
@@ -13,43 +14,91 @@ import (
 )
 
 func Handle(params bot.HandlerParams) error {
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 	ctx := context.TODO()
+
+	var msg string
+	if len(params.Matches) < 2 {
+		return nil
+	}
+	msg = strings.TrimSpace(params.Matches[1])
 
 	q := model.New(db.DB.DB)
 
-	notes, err := q.Notes(ctx)
+	response, err := complete(ctx, openai.GPT4oMini, "categorize input into statements, questions or pleasantries.  If it is a statement, reply with the one word 'statement'.  If it is a question, reply with 'question'.  If it is a pleasantry, reply with 'pleasantry'", msg)
 	if err != nil {
 		return err
 	}
 
-	lines := make([]string, len(notes))
-	for i, n := range notes {
-		lines[i] = fmt.Sprintf("%s <%s> %s", n.CreatedAt, n.Nick.String, n.Text.String)
+	switch response {
+	case "statement":
+		response, err := complete(ctx, openai.GPT4oMini, "you are annie, a friend hanging out in an irc channel. given the following statement, reflect on its meaning, and come up with a terse response, no more than a short sentence, in lower case, with minimal punctuation", msg)
+		if err != nil {
+			return err
+		}
+		_, err = q.InsertNote(context.TODO(), model.InsertNoteParams{
+			Target: params.Target,
+			Nick:   sql.NullString{String: params.Nick, Valid: true},
+			Kind:   "note",
+			Text:   sql.NullString{String: msg, Valid: true},
+		})
+		if err != nil {
+			return err
+		}
+
+		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
+	case "question":
+		notes, err := q.Notes(ctx)
+		if err != nil {
+			return err
+		}
+		lines := make([]string, len(notes))
+		for i, n := range notes {
+			lines[i] = fmt.Sprintf("%s <%s> %s", n.CreatedAt, n.Nick.String, n.Text.String)
+		}
+
+		systemPrompt := "You are annie, a friend hanging out in an irc channel. You have been asked a question, read the question, and think about it in the context of all you have read in this channel.  Respond with single sentences, in lower case, with minimal punctuation. Do not refer to yourself in the third person. Ignore everything you know except for what you have read in the following chat history: "
+		systemPrompt += strings.Join(lines, "\n")
+
+		response, err := complete(ctx, openai.GPT4oMini, systemPrompt, msg)
+		if err != nil {
+			return err
+		}
+		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
+	case "pleasantry":
+		systemPrompt := "You are annie, a friend hanging out in an irc channel. Someone has posted some pleasantry or small talk.  Respond in kind, in lower case, with minimal punctuation."
+
+		response, err := complete(ctx, openai.GPT3Dot5Turbo, systemPrompt, msg)
+		if err != nil {
+			return err
+		}
+		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
+	default:
+		params.Privmsgf(params.Target, "%s: [interpreted '%s' as a unknown type: %s]", params.Nick, msg, response)
 	}
 
-	systemPrompt := "You are annie, a friend hanging out in an irc channel. Respond with single sentences, in lower case, with no punctuation. You are generally knowledgable but give special importance to the facts you learned from this chat history:"
-	systemPrompt += strings.Join(lines, "\n")
+	return nil
+}
+
+func complete(ctx context.Context, model string, system string, message string) (string, error) {
+	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 
 	resp, err := client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
-			Model: openai.GPT4o,
+			Model: openai.GPT4oMini,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: systemPrompt,
+					Content: system,
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
-					Content: params.Msg,
+					Content: message,
 				},
 			},
 		})
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	params.Privmsgf(params.Target, "%s: %s", params.Nick, resp.Choices[0].Message.Content)
-
-	return nil
+	return resp.Choices[0].Message.Content, nil
 }

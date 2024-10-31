@@ -6,12 +6,13 @@ import (
 	"goirc/bot"
 	"goirc/db/model"
 	db "goirc/model"
+	"strings"
 )
 
 func CreateNote(params bot.HandlerParams) error {
 	q := model.New(db.DB)
 
-	text := params.Matches[1]
+	text := strings.TrimSpace(params.Matches[1])
 
 	_, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
 		Target: params.Target,

@@ -248,6 +248,31 @@ func (q *Queries) GeneratedImages(ctx context.Context) ([]GeneratedImage, error)
 	return items, nil
 }
 
+const insertFact = `-- name: InsertFact :one
+insert into notes(target, nick, kind, text, anon) values(?,?,'fact',?,0) returning id, created_at, nick, text, kind, target, anon
+`
+
+type InsertFactParams struct {
+	Target string
+	Nick   sql.NullString
+	Text   sql.NullString
+}
+
+func (q *Queries) InsertFact(ctx context.Context, arg InsertFactParams) (Note, error) {
+	row := q.db.QueryRowContext(ctx, insertFact, arg.Target, arg.Nick, arg.Text)
+	var i Note
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Nick,
+		&i.Text,
+		&i.Kind,
+		&i.Target,
+		&i.Anon,
+	)
+	return i, err
+}
+
 const insertNickWeatherRequest = `-- name: InsertNickWeatherRequest :exec
 insert into nick_weather_requests(nick, query, city, country) values(?,?,?,?)
 `
@@ -507,6 +532,41 @@ select id, created_at, nick, text, kind, target, anon from notes where kind='not
 
 func (q *Queries) Notes(ctx context.Context) ([]Note, error) {
 	rows, err := q.db.QueryContext(ctx, notes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Nick,
+			&i.Text,
+			&i.Kind,
+			&i.Target,
+			&i.Anon,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const notesAndQuotes = `-- name: NotesAndQuotes :many
+select id, created_at, nick, text, kind, target, anon from notes where kind='note' or kind='quote' order by created_at desc
+`
+
+func (q *Queries) NotesAndQuotes(ctx context.Context) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, notesAndQuotes)
 	if err != nil {
 		return nil, err
 	}
