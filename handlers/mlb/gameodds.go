@@ -68,11 +68,6 @@ func GameOdds(params bot.HandlerParams) error {
 		return err
 	}
 
-	half := "top"
-	if g[0].Scores.InningHalf == 1 {
-		half = "bot"
-	}
-
 	bases := ""
 	if g[0].Scores.Has3B == 1 {
 		bases += "<"
@@ -98,7 +93,7 @@ func GameOdds(params bot.HandlerParams) error {
 		g[0].Scores.HomeScore,
 		g[0].Scores.LiveWEHome*100,
 		g[0].Scores.Outs,
-		half,
+		g[0].Scores.Ih,
 		g[0].Scores.Inning,
 		bases)
 
