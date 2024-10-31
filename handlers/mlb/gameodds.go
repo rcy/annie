@@ -73,7 +73,24 @@ func GameOdds(params bot.HandlerParams) error {
 		half = "bot"
 	}
 
-	params.Privmsgf(params.Target, "%s %d [%.0f%%], %s %d [%.0f%%], %d out %s %d",
+	bases := ""
+	if g[0].Scores.Has3B == 1 {
+		bases += "<"
+	} else {
+		bases += "."
+	}
+	if g[0].Scores.Has2B == 1 {
+		bases += "^"
+	} else {
+		bases += "."
+	}
+	if g[0].Scores.Has1B == 1 {
+		bases += ">"
+	} else {
+		bases += "."
+	}
+
+	params.Privmsgf(params.Target, "%s %d [%.0f%%], %s %d [%.0f%%], %d out %s %d %s",
 		g[0].Schedule.AwayTeamName,
 		g[0].Scores.AwayScore,
 		g[0].Schedule.AwayGameOdds*100,
@@ -82,7 +99,8 @@ func GameOdds(params bot.HandlerParams) error {
 		g[0].Schedule.HomeGameOdds*100,
 		g[0].Scores.Outs,
 		half,
-		g[0].Scores.Inning)
+		g[0].Scores.Inning,
+		bases)
 
 	return nil
 }
