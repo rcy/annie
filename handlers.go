@@ -42,6 +42,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!img (.+)$`, day.Image)
 	b.Handle(`\b69[^0-9]*\b`, handlers.Nice)
 	b.Handle(`^!odds`, mlb.PlayoffOdds)
+	b.Handle(`^!godds`, mlb.GameOdds)
 	b.Handle(`^!pom`, handlers.POM)
 	b.Handle(`^("[^"]+)$`, handlers.Quote)
 	b.Handle(`^!remindme ([^\s]+) (.+)$`, handlers.RemindMe)
