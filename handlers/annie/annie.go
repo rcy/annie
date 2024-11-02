@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"goirc/bot"
 	"goirc/db/model"
+	"goirc/internal/ai"
 	db "goirc/model"
-	"os"
 	"strings"
 
 	"github.com/sashabaranov/go-openai"
@@ -24,14 +24,14 @@ func Handle(params bot.HandlerParams) error {
 
 	q := model.New(db.DB.DB)
 
-	response, err := complete(ctx, openai.GPT4oMini, "categorize input into statements, questions or pleasantries.  If it is a statement, reply with the one word 'statement'.  If it is a question, reply with 'question'.  If it is a pleasantry, reply with 'pleasantry'", msg)
+	response, err := ai.Complete(ctx, openai.GPT4oMini, "categorize input into statements, questions or pleasantries.  If it is a statement, reply with the one word 'statement'.  If it is a question, reply with 'question'.  If it is a pleasantry, reply with 'pleasantry'", msg)
 	if err != nil {
 		return err
 	}
 
 	switch response {
 	case "statement":
-		response, err := complete(ctx, openai.GPT4oMini, "you are annie, a friend hanging out in an irc channel. given the following statement, reflect on its meaning, and come up with a terse response, no more than a short sentence, in lower case, with minimal punctuation", msg)
+		response, err := ai.Complete(ctx, openai.GPT4oMini, "you are annie, a friend hanging out in an irc channel. given the following statement, reflect on its meaning, and come up with a terse response, no more than a short sentence, in lower case, with minimal punctuation", msg)
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func Handle(params bot.HandlerParams) error {
 		systemPrompt := "You are annie, a friend hanging out in an irc channel. You have been asked a question, read the question, and think about it in the context of all you have read in this channel.  Respond with single sentences, in lower case, with minimal punctuation. Do not refer to yourself in the third person. Ignore everything you know except for what you have read in the following chat history: "
 		systemPrompt += strings.Join(lines, "\n")
 
-		response, err := complete(ctx, openai.GPT4oMini, systemPrompt, msg)
+		response, err := ai.Complete(ctx, openai.GPT4oMini, systemPrompt, msg)
 		if err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func Handle(params bot.HandlerParams) error {
 	case "pleasantry":
 		systemPrompt := "You are annie, a friend hanging out in an irc channel. Someone has posted some pleasantry or small talk.  Respond in kind, in lower case, with minimal punctuation."
 
-		response, err := complete(ctx, openai.GPT3Dot5Turbo, systemPrompt, msg)
+		response, err := ai.Complete(ctx, openai.GPT3Dot5Turbo, systemPrompt, msg)
 		if err != nil {
 			return err
 		}
@@ -77,28 +77,4 @@ func Handle(params bot.HandlerParams) error {
 	}
 
 	return nil
-}
-
-func complete(ctx context.Context, model string, system string, message string) (string, error) {
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
-
-	resp, err := client.CreateChatCompletion(ctx,
-		openai.ChatCompletionRequest{
-			Model: openai.GPT4oMini,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleSystem,
-					Content: system,
-				},
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: message,
-				},
-			},
-		})
-	if err != nil {
-		return "", err
-	}
-
-	return resp.Choices[0].Message.Content, nil
 }
