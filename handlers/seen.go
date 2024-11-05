@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"database/sql"
+	"errors"
 	"goirc/bot"
 	"goirc/model"
 	"goirc/util"
@@ -13,6 +15,9 @@ func Seen(params bot.HandlerParams) error {
 
 	err := model.DB.Get(&channelNick, "select * from channel_nicks where nick = ? and channel = ?", nick, params.Target)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
 		return err
 	}
 
