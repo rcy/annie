@@ -15,7 +15,7 @@ type party struct {
 }
 
 func (p party) String() string {
-	return fmt.Sprintf("%s %s %s", p.Name, p.Tally, p.Votes)
+	return fmt.Sprintf("%s %s (%s)", p.Tally, p.Name, p.Votes)
 }
 
 type results struct {
@@ -34,7 +34,7 @@ func count() (*results, error) {
 		results.Rep.Name = e.ChildText("div.tally-party")
 	})
 	c.OnHTML("p.div-rep", func(e *colly.HTMLElement) {
-		results.Rep.Votes = strings.TrimSuffix(strings.TrimSpace(e.Text), " votes")
+		results.Rep.Votes = strings.TrimSpace(e.Text)
 	})
 
 	c.OnHTML("div.div-dem", func(e *colly.HTMLElement) {
@@ -42,7 +42,7 @@ func count() (*results, error) {
 		results.Dem.Name = e.ChildText("div.tally-party")
 	})
 	c.OnHTML("p.div-dem", func(e *colly.HTMLElement) {
-		results.Dem.Votes = strings.TrimSuffix(strings.TrimSpace(e.Text), " votes")
+		results.Dem.Votes = strings.TrimSpace(e.Text)
 	})
 
 	err := c.Visit(base)
@@ -59,9 +59,8 @@ func HandleTrump(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s (%s) %s | %s (%s) %s",
-		results.Rep.Name, results.Rep.Votes, results.Rep.Tally, results.Dem.Tally, results.Dem.Votes, results.Dem.Name,
-	)
+	params.Privmsgf(params.Target, "%s", results.Rep)
+	params.Privmsgf(params.Target, "%s", results.Dem)
 
 	return nil
 }
@@ -72,9 +71,8 @@ func HandleHarris(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s (%s) %s | %s (%s) %s",
-		results.Dem.Name, results.Dem.Votes, results.Dem.Tally, results.Rep.Tally, results.Rep.Votes, results.Rep.Name,
-	)
+	params.Privmsgf(params.Target, "%s", results.Dem)
+	params.Privmsgf(params.Target, "%s", results.Rep)
 
 	return nil
 }
