@@ -17,7 +17,6 @@ import (
 	"goirc/handlers/kinfonet"
 	"goirc/handlers/linkpool"
 	"goirc/handlers/mlb"
-	"goirc/handlers/usvote2024"
 	"goirc/handlers/weather"
 	db "goirc/model"
 	"goirc/web"
@@ -69,8 +68,6 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!election`, election.Handle)
 	b.Handle(`^annie:?(.+)$`, annie.Handle)
 	b.Handle(`^(.+),? annie.?$`, annie.Handle)
-	b.Handle(`^!trump`, usvote2024.HandleTrump)
-	b.Handle(`^!harris`, usvote2024.HandleHarris)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
