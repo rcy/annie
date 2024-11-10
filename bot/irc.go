@@ -122,7 +122,15 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 	bot.Conn.Debug = false
 	bot.Conn.UseTLS = true
 	bot.Conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	bot.Conn.AddCallback("001", func(e *irc.Event) { bot.Conn.Join(channel) })
+	bot.Conn.AddCallback("001", func(e *irc.Event) {
+		location, err := time.LoadLocation("America/Los_Angeles")
+		if err != nil {
+			panic(err)
+		}
+		if time.Now().In(location).Weekday() != 0 {
+			bot.Conn.Join(channel)
+		}
+	})
 	bot.Conn.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
 		_, err := db.DB.Exec(`update channel_nicks set updated_at = current_timestamp, present = false where present = true`)

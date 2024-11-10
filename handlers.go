@@ -18,11 +18,13 @@ import (
 	"goirc/handlers/linkpool"
 	"goirc/handlers/mlb"
 	"goirc/handlers/weather"
+	"goirc/internal/ai"
 	db "goirc/model"
 	"goirc/web"
 	"time"
 
 	"github.com/robfig/cron"
+	"github.com/sashabaranov/go-openai"
 )
 
 func addHandlers(b *bot.Bot) {
@@ -78,7 +80,7 @@ func addHandlers(b *bot.Bot) {
 	}
 
 	c := cron.NewWithLocation(location)
-	err = c.AddFunc("16 14 15 * * *", func() {
+	err = c.AddFunc("16 14 15 * * 1,2,3,4,5,6", func() {
 		q := model.New(db.DB.DB)
 		note, err := q.RandomHistoricalTodayNote(context.TODO())
 		if err != nil {
@@ -92,6 +94,26 @@ func addHandlers(b *bot.Bot) {
 	if err != nil {
 		panic(err)
 	}
+	err = c.AddFunc("0 0 0 * * 0", func() {
+		signoff, err := ai.Complete(context.TODO(), openai.GPT4o, "you are annie, and have been hanging out with friends in irc all week. now its time for you to rest for a day. respond with a short goodbye. use all lowercase, minimal punctuation, no emojis", "see you later, annie")
+		if err != nil {
+			b.Conn.Privmsg(b.Channel, err.Error())
+			return
+		}
+		b.Conn.Privmsg(b.Channel, signoff)
+		b.Conn.Part(b.Channel)
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	err = c.AddFunc("0 0 0 * * 1", func() {
+		b.Conn.Join(b.Channel)
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	c.Start()
 
 	events.Subscribe("anonnoteposted", func(note any) {
