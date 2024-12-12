@@ -460,7 +460,12 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 	})
 
 	fs := http.FileServer(http.Dir(image.ImageFileBase))
-	r.Handle("/images/*", http.StripPrefix("/images/", fs))
+	r.Handle("/images/*",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%.0f", (time.Hour*24*365).Seconds()))
+			http.StripPrefix("/images/", fs).ServeHTTP(w, r)
+		}),
+	)
 
 	addr := ":" + os.Getenv("PORT")
 	log.Printf("web server listening on %s", addr)
