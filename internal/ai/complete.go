@@ -2,12 +2,14 @@ package ai
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"os"
 	"strings"
 
 	"github.com/sashabaranov/go-openai"
 )
+
+var ErrBilling = errors.New("I need money: https://rcy.sh/fundannie")
 
 func Complete(ctx context.Context, model string, system string, message string) (string, error) {
 	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
@@ -28,7 +30,7 @@ func Complete(ctx context.Context, model string, system string, message string) 
 		})
 	if err != nil {
 		if strings.Contains(err.Error(), "billing") {
-			return "", fmt.Errorf("I need money: https://rcy.sh/fundannie")
+			return "", ErrBilling
 		}
 
 		return "", err

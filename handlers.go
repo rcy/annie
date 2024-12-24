@@ -137,9 +137,13 @@ func addHandlers(b *bot.Bot) {
 				Privmsgf: b.MakePrivmsgf(),
 			})
 			if err != nil {
-				if !errors.Is(err, linkpool.NoNoteFoundError) {
-					b.Conn.Privmsg(b.Channel, "error: "+err.Error())
+				if errors.Is(err, ai.ErrBilling) {
+					return
 				}
+				if errors.Is(err, linkpool.NoNoteFoundError) {
+					return
+				}
+				b.Conn.Privmsg(b.Channel, "error: "+err.Error())
 			}
 		}()
 	})

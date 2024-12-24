@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"goirc/db/model"
+	"goirc/internal/ai"
 	db "goirc/model"
 	"io"
 	"log"
@@ -49,7 +50,7 @@ func GenerateDALLE(ctx context.Context, prompt string) (*GeneratedImage, error) 
 	imgResp, err := client.CreateImage(ctx, req)
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "billing") {
-			return nil, fmt.Errorf("I need money: https://rcy.sh/fundannie")
+			return nil, ai.ErrBilling
 		}
 		return nil, err
 	}
