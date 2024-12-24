@@ -2,7 +2,9 @@ package ai
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -25,6 +27,10 @@ func Complete(ctx context.Context, model string, system string, message string) 
 			},
 		})
 	if err != nil {
+		if strings.Contains(err.Error(), "billing") {
+			return "", fmt.Errorf("I need money: https://ko-fi.com/rcyemb")
+		}
+
 		return "", err
 	}
 
