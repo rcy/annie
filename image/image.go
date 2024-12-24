@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -47,6 +48,9 @@ func GenerateDALLE(ctx context.Context, prompt string) (*GeneratedImage, error) 
 
 	imgResp, err := client.CreateImage(ctx, req)
 	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "billing") {
+			return nil, fmt.Errorf("I need money: https://rcy.sh/fundannie")
+		}
 		return nil, err
 	}
 

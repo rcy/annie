@@ -28,7 +28,7 @@ func Complete(ctx context.Context, model string, system string, message string) 
 		})
 	if err != nil {
 		if strings.Contains(err.Error(), "billing") {
-			return "", fmt.Errorf("I need money: https://ko-fi.com/rcyemb")
+			return "", fmt.Errorf("I need money: https://rcy.sh/fundannie")
 		}
 
 		return "", err
