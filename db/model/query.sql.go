@@ -180,6 +180,15 @@ func (q *Queries) CreateNickSession(ctx context.Context, arg CreateNickSessionPa
 	return err
 }
 
+const deleteFutureMessage = `-- name: DeleteFutureMessage :exec
+delete from future_messages where id = ?
+`
+
+func (q *Queries) DeleteFutureMessage(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteFutureMessage, id)
+	return err
+}
+
 const deleteNickSessions = `-- name: DeleteNickSessions :exec
 delete from nick_sessions where nick = ?
 `
@@ -246,31 +255,6 @@ func (q *Queries) GeneratedImages(ctx context.Context) ([]GeneratedImage, error)
 		return nil, err
 	}
 	return items, nil
-}
-
-const insertFact = `-- name: InsertFact :one
-insert into notes(target, nick, kind, text, anon) values(?,?,'fact',?,0) returning id, created_at, nick, text, kind, target, anon
-`
-
-type InsertFactParams struct {
-	Target string
-	Nick   sql.NullString
-	Text   sql.NullString
-}
-
-func (q *Queries) InsertFact(ctx context.Context, arg InsertFactParams) (Note, error) {
-	row := q.db.QueryRowContext(ctx, insertFact, arg.Target, arg.Nick, arg.Text)
-	var i Note
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.Nick,
-		&i.Text,
-		&i.Kind,
-		&i.Target,
-		&i.Anon,
-	)
-	return i, err
 }
 
 const insertNickWeatherRequest = `-- name: InsertNickWeatherRequest :exec
@@ -618,6 +602,28 @@ func (q *Queries) RandomHistoricalTodayNote(ctx context.Context) (Note, error) {
 		&i.Target,
 		&i.Anon,
 	)
+	return i, err
+}
+
+const readyFutureMessage = `-- name: ReadyFutureMessage :one
+select id, created_at, kind from future_messages where datetime('now') > datetime(created_at, ?) limit 1
+`
+
+func (q *Queries) ReadyFutureMessage(ctx context.Context, datetime interface{}) (FutureMessage, error) {
+	row := q.db.QueryRowContext(ctx, readyFutureMessage, datetime)
+	var i FutureMessage
+	err := row.Scan(&i.ID, &i.CreatedAt, &i.Kind)
+	return i, err
+}
+
+const scheduleFutureMessage = `-- name: ScheduleFutureMessage :one
+insert into future_messages(kind) values(?) returning id, created_at, kind
+`
+
+func (q *Queries) ScheduleFutureMessage(ctx context.Context, kind string) (FutureMessage, error) {
+	row := q.db.QueryRowContext(ctx, scheduleFutureMessage, kind)
+	var i FutureMessage
+	err := row.Scan(&i.ID, &i.CreatedAt, &i.Kind)
 	return i, err
 }
 

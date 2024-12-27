@@ -15,7 +15,7 @@ func Quote(params bot.HandlerParams) error {
 	// posted to private channel
 	isAnonymous := params.Target == params.Nick
 
-	note, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
+	_, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
 		Target: params.Target,
 		Nick:   sql.NullString{String: params.Nick, Valid: true},
 		Kind:   "quote",
@@ -27,8 +27,14 @@ func Quote(params bot.HandlerParams) error {
 	}
 
 	if isAnonymous {
-		params.Privmsgf(params.Target, "stored quote to share later, maybe")
-		params.Publish("anonquoteposted", note)
+		_, err = q.ScheduleFutureMessage(context.TODO(), "quote")
+		if err != nil {
+			return err
+		}
+
+		params.Privmsgf(params.Target, "thanks for the quote")
+
+		return nil
 	}
 
 	return nil

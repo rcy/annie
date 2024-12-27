@@ -16,7 +16,7 @@ func Link(params bot.HandlerParams) error {
 	// posted in a private message?
 	isAnonymous := params.Target == params.Nick
 
-	note, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
+	_, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
 		Target: params.Target,
 		Nick:   sql.NullString{String: params.Nick, Valid: true},
 		Kind:   "link",
@@ -28,12 +28,13 @@ func Link(params bot.HandlerParams) error {
 	}
 
 	if isAnonymous {
-		link, err := note.Link()
+		_, err = q.ScheduleFutureMessage(context.TODO(), "link")
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target, "%s will be shared later, maybe", link)
-		params.Publish("anonnoteposted", note)
+
+		params.Privmsgf(params.Target, "thanks for the link")
+
 		return nil
 	}
 

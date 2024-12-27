@@ -248,6 +248,17 @@ create table bedtimes(
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add future messages")
+			_, err := tx.Exec(`
+create table future_messages(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  kind text not null
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)

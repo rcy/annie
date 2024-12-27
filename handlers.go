@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"goirc/bot"
 	"goirc/db/model"
@@ -79,9 +80,10 @@ func addHandlers(b *bot.Bot) {
 		panic(err)
 	}
 
+	q := model.New(db.DB.DB)
+
 	c := cron.NewWithLocation(location)
 	err = c.AddFunc("16 14 15 * * 1,2,3,4,5,6", func() {
-		q := model.New(db.DB.DB)
 		note, err := q.RandomHistoricalTodayNote(context.TODO())
 		if err != nil {
 			// TODO test no rows
@@ -114,6 +116,58 @@ func addHandlers(b *bot.Bot) {
 		panic(err)
 	}
 
+	err = c.AddFunc("57 * * * * *", func() {
+		ctx := context.TODO()
+		msg, err := q.ReadyFutureMessage(ctx, handlers.FutureMessageInterval)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return
+			}
+			b.Conn.Privmsg(b.Channel, err.Error())
+			return
+		}
+		err = q.DeleteFutureMessage(ctx, msg.ID)
+		if err != nil {
+			b.Conn.Privmsg(b.Channel, err.Error())
+			return
+		}
+
+		// send anonymous note
+		switch msg.Kind {
+		case "link":
+			err = handlers.AnonLink(bot.HandlerParams{
+				Target:   b.Channel,
+				Privmsgf: b.MakePrivmsgf(),
+			})
+		case "quote":
+			err = handlers.AnonQuote(bot.HandlerParams{
+				Target:   b.Channel,
+				Privmsgf: b.MakePrivmsgf(),
+			})
+		default:
+			b.Conn.Privmsgf(b.Channel, "unhandled msg.Kind: %s", msg.Kind)
+		}
+		if err != nil {
+			if errors.Is(err, ai.ErrBilling) {
+				// the quote was sent, but no generated image, this is fine
+				return
+			}
+			if errors.Is(err, linkpool.NoNoteFoundError) {
+				// didn't find a note, reschedule
+				_, scheduleErr := q.ScheduleFutureMessage(ctx, msg.Kind)
+				if scheduleErr != nil {
+					b.Conn.Privmsg(b.Channel, "error rescheduling: "+scheduleErr.Error())
+				}
+				return
+			}
+			// something else happened, spam the channel
+			b.Conn.Privmsg(b.Channel, "error: "+err.Error())
+		}
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	c.Start()
 
 	events.Subscribe("anonnoteposted", func(note any) {
@@ -123,9 +177,13 @@ func addHandlers(b *bot.Bot) {
 				Privmsgf: b.MakePrivmsgf(),
 			})
 			if err != nil {
-				if !errors.Is(err, linkpool.NoNoteFoundError) {
-					b.Conn.Privmsg(b.Channel, "error: "+err.Error())
+				if errors.Is(err, ai.ErrBilling) {
+					return
 				}
+				if errors.Is(err, linkpool.NoNoteFoundError) {
+					return
+				}
+				b.Conn.Privmsg(b.Channel, "error: "+err.Error())
 			}
 		}()
 	})

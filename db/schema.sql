@@ -1,7 +1,7 @@
-CREATE TABLE links(created_at text, nick text, text text);
 CREATE TABLE migration_version (
 			version INTEGER
 		);
+CREATE TABLE links(created_at text, nick text, text text);
 CREATE TABLE laters(created_at text, nick text, target text, message text, sent boolean default false);
 CREATE TABLE notes(
   id INTEGER not null primary key,
@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS channel_nicks(
   present bool not null default false,
   updated_at datetime not null
 );
+CREATE UNIQUE INDEX channel_nick_unique_index on "channel_nicks"(channel, nick);
 CREATE TABLE generated_images(
   id integer not null primary key,
   created_at datetime not null default current_timestamp,
@@ -48,10 +49,20 @@ CREATE TABLE generated_images(
   prompt text not null,
   revised_prompt text not null
 );
-CREATE UNIQUE INDEX channel_nick_unique_index on "channel_nicks"(channel, nick);
 CREATE TABLE nick_sessions(
   id integer not null primary key,
   created_at datetime not null default current_timestamp,
   nick text not null,
   session text not null
+);
+CREATE TABLE bedtimes(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  message text
+);
+CREATE TABLE future_messages(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  kind text not null
 );

@@ -9,11 +9,24 @@ import (
 	"time"
 )
 
+type Bedtime struct {
+	ID        int64
+	CreatedAt time.Time
+	Nick      string
+	Message   sql.NullString
+}
+
 type ChannelNick struct {
 	Channel   string
 	Nick      string
 	Present   bool
 	UpdatedAt time.Time
+}
+
+type FutureMessage struct {
+	ID        int64
+	CreatedAt time.Time
+	Kind      string
 }
 
 type GeneratedImage struct {
