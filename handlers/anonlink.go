@@ -7,11 +7,12 @@ import (
 	"goirc/handlers/linkpool"
 	"goirc/image"
 	db "goirc/model"
+	"time"
 )
 
 const (
 	// how old a message must be before it is delivered
-	minAge = 0 //7 * time.Hour * 24
+	minAge = 7 * time.Hour * 24
 
 	// how long to wait after an anon message is posted to send one from the queue
 	FutureMessageInterval = "+1 hour"
