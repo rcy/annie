@@ -86,7 +86,9 @@ func addHandlers(b *bot.Bot) {
 	err = c.AddFunc("16 14 15 * * 1,2,3,4,5,6", func() {
 		note, err := q.RandomHistoricalTodayNote(context.TODO())
 		if err != nil {
-			// TODO test no rows
+			if errors.Is(err, sql.ErrNoRows) {
+				return
+			}
 			b.Conn.Privmsg(b.Channel, err.Error())
 			return
 		}
