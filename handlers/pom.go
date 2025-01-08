@@ -16,7 +16,12 @@ func POM(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", out.String())
+	str := out.String()
+	if strings.Contains(str, "69") {
+		str = str + " (nice)"
+	}
+
+	params.Privmsgf(params.Target, "%s", str)
 
 	return nil
 }
