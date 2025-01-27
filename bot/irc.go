@@ -129,6 +129,8 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 		}
 		if time.Now().In(location).Weekday() != 0 {
 			bot.Conn.Join(channel)
+		} else {
+			initialized <- true
 		}
 	})
 	bot.Conn.AddCallback("353", func(e *irc.Event) {
