@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>weekly summary</title>
+    <style>
+     body {
+         max-width: 960px;
+         margin: auto;
+         font-family: monospace;
+     }
+     pre {
+         white-space: pre-wrap;
+     }
+    </style>
+  </head>
+
+  <body>
+    <h1>
+      #emb news
+    </h1>
+    <h2>
+      {{dateStart .Start}}-{{dateEnd .End}}
+    </h2>
+
+    {{if .NotesSummary}}
+      <section>
+        <h2>notes</h2>
+        <pre>
+          {{.NotesSummary}}
+        </pre>
+
+        <details>
+          <summary>references</summary>
+          <ul>
+            {{range (index .Notes "note")}}
+              <li>{{.Text.String}}</li>
+            {{end}}
+          </ul>
+        </details>
+      </section>
+    {{end}}
+
+    {{if .QuotesSummary}}
+      <section>
+        <h2>quotes</h2>
+        <pre>
+          {{.QuotesSummary}}
+        </pre>
+
+        <details>
+          <summary>references</summary>
+          <ul>
+            {{range (index .Notes "quote")}}
+              <li>{{.Text.String}}</li>
+            {{end}}
+          </ul>
+        </details>
+      </section>
+    {{end}}
+
+    {{if .Links}}
+      <section>
+        <h2>links</h2>
+        <ol>
+          {{range .Links}}
+            <li>
+              {{.Title}} <a href={{.URL}}>{{.URL}}</a>
+            </li>
+          {{end}}
+        </ol>
+      </section>
+    {{end}}
+    
+  </body>
+</html>

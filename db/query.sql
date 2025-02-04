@@ -34,6 +34,13 @@ select * from notes where target != nick order by created_at desc limit 10000;
 -- name: AllNickNotes :many
 select * from notes where target != nick and nick = ? order by created_at desc limit 10000;
 
+-- name: NotesBetween :many
+select *
+from notes
+where
+  created_at >= @start_at and created_at < @end_at
+order by created_at asc;
+
 -- name: NicksWithNoteCount :many
 select nick, count(nick) as count from notes group by nick;
 
@@ -93,3 +100,9 @@ select * from future_messages where datetime('now') > datetime(created_at, ?) li
 
 -- name: DeleteFutureMessage :exec
 delete from future_messages where id = ?;
+
+-- name: CacheLoad :one
+select * from cache where key = @key;
+
+-- name: CacheStore :one
+insert into cache(key, value) values(@key, @value) returning *;

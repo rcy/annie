@@ -259,6 +259,18 @@ create table future_messages(
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add cache")
+			_, err := tx.Exec(`
+create table cache(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  key text not null,
+  value text not null
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
