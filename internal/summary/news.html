@@ -22,21 +22,23 @@
       {{dateStart .Start}}-{{dateEnd .End}}
     </h2>
 
-    <section>
-      <h2>notes</h2>
-      <pre>
-        {{.NotesSummary}}
-      </pre>
+    {{if .NotesSummary}}
+      <section>
+        <h2>notes</h2>
+        <pre>
+          {{.NotesSummary}}
+        </pre>
 
-      <details>
-        <summary>references</summary>
-        <ul>
-          {{range (index .Notes "note")}}
-            <li>{{.Text.String}}</li>
-          {{end}}
-        </ul>
-      </details>
-    </section>
+        <details>
+          <summary>references</summary>
+          <ul>
+            {{range (index .Notes "note")}}
+              <li>{{.Text.String}}</li>
+            {{end}}
+          </ul>
+        </details>
+      </section>
+    {{end}}
 
     {{if .QuotesSummary}}
       <section>
