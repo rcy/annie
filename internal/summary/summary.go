@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/sashabaranov/go-openai"
@@ -171,9 +172,19 @@ func getTitle(url string) (string, error) {
 	}
 }
 
+var funcMap = template.FuncMap{
+	"dateStart": func(t time.Time) string {
+		return t.Format("Mon Jan 02")
+	},
+	"dateEnd": func(t time.Time) string {
+		s := t.Add(-time.Second)
+		return s.Format("Mon Jan 02, 2006")
+	},
+}
+
 //go:embed news.html
 var newsTemplateContent string
-var newsTemplate = template.Must(template.New("").Parse(newsTemplateContent))
+var newsTemplate = template.Must(template.New("").Funcs(funcMap).Parse(newsTemplateContent))
 
 func (s *summary) HTML(ctx context.Context) ([]byte, error) {
 	err := s.LoadNotes(ctx)
@@ -202,4 +213,44 @@ func (s *summary) HTML(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+// return the sunday prior to the time passed in
+func WeekStart(t time.Time, location *time.Location) time.Time {
+	day := t.In(location)
+	weekday := t.Weekday()
+	offset := (int(weekday) - int(time.Sunday) + 7) % 7 // Days since last Sunday
+	return day.AddDate(0, 0, -offset)
+}
+
+func (s *summary) WeeklyNewsletter(ctx context.Context) ([]byte, error) {
+	err := s.LoadAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	b, err := s.HTML(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func (s *summary) cacheKey() string {
+	return s.Start.Format(time.DateOnly) + "_" + s.End.Format(time.DateOnly)
+}
+
+var cacheMap sync.Map
+
+func (s *summary) Cache(ctx context.Context, fn func(context.Context) ([]byte, error)) ([]byte, error) {
+	cached, ok := cacheMap.Load(s.cacheKey())
+	if ok {
+		return cached.([]byte), nil
+	}
+
+	bytes, err := fn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cacheMap.Store(s.cacheKey(), bytes)
+	return bytes, nil
 }

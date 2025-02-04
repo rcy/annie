@@ -52,6 +52,14 @@ var generatedImageTemplate = template.Must(template.New("").Parse(generatedImage
 var generatedImagesTemplateContent string
 var generatedImagesTemplate = template.Must(template.New("").Parse(generatedImagesTemplateContent))
 
+var pacific = func(name string) *time.Location {
+	result, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return result
+}("America/Los_Angeles")
+
 type keyType int
 
 const (
@@ -275,11 +283,6 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			http.ServeFile(w, r, "/tmp/snapshot.db")
 		})
 
-		pacific, err := time.LoadLocation("America/Los_Angeles")
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		funcMap := template.FuncMap{
 			"time": func(t time.Time) string {
 				return t.In(pacific).Format("2006-01-02 15:04:05")
@@ -419,24 +422,20 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			_, _ = w.Write(out.Bytes())
 		})
 
-		r.Get("/news/day/{date}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/news/week/{date}", func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			q := model.New(db.DB)
 
-			start, err := time.Parse(time.DateOnly, chi.URLParam(r, "date"))
+			date, err := time.ParseInLocation(time.DateOnly, chi.URLParam(r, "date"), pacific)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			start := summary.WeekStart(date, pacific)
 			end := start.Add(time.Hour * 24 * 7)
 
 			s := summary.New(q, start, end)
-			err = s.LoadAll(ctx)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			b, err := s.HTML(ctx)
+			b, err := s.Cache(ctx, s.WeeklyNewsletter)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
