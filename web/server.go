@@ -433,6 +433,10 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			}
 			start := summary.WeekStart(date, pacific)
 			end := start.Add(time.Hour * 24 * 7)
+			if end.After(time.Now().In(pacific)) {
+				w.Write([]byte("not yet"))
+				return
+			}
 
 			s := summary.New(q, start, end)
 			b, err := s.DBCache(ctx, q, s.WeeklyNewsletter)
