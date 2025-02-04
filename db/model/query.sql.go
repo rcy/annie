@@ -81,6 +81,43 @@ func (q *Queries) AllNotes(ctx context.Context) ([]Note, error) {
 	return items, nil
 }
 
+const cacheLoad = `-- name: CacheLoad :one
+select id, created_at, "key", value from cache where key = ?1
+`
+
+func (q *Queries) CacheLoad(ctx context.Context, key string) (Cache, error) {
+	row := q.db.QueryRowContext(ctx, cacheLoad, key)
+	var i Cache
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Key,
+		&i.Value,
+	)
+	return i, err
+}
+
+const cacheStore = `-- name: CacheStore :one
+insert into cache(key, value) values(?1, ?2) returning id, created_at, "key", value
+`
+
+type CacheStoreParams struct {
+	Key   string
+	Value string
+}
+
+func (q *Queries) CacheStore(ctx context.Context, arg CacheStoreParams) (Cache, error) {
+	row := q.db.QueryRowContext(ctx, cacheStore, arg.Key, arg.Value)
+	var i Cache
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Key,
+		&i.Value,
+	)
+	return i, err
+}
+
 const channelNick = `-- name: ChannelNick :one
 select channel, nick, present, updated_at from channel_nicks where present = ? and channel = ? and nick = ? collate nocase
 `

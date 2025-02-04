@@ -241,7 +241,7 @@ func (s *summary) cacheKey() string {
 
 var cacheMap sync.Map
 
-func (s *summary) Cache(ctx context.Context, fn func(context.Context) ([]byte, error)) ([]byte, error) {
+func (s *summary) MemoryCache(ctx context.Context, fn func(context.Context) ([]byte, error)) ([]byte, error) {
 	cached, ok := cacheMap.Load(s.cacheKey())
 	if ok {
 		return cached.([]byte), nil
@@ -252,5 +252,25 @@ func (s *summary) Cache(ctx context.Context, fn func(context.Context) ([]byte, e
 		return nil, err
 	}
 	cacheMap.Store(s.cacheKey(), bytes)
+	return bytes, nil
+}
+
+func (s *summary) DBCache(ctx context.Context, q *model.Queries, fn func(context.Context) ([]byte, error)) ([]byte, error) {
+	cached, err := q.CacheLoad(ctx, s.cacheKey())
+	if err == nil {
+		return []byte(cached.Value), nil
+	}
+
+	bytes, err := fn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	_, err = q.CacheStore(ctx, model.CacheStoreParams{
+		Key:   s.cacheKey(),
+		Value: string(bytes),
+	})
+	if err != nil {
+		return nil, err
+	}
 	return bytes, nil
 }

@@ -435,7 +435,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			end := start.Add(time.Hour * 24 * 7)
 
 			s := summary.New(q, start, end)
-			b, err := s.Cache(ctx, s.WeeklyNewsletter)
+			b, err := s.DBCache(ctx, q, s.WeeklyNewsletter)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

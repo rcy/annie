@@ -16,6 +16,13 @@ type Bedtime struct {
 	Message   sql.NullString
 }
 
+type Cache struct {
+	ID        int64
+	CreatedAt time.Time
+	Key       string
+	Value     string
+}
+
 type ChannelNick struct {
 	Channel   string
 	Nick      string

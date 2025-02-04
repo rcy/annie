@@ -100,3 +100,9 @@ select * from future_messages where datetime('now') > datetime(created_at, ?) li
 
 -- name: DeleteFutureMessage :exec
 delete from future_messages where id = ?;
+
+-- name: CacheLoad :one
+select * from cache where key = @key;
+
+-- name: CacheStore :one
+insert into cache(key, value) values(@key, @value) returning *;
