@@ -11,6 +11,7 @@ import (
 	"goirc/db/model"
 	"goirc/image"
 	"goirc/internal/idstr"
+	"goirc/internal/summary"
 	db "goirc/model"
 	"html/template"
 	"log"
@@ -416,6 +417,31 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			}
 
 			_, _ = w.Write(out.Bytes())
+		})
+
+		r.Get("/news/day/{date}", func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			q := model.New(db.DB)
+
+			start, err := time.Parse(time.DateOnly, chi.URLParam(r, "date"))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			end := start.Add(time.Hour * 24 * 7)
+
+			s := summary.New(q, start, end)
+			err = s.LoadAll(ctx)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			b, err := s.HTML(ctx)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Write(b)
 		})
 	})
 
