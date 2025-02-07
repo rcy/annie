@@ -59,7 +59,7 @@ func Handle(params bot.HandlerParams) error {
 		systemPrompt := "You are annie, a friend hanging out in an irc channel. You have been asked a question, read the question, and think about it in the context of all you have read in this channel.  Respond with single sentences, in lower case, with minimal punctuation. Do not refer to yourself in the third person. Ignore everything you know except for what you have read in the following chat history: "
 		systemPrompt += strings.Join(lines, "\n")
 
-		response, err := ai.Complete(ctx, openai.GPT4oMini, systemPrompt, msg)
+		response, err := ai.Complete(ctx, openai.O3Mini, systemPrompt, msg)
 		if err != nil {
 			return err
 		}
