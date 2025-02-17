@@ -6,12 +6,12 @@ with nixpkgs; mkShell {
   buildInputs = [
     nodejs
     air
-    unstable.go_1_21
-    unstable.golint
-    unstable.gopls
+    go
+    golint
+    gopls
     html2text
     flyctl
-    unstable.golangci-lint
+    golangci-lint
     google-cloud-sdk
     pup
   ];
