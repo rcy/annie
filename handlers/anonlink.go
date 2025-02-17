@@ -35,6 +35,8 @@ func AnonLink(params bot.HandlerParams) error {
 	return nil
 }
 
+const generateAnonQuoteImages = false
+
 func AnonQuote(params bot.HandlerParams) error {
 	q := model.New(db.DB)
 	pool := linkpool.New(q, minAge)
@@ -43,13 +45,17 @@ func AnonQuote(params bot.HandlerParams) error {
 		return err
 	}
 
-	img, err := image.GenerateDALLE(context.TODO(), note.Text.String)
-	if err != nil {
-		params.Privmsgf(params.Target, "%s", note.Text.String)
-		return err
-	}
+	if generateAnonQuoteImages {
+		img, err := image.GenerateDALLE(context.TODO(), note.Text.String)
+		if err != nil {
+			params.Privmsgf(params.Target, "%s", note.Text.String)
+			return err
+		}
 
-	params.Privmsgf(params.Target, "%s %s", note.Text.String, img.URL())
+		params.Privmsgf(params.Target, "%s %s", note.Text.String, img.URL())
+	} else {
+		params.Privmsgf(params.Target, "%s", note.Text.String)
+	}
 
 	return nil
 }
