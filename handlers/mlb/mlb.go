@@ -1,6 +1,7 @@
 package mlb
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"goirc/bot"
@@ -92,7 +93,7 @@ func fetchLeagueTeams(league string) (TeamList, error) {
 	return lt, nil
 }
 
-func PlayoffOdds(params bot.HandlerParams) error {
+func PlayoffOdds(ctx context.Context, params bot.HandlerParams) error {
 	teams, err := fetchLeagueTeams("AL")
 	if err != nil {
 		return err

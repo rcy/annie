@@ -19,7 +19,7 @@ var dayCache = NewCache(dayCmd)
 var weekCache = NewCache(weekCmd)
 var monthCache = NewCache(monthCmd)
 
-func NationalDay(params bot.HandlerParams) error {
+func NationalDay(ctx context.Context, params bot.HandlerParams) error {
 	str, err := dayCache.Pop()
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func NationalDay(params bot.HandlerParams) error {
 	str = strings.ReplaceAll(str, "&amp;", "&")
 
 	if str == "EOF" {
-		img, err := dayImage(dayCmd)
+		img, err := dayImage(ctx, dayCmd)
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func NationalDay(params bot.HandlerParams) error {
 	return nil
 }
 
-func NationalWeek(params bot.HandlerParams) error {
+func NationalWeek(ctx context.Context, params bot.HandlerParams) error {
 	str, err := weekCache.Pop()
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func NationalWeek(params bot.HandlerParams) error {
 	str = strings.ReplaceAll(str, "&amp;", "&")
 
 	if str == "EOF" {
-		img, err := dayImage(weekCmd)
+		img, err := dayImage(ctx, weekCmd)
 		if err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func NationalWeek(params bot.HandlerParams) error {
 	return nil
 }
 
-func NationalMonth(params bot.HandlerParams) error {
+func NationalMonth(ctx context.Context, params bot.HandlerParams) error {
 	str, err := monthCache.Pop()
 	if err != nil {
 		return err
@@ -70,7 +70,7 @@ func NationalMonth(params bot.HandlerParams) error {
 	str = strings.ReplaceAll(str, "&amp;", "&")
 
 	if str == "EOF" {
-		img, err := dayImage(monthCmd)
+		img, err := dayImage(ctx, monthCmd)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func NationalMonth(params bot.HandlerParams) error {
 	return nil
 }
 
-func NationalRefs(params bot.HandlerParams) error {
+func NationalRefs(ctx context.Context, params bot.HandlerParams) error {
 	params.Privmsgf(params.Target, "%s", url)
 
 	return nil
@@ -130,7 +130,7 @@ func stripPhrases(days []string) []string {
 	return result
 }
 
-func dayImage(cmd string) (*image.GeneratedImage, error) {
+func dayImage(ctx context.Context, cmd string) (*image.GeneratedImage, error) {
 	r, err := shell.Command(cmd)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 	days := strings.Split(strings.TrimSpace(r), "\n")
 	days = stripPhrases(days)
 	prompt := "create a single scene with representations of " + strings.Join(days, ", ")
-	gi, err := image.GenerateDALLE(context.Background(), prompt)
+	gi, err := image.GenerateDALLE(ctx, prompt)
 	if err != nil {
 		return nil, fmt.Errorf("prompt: %s: %w", prompt, err)
 	}
@@ -149,8 +149,8 @@ func dayImage(cmd string) (*image.GeneratedImage, error) {
 	return gi, nil
 }
 
-func Dayi(params bot.HandlerParams) error {
-	img, err := dayImage(dayCmd)
+func Dayi(ctx context.Context, params bot.HandlerParams) error {
+	img, err := dayImage(ctx, dayCmd)
 	if err != nil {
 		return err
 	}
@@ -158,8 +158,8 @@ func Dayi(params bot.HandlerParams) error {
 	return nil
 }
 
-func Weeki(params bot.HandlerParams) error {
-	img, err := dayImage(weekCmd)
+func Weeki(ctx context.Context, params bot.HandlerParams) error {
+	img, err := dayImage(ctx, weekCmd)
 	if err != nil {
 		return err
 	}
@@ -167,8 +167,8 @@ func Weeki(params bot.HandlerParams) error {
 	return nil
 }
 
-func Monthi(params bot.HandlerParams) error {
-	img, err := dayImage(monthCmd)
+func Monthi(ctx context.Context, params bot.HandlerParams) error {
+	img, err := dayImage(ctx, monthCmd)
 	if err != nil {
 		return err
 	}
@@ -176,9 +176,9 @@ func Monthi(params bot.HandlerParams) error {
 	return nil
 }
 
-func Image(params bot.HandlerParams) error {
+func Image(ctx context.Context, params bot.HandlerParams) error {
 	prompt := params.Matches[1]
-	gi, err := image.GenerateDALLE(context.Background(), prompt)
+	gi, err := image.GenerateDALLE(ctx, prompt)
 	if err != nil {
 		return err
 	}

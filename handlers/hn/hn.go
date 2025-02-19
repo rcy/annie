@@ -1,6 +1,7 @@
 package hn
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"goirc/bot"
@@ -8,7 +9,7 @@ import (
 	"net/http"
 )
 
-func Handle(params bot.HandlerParams) error {
+func Handle(ctx context.Context, params bot.HandlerParams) error {
 	resp, err := http.Get("https://hacker-news.firebaseio.com/v0/beststories.json")
 	if err != nil {
 		return err

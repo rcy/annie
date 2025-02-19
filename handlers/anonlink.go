@@ -18,10 +18,10 @@ const (
 	FutureMessageInterval = "+1 hour"
 )
 
-func AnonLink(params bot.HandlerParams) error {
+func AnonLink(ctx context.Context, params bot.HandlerParams) error {
 	q := model.New(db.DB)
 	pool := linkpool.New(q, minAge)
-	note, err := pool.PopRandomNote(context.Background(), params.Target, "link")
+	note, err := pool.PopRandomNote(ctx, params.Target, "link")
 	if err != nil {
 		return err
 	}
@@ -37,16 +37,16 @@ func AnonLink(params bot.HandlerParams) error {
 
 const generateAnonQuoteImages = false
 
-func AnonQuote(params bot.HandlerParams) error {
+func AnonQuote(ctx context.Context, params bot.HandlerParams) error {
 	q := model.New(db.DB)
 	pool := linkpool.New(q, minAge)
-	note, err := pool.PopRandomNote(context.Background(), params.Target, "quote")
+	note, err := pool.PopRandomNote(ctx, params.Target, "quote")
 	if err != nil {
 		return err
 	}
 
 	if generateAnonQuoteImages {
-		img, err := image.GenerateDALLE(context.TODO(), note.Text.String)
+		img, err := image.GenerateDALLE(ctx, note.Text.String)
 		if err != nil {
 			params.Privmsgf(params.Target, "%s", note.Text.String)
 			return err
@@ -60,8 +60,7 @@ func AnonQuote(params bot.HandlerParams) error {
 	return nil
 }
 
-func AnonStatus(params bot.HandlerParams) error {
-	ctx := context.TODO()
+func AnonStatus(ctx context.Context, params bot.HandlerParams) error {
 	q := model.New(db.DB)
 	allPool := linkpool.New(q, 0)
 	allLinks, err := allPool.Notes(ctx, "link")

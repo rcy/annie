@@ -9,12 +9,12 @@ import (
 	"strings"
 )
 
-func CreateNote(params bot.HandlerParams) error {
+func CreateNote(ctx context.Context, params bot.HandlerParams) error {
 	q := model.New(db.DB)
 
 	text := strings.TrimSpace(params.Matches[1])
 
-	_, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
+	_, err := q.InsertNote(ctx, model.InsertNoteParams{
 		Target: params.Target,
 		Nick:   sql.NullString{String: params.Nick, Valid: true},
 		Kind:   "note",

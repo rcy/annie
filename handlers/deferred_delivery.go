@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"goirc/bot"
 	"goirc/model"
 )
 
-func DeferredDelivery(params bot.HandlerParams) error {
+func DeferredDelivery(ctx context.Context, params bot.HandlerParams) error {
 	if params.Target == params.Nick {
 		params.Privmsgf(params.Target, "not your personal secretary")
 		return nil

@@ -8,14 +8,14 @@ import (
 	db "goirc/model"
 )
 
-func Quote(params bot.HandlerParams) error {
+func Quote(ctx context.Context, params bot.HandlerParams) error {
 	q := model.New(db.DB)
 	text := params.Matches[1]
 
 	// posted to private channel
 	isAnonymous := params.Target == params.Nick
 
-	_, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
+	_, err := q.InsertNote(ctx, model.InsertNoteParams{
 		Target: params.Target,
 		Nick:   sql.NullString{String: params.Nick, Valid: true},
 		Kind:   "quote",
@@ -27,7 +27,7 @@ func Quote(params bot.HandlerParams) error {
 	}
 
 	if isAnonymous {
-		_, err = q.ScheduleFutureMessage(context.TODO(), "quote")
+		_, err = q.ScheduleFutureMessage(ctx, "quote")
 		if err != nil {
 			return err
 		}

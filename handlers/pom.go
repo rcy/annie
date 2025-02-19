@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"goirc/bot"
 	"os/exec"
 	"strings"
 )
 
-func POM(params bot.HandlerParams) error {
+func POM(ctx context.Context, params bot.HandlerParams) error {
 	cmd := exec.Command("/usr/games/pom")
 
 	var out strings.Builder

@@ -9,8 +9,7 @@ import (
 	"time"
 )
 
-func Catchup(params bot.HandlerParams) error {
-	ctx := context.TODO()
+func Catchup(ctx context.Context, params bot.HandlerParams) error {
 	q := model.New(db.DB)
 
 	notes, err := q.LastDaysNotes(ctx)

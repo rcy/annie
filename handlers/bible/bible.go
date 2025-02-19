@@ -1,11 +1,12 @@
 package bible
 
 import (
+	"context"
 	"goirc/bot"
 	"goirc/internal/bible"
 )
 
-func Handle(params bot.HandlerParams) error {
+func Handle(ctx context.Context, params bot.HandlerParams) error {
 	ref := params.Matches[1]
 
 	b := bible.New()

@@ -1,6 +1,7 @@
 package mlb
 
 import (
+	"context"
 	"encoding/json"
 	"goirc/bot"
 	"net/http"
@@ -62,7 +63,7 @@ type Game struct {
 	IsLiveData bool `json:"isLiveData"`
 }
 
-func GameOdds(params bot.HandlerParams) error {
+func GameOdds(ctx context.Context, params bot.HandlerParams) error {
 	g, err := fetchGameOdds()
 	if err != nil {
 		return err

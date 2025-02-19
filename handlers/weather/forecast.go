@@ -122,8 +122,7 @@ func fetchForecastByCoords(lat, lon float64) (*forecast, error) {
 	return &f, nil
 }
 
-func HandleForecast(params bot.HandlerParams) error {
-	ctx := context.TODO()
+func HandleForecast(ctx context.Context, params bot.HandlerParams) error {
 	queries := db.New(model.DB)
 
 	var q string
@@ -168,12 +167,12 @@ func HandleForecast(params bot.HandlerParams) error {
 	return nil
 }
 
-func HandleWeatherForecast(params bot.HandlerParams) error {
-	err := Handle(params)
+func HandleWeatherForecast(ctx context.Context, params bot.HandlerParams) error {
+	err := Handle(ctx, params)
 	if err != nil {
 		return err
 	}
-	return HandleForecast(params)
+	return HandleForecast(ctx, params)
 }
 
 func (f *forecast) Format() (string, error) {

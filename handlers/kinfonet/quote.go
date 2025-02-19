@@ -1,13 +1,14 @@
 package kinfonet
 
 import (
+	"context"
 	"goirc/bot"
 	"time"
 
 	"github.com/gocolly/colly"
 )
 
-func TodaysQuoteHandler(params bot.HandlerParams) error {
+func TodaysQuoteHandler(ctx context.Context, params bot.HandlerParams) error {
 	quote, err := todaysQuote()
 	if err != nil {
 		return err

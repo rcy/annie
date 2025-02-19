@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"context"
 	"goirc/events"
 
 	irc "github.com/thoj/go-ircevent"
@@ -19,4 +20,4 @@ func (hp *HandlerParams) Publish(eventName string, payload any) {
 	events.Publish(eventName, payload)
 }
 
-type HandlerFunction func(HandlerParams) error
+type HandlerFunction func(context.Context, HandlerParams) error

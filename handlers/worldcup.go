@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"goirc/bot"
 	"goirc/util"
 	"time"
 )
 
-func Worldcup(params bot.HandlerParams) error {
+func Worldcup(ctx context.Context, params bot.HandlerParams) error {
 	then, err := time.Parse(time.RFC3339, "2026-06-01T15:00:00Z")
 	if err != nil {
 		return err

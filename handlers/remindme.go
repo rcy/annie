@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"goirc/bot"
 	"goirc/model/reminders"
@@ -10,7 +11,7 @@ import (
 	"github.com/xhit/go-str2duration/v2"
 )
 
-func RemindMe(params bot.HandlerParams) error {
+func RemindMe(ctx context.Context, params bot.HandlerParams) error {
 	duration := params.Matches[1]
 	what := params.Matches[2]
 
@@ -46,7 +47,7 @@ func remind(nick string, dur string, what string) (*time.Time, error) {
 	return &at, nil
 }
 
-func DoRemind(params bot.HandlerParams) error {
+func DoRemind(ctx context.Context, params bot.HandlerParams) error {
 	row, err := reminders.NextDue(params.Target)
 	if err != nil {
 		if err != sql.ErrNoRows {

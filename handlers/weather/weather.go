@@ -186,8 +186,7 @@ func fetchXWeather(city string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func Handle(params bot.HandlerParams) error {
-	ctx := context.TODO()
+func Handle(ctx context.Context, params bot.HandlerParams) error {
 	queries := db.New(model.DB)
 
 	var q string
@@ -228,7 +227,7 @@ func Handle(params bot.HandlerParams) error {
 	return nil
 }
 
-func XHandle(params bot.HandlerParams) error {
+func XHandle(ctx context.Context, params bot.HandlerParams) error {
 	q := params.Matches[1]
 
 	resp, err := fetchXWeather(q)

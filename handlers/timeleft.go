@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"goirc/bot"
 	"math"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func TimeLeft(params bot.HandlerParams) error {
+func TimeLeft(ctx context.Context, params bot.HandlerParams) error {
 	left := time.Until(time.Unix(2<<30, 0))
 
 	years := int(math.Round(left.Hours() / 24 / 365))

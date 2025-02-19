@@ -139,12 +139,12 @@ func addHandlers(b *bot.Bot) {
 		// send anonymous note
 		switch msg.Kind {
 		case "link":
-			err = handlers.AnonLink(bot.HandlerParams{
+			err = handlers.AnonLink(ctx, bot.HandlerParams{
 				Target:   b.Channel,
 				Privmsgf: b.MakePrivmsgf(),
 			})
 		case "quote":
-			err = handlers.AnonQuote(bot.HandlerParams{
+			err = handlers.AnonQuote(ctx, bot.HandlerParams{
 				Target:   b.Channel,
 				Privmsgf: b.MakePrivmsgf(),
 			})
@@ -176,7 +176,7 @@ func addHandlers(b *bot.Bot) {
 
 	events.Subscribe("anonnoteposted", func(note any) {
 		go func() {
-			err := handlers.AnonLink(bot.HandlerParams{
+			err := handlers.AnonLink(context.TODO(), bot.HandlerParams{
 				Target:   b.Channel,
 				Privmsgf: b.MakePrivmsgf(),
 			})
@@ -194,7 +194,7 @@ func addHandlers(b *bot.Bot) {
 
 	events.Subscribe("anonquoteposted", func(note any) {
 		go func() {
-			err := handlers.AnonQuote(bot.HandlerParams{
+			err := handlers.AnonQuote(context.TODO(), bot.HandlerParams{
 				Target:   b.Channel,
 				Privmsgf: b.MakePrivmsgf(),
 			})
@@ -210,7 +210,7 @@ func addHandlers(b *bot.Bot) {
 		}()
 	})
 
-	b.Handle(`^!help`, func(params bot.HandlerParams) error {
+	b.Handle(`^!help`, func(ctx context.Context, params bot.HandlerParams) error {
 		params.Privmsgf(params.Target, "%s: %s", params.Nick, "https://github.com/rcy/annie/blob/main/handlers.go")
 		return nil
 	})

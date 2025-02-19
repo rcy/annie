@@ -13,9 +13,7 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-func Handle(params bot.HandlerParams) error {
-	ctx := context.TODO()
-
+func Handle(ctx context.Context, params bot.HandlerParams) error {
 	var msg string
 	if len(params.Matches) < 2 {
 		return nil

@@ -1,6 +1,7 @@
 package election
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"goirc/bot"
@@ -211,7 +212,7 @@ func partyResults() ([]string, error) {
 	return rows, nil
 }
 
-func Handle(params bot.HandlerParams) error {
+func Handle(ctx context.Context, params bot.HandlerParams) error {
 	rows, err := partyResults()
 	if err != nil {
 		return err

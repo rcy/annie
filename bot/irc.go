@@ -64,7 +64,7 @@ func (b *Bot) Repeat(timeout time.Duration, action HandlerFunction) {
 	go func() {
 		for {
 			time.Sleep(timeout)
-			err := action(HandlerParams{
+			err := action(context.TODO(), HandlerParams{
 				Privmsgf: b.MakePrivmsgf(),
 				Target:   b.Channel,
 			})
@@ -77,7 +77,7 @@ func (b *Bot) Repeat(timeout time.Duration, action HandlerFunction) {
 
 func (b *Bot) IdleRepeat(timeout time.Duration, action HandlerFunction) {
 	reset := idle.Repeat(timeout, func() {
-		err := action(HandlerParams{
+		err := action(context.TODO(), HandlerParams{
 			Privmsgf: b.MakePrivmsgf(),
 			Target:   b.Channel,
 		})
@@ -91,7 +91,7 @@ func (b *Bot) IdleRepeat(timeout time.Duration, action HandlerFunction) {
 
 func (b *Bot) IdleRepeatAfterReset(timeout time.Duration, action HandlerFunction) {
 	reset := idle.RepeatAfterReset(timeout, func() {
-		err := action(HandlerParams{
+		err := action(context.TODO(), HandlerParams{
 			Privmsgf: b.MakePrivmsgf(),
 			Target:   b.Channel,
 		})
@@ -183,7 +183,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 					return
 				}
 				if url != "" {
-					bot.Conn.Privmsgf(channel, url)
+					bot.Conn.Privmsgf(channel, "%s", url)
 				}
 				initialized <- true
 			}()
@@ -275,7 +275,7 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 	for _, handler := range bot.Handlers {
 		matches := handler.regexp.FindStringSubmatch(msg)
 		if len(matches) > 0 {
-			err := handler.action(HandlerParams{
+			err := handler.action(context.TODO(), HandlerParams{
 				Privmsgf:  bot.MakePrivmsgf(),
 				Msg:       msg,
 				Nick:      nick,

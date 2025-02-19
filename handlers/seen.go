@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"goirc/bot"
@@ -8,7 +9,7 @@ import (
 	"goirc/util"
 )
 
-func Seen(params bot.HandlerParams) error {
+func Seen(ctx context.Context, params bot.HandlerParams) error {
 	nick := params.Matches[1]
 
 	var channelNick model.ChannelNick

@@ -79,7 +79,7 @@ type oneTimeCode struct {
 
 var codes = make(map[code]oneTimeCode)
 
-func HandleAuth(params bot.HandlerParams) error {
+func HandleAuth(ctx context.Context, params bot.HandlerParams) error {
 	if params.Nick == params.Target {
 		params.Privmsgf(params.Nick, "cannot !auth privately, do it in channel")
 		return nil
@@ -90,10 +90,10 @@ func HandleAuth(params bot.HandlerParams) error {
 	return nil
 }
 
-func HandleDeauth(params bot.HandlerParams) error {
+func HandleDeauth(ctx context.Context, params bot.HandlerParams) error {
 	q := model.New(db.DB.DB)
 
-	err := q.DeleteNickSessions(context.Background(), params.Nick)
+	err := q.DeleteNickSessions(context.TODO(), params.Nick)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package gold
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"goirc/bot"
@@ -60,7 +61,7 @@ func getGoldPrice(token string) (float64, error) {
 	return obj.Price, nil
 }
 
-func Handle(params bot.HandlerParams) error {
+func Handle(ctx context.Context, params bot.HandlerParams) error {
 	price, err := getGoldPrice(os.Getenv("GOLD_API_TOKEN"))
 	if err != nil {
 		return err
