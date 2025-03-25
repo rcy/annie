@@ -422,6 +422,11 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			_, _ = w.Write(out.Bytes())
 		})
 
+		r.Get("/week", func(w http.ResponseWriter, r *http.Request) {
+			start := summary.WeekStart(time.Now().AddDate(0, 0, -7), pacific)
+			http.Redirect(w, r, "/week/"+start.Format(time.DateOnly), http.StatusSeeOther)
+		})
+
 		r.Get("/week/{date}", func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			q := model.New(db.DB)
