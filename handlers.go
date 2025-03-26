@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"goirc/bot"
 	"goirc/db/model"
 	"goirc/events"
@@ -23,6 +24,7 @@ import (
 	"goirc/internal/ai"
 	db "goirc/model"
 	"goirc/web"
+	"regexp"
 	"time"
 
 	"github.com/robfig/cron"
@@ -30,6 +32,8 @@ import (
 )
 
 func addHandlers(b *bot.Bot) {
+	nick := regexp.QuoteMeta(b.Conn.GetNick())
+
 	b.Handle(`^!catchup`, handlers.Catchup)
 	b.Handle(`^,(.+)$`, handlers.CreateNote)
 	b.Handle(`^([^\s:]+): (.+)$`, handlers.DeferredDelivery)
@@ -70,8 +74,8 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!deauth$`, web.HandleDeauth)
 	b.Handle(`night`, bedtime.Handle)
 	b.Handle(`^!election`, election.Handle)
-	b.Handle(`^annie:?(.+)$`, annie.Handle)
-	b.Handle(`^(.+),? annie.?$`, annie.Handle)
+	b.Handle(fmt.Sprintf(`^%s:?(.+)$`, nick), annie.Handle)
+	b.Handle(fmt.Sprintf(`^(.+),? %s.?$`, nick), annie.Handle)
 	b.Handle(`^!bible (.+)$`, bible.Handle)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
