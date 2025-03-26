@@ -14,8 +14,10 @@ import (
 	"goirc/internal/summary"
 	db "goirc/model"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -248,6 +250,29 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 		}
 
 		http.Redirect(w, r, note.Text.String, http.StatusSeeOther)
+	})
+
+	r.Get("/vibe", func(w http.ResponseWriter, r *http.Request) {
+		contentURL := r.FormValue("url")
+
+		parsedURL, err := url.Parse(contentURL)
+		if parsedURL.Host != "gist.githubusercontent.com" {
+			http.Error(w, "host not allowed", http.StatusBadRequest)
+			return
+		}
+
+		resp, err := http.Get(parsedURL.String())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer resp.Body.Close()
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(bytes)
 	})
 
 	r.Group(func(r chi.Router) {
