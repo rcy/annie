@@ -396,6 +396,10 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 					return
 				}
 			}
+			nick := r.Context().Value(nickKey).(string)
+
+			b.Conn.Privmsgf(b.Channel, "%s edited note %d", nick, id)
+
 			http.Redirect(w, r, r.URL.String(), http.StatusSeeOther)
 		})
 
