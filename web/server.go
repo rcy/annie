@@ -381,13 +381,18 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			id, _ := strconv.Atoi(chi.URLParam(r, "id"))
 			text := r.FormValue("text")
 
+			note, err := q.NoteByID(ctx, int64(id))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
 			if text == "" {
 				err := q.DeleteNoteByID(ctx, int64(id))
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-				b.Conn.Privmsgf(b.Channel, "%s deleted note %d", nick, id)
+				b.Conn.Privmsgf(b.Channel, "%s deleted note %d (was: %s)", nick, id, note.Text.String)
 			} else {
 				_, err := q.UpdateNoteTextByID(ctx, model.UpdateNoteTextByIDParams{
 					ID:   int64(id),
@@ -397,7 +402,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-				b.Conn.Privmsgf(b.Channel, "%s edited note %d", nick, id)
+				b.Conn.Privmsgf(b.Channel, "%s edited note %d: (was: %s)", nick, id, note.Text.String)
 			}
 
 			http.Redirect(w, r, r.URL.String(), http.StatusSeeOther)
