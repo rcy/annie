@@ -384,6 +384,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			note, err := q.NoteByID(ctx, int64(id))
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
 
 			if text == "" {
