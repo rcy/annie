@@ -528,6 +528,41 @@ func (q *Queries) NicksWithNoteCount(ctx context.Context) ([]NicksWithNoteCountR
 	return items, nil
 }
 
+const nonAnonNotes = `-- name: NonAnonNotes :many
+select id, created_at, nick, text, kind, target, anon from notes where kind='note' and anon = false order by created_at desc
+`
+
+func (q *Queries) NonAnonNotes(ctx context.Context) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, nonAnonNotes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Nick,
+			&i.Text,
+			&i.Kind,
+			&i.Target,
+			&i.Anon,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const noteByID = `-- name: NoteByID :one
 select id, created_at, nick, text, kind, target, anon from notes where id = ?
 `

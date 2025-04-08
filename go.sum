@@ -103,6 +103,8 @@ github.com/sashabaranov/go-openai v1.28.3 h1:9ZjKWwFOO8RRgHarUC8rTPSLBZgkNzjyf18
 github.com/sashabaranov/go-openai v1.28.3/go.mod h1:lj5b/K+zjTSFxVLijLSTDZuP7adOgerWeFyZLUhAKRg=
 github.com/sashabaranov/go-openai v1.37.0 h1:hQQowgYm4OXJ1Z/wTrE+XZaO20BYsL0R3uRPSpfNZkY=
 github.com/sashabaranov/go-openai v1.37.0/go.mod h1:lj5b/K+zjTSFxVLijLSTDZuP7adOgerWeFyZLUhAKRg=
+github.com/sashabaranov/go-openai v1.38.1 h1:TtZabbFQZa1nEni/IhVtDF/WQjVqDgd+cWR5OeddzF8=
+github.com/sashabaranov/go-openai v1.38.1/go.mod h1:lj5b/K+zjTSFxVLijLSTDZuP7adOgerWeFyZLUhAKRg=
 github.com/solafide-dev/gobible v1.1.1 h1:gnEnnavD3gCHI0uwk1dxfh8tOgz6d7lN5+P7FLkUdLU=
 github.com/solafide-dev/gobible v1.1.1/go.mod h1:vNQz0MXUfedUc33zqelugXug0gUOx4K6aOcmUr9aE7Y=
 github.com/sqids/sqids-go v0.4.1 h1:eQKYzmAZbLlRwHeHYPF35QhgxwZHLnlmVj9AkIj/rrw=

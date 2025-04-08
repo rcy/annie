@@ -47,7 +47,7 @@ func Handle(params bot.HandlerParams) error {
 
 		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
 	case "question":
-		notes, err := q.Notes(ctx)
+		notes, err := q.NonAnonNotes(ctx)
 		if err != nil {
 			return err
 		}
