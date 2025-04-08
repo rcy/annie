@@ -90,7 +90,7 @@ select * from generated_images order by created_at desc;
 select * from notes where kind='note' order by created_at desc;
 
 -- name: NonAnonNotes :many
-select * from notes where kind='note' and nick = target order by created_at desc;
+select * from notes where kind='note' and nick != target order by created_at desc;
 
 -- name: NotesAndQuotes :many
 select * from notes where kind='note' or kind='quote' order by created_at desc;
