@@ -529,7 +529,7 @@ func (q *Queries) NicksWithNoteCount(ctx context.Context) ([]NicksWithNoteCountR
 }
 
 const nonAnonNotes = `-- name: NonAnonNotes :many
-select id, created_at, nick, text, kind, target, anon from notes where kind='note' and anon = false order by created_at desc
+select id, created_at, nick, text, kind, target, anon from notes where kind='note' and nick = target order by created_at desc
 `
 
 func (q *Queries) NonAnonNotes(ctx context.Context) ([]Note, error) {
