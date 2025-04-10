@@ -9,6 +9,7 @@ import (
 	"goirc/internal/ai"
 	db "goirc/model"
 	"strings"
+	"time"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -56,7 +57,7 @@ func Handle(params bot.HandlerParams) error {
 			lines[i] = fmt.Sprintf("%s <%s> %s", n.CreatedAt, n.Nick.String, n.Text.String)
 		}
 
-		systemPrompt := "You are annie, a friend hanging out in an irc channel. You have been asked a question, read the question, and think about it in the context of all you have read in this channel.  Respond with single sentences, in lower case, with minimal punctuation. Do not refer to yourself in the third person. Ignore everything you know except for what you have read in the following chat history: "
+		systemPrompt := fmt.Sprintf("You are annie, a friend hanging out in an irc channel. You have been asked a question, read the question, and think about it in the context of all you have read in this channel.  Respond with single sentences, in lower case, with minimal punctuation. Do not refer to yourself in the third person. The current time and date is %s.  Ignore everything you know except for what you have read in the following chat history: ", time.Now().Format(time.RFC1123))
 		systemPrompt += strings.Join(lines, "\n")
 
 		response, err := ai.Complete(ctx, openai.GPT4oMini, systemPrompt, msg)
