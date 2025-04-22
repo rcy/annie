@@ -71,7 +71,7 @@ func (s *service) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	url := fmt.Sprintf("%s/uploads/%d", os.Getenv("ROOT_URL"), file.ID)
 
-	s.Bot.Conn.Privmsgf(s.Bot.Channel, "%s uploaded file %s", nick, url)
+	s.Bot.Conn.Privmsgf(s.Bot.Channel, "%s uploaded %s", nick, url)
 
 	http.Redirect(w, r, fmt.Sprintf("/uploads/success/%d", file.ID), http.StatusSeeOther)
 }
