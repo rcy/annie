@@ -12,7 +12,9 @@ import (
 	"goirc/image"
 	"goirc/internal/idstr"
 	"goirc/internal/summary"
+	"goirc/internal/uploads"
 	db "goirc/model"
+	"goirc/web/auth"
 	"html/template"
 	"io"
 	"log"
@@ -28,6 +30,7 @@ import (
 	"github.com/kkdai/youtube/v2"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 //go:embed "templates/index.gohtml"
@@ -62,15 +65,7 @@ var pacific = func(name string) *time.Location {
 	return result
 }("America/Los_Angeles")
 
-type keyType int
-
-const (
-	sessionKey keyType = iota
-	nickKey
-)
-
 const sessionCookieKey = "annie.session"
-const fromCookieKey = "annie.from"
 
 type code string
 
@@ -105,6 +100,7 @@ func HandleDeauth(params bot.HandlerParams) error {
 
 func Serve(db *sqlx.DB, b *bot.Bot) {
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
 	q := model.New(db.DB)
 
@@ -126,11 +122,13 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 				value = c.Value
 			}
 
-			ctx := context.WithValue(r.Context(), sessionKey, value)
+			ctx := context.WithValue(r.Context(), auth.SessionKey, value)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	})
+
+	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {})
 
 	r.Route("/login", func(r chi.Router) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +151,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 
 			nick := r.FormValue("nick")
 
-			skey := r.Context().Value(sessionKey).(string)
+			skey := r.Context().Value(auth.SessionKey).(string)
 
 			var c = code(strings.Split(uuid.Must(uuid.NewV4()).String(), "-")[0])
 			codes[c] = oneTimeCode{session: skey, nick: nick}
@@ -191,7 +189,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 
 			delete(codes, c)
 
-			sess := r.Context().Value(sessionKey).(string)
+			sess := r.Context().Value(auth.SessionKey).(string)
 
 			err := q.CreateNickSession(r.Context(), model.CreateNickSessionParams{
 				Session: sess,
@@ -202,14 +200,14 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 				return
 			}
 
-			cookie, err := r.Cookie(fromCookieKey)
+			cookie, err := r.Cookie(auth.FromCookieKey)
 			if err != nil {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 				return
 			}
 			// expire "from" cookie
 			http.SetCookie(w, &http.Cookie{
-				Name:     fromCookieKey,
+				Name:     auth.FromCookieKey,
 				Value:    r.URL.Path,
 				Path:     "/",
 				Secure:   true,
@@ -230,7 +228,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			return
 		}
 
-		sess := r.Context().Value(sessionKey).(string)
+		sess := r.Context().Value(auth.SessionKey).(string)
 		m := model.New(db.DB)
 
 		note, err := m.Link(ctx, id)
@@ -276,27 +274,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
-				key := r.Context().Value(sessionKey).(string)
-				session, err := q.NickBySession(ctx, key)
-				if err != nil {
-					http.SetCookie(w, &http.Cookie{
-						Name:     fromCookieKey,
-						Value:    r.URL.Path,
-						Path:     "/",
-						Secure:   true,
-						HttpOnly: true,
-						Expires:  time.Now().Add(time.Hour),
-					})
-					http.Redirect(w, r, "/login", http.StatusFound)
-					return
-				}
-				ctx = context.WithValue(ctx, nickKey, session.Nick)
-				next.ServeHTTP(w, r.WithContext(ctx))
-			})
-		})
+		r.Use(auth.NewService(q).Middleware)
 
 		r.Get("/snapshot.db", func(w http.ResponseWriter, r *http.Request) {
 			os.Remove("/tmp/snapshot.db")
@@ -376,7 +354,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 
 		r.Post("/note/{id}", func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			nick := r.Context().Value(nickKey).(string)
+			nick := r.Context().Value(auth.NickKey).(string)
 
 			id, _ := strconv.Atoi(chi.URLParam(r, "id"))
 			text := r.FormValue("text")
@@ -486,6 +464,12 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			}
 			w.Write(b)
 		})
+
+		uploader := uploads.NewUploader(q, db.DB)
+		r.Get("/uploads/success/{id}", uploader.SuccessHandler)
+		r.Get("/uploads/{id}", uploader.FileHandler)
+		r.Get("/uploads", uploader.GetHandler)
+		r.Post("/uploads", uploader.PostHandler)
 	})
 
 	r.Get("/generated_images/{id}", func(w http.ResponseWriter, r *http.Request) {

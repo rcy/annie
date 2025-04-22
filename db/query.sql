@@ -109,3 +109,9 @@ select * from cache where key = @key;
 
 -- name: CacheStore :one
 insert into cache(key, value) values(@key, @value) returning *;
+
+-- name: InsertFile :one
+insert into files(nick,content) values (@nick, @content) returning *;
+
+-- name: GetFile :one
+select * from files where id = @id;

@@ -72,3 +72,9 @@ CREATE TABLE cache(
   key text not null,
   value text not null
 );
+CREATE TABLE files(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  content blob not null
+);

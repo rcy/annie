@@ -271,6 +271,18 @@ create table cache(
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add files")
+			_, err := tx.Exec(`
+create table files(
+  id integer not null primary key,
+  created_at datetime not null default current_timestamp,
+  nick text not null,
+  content blob not null
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
