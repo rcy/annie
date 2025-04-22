@@ -3,10 +3,12 @@ package uploads
 import (
 	"database/sql"
 	"fmt"
+	"goirc/bot"
 	"goirc/db/model"
 	"goirc/web/auth"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -17,10 +19,11 @@ import (
 type service struct {
 	Queries *model.Queries
 	DB      *sql.DB
+	Bot     *bot.Bot
 }
 
-func NewUploader(q *model.Queries, db *sql.DB) *service {
-	return &service{Queries: q, DB: db}
+func NewUploader(q *model.Queries, db *sql.DB, bot *bot.Bot) *service {
+	return &service{Queries: q, DB: db, Bot: bot}
 }
 
 func (s *service) GetHandler(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +68,10 @@ func (s *service) PostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to save file to DB", http.StatusInternalServerError)
 		return
 	}
+
+	url := fmt.Sprintf("%s/uploads/%d", os.Getenv("ROOT_URL"), file.ID)
+
+	s.Bot.Conn.Privmsgf(s.Bot.Channel, "%s uploaded file %s", nick, url)
 
 	http.Redirect(w, r, fmt.Sprintf("/uploads/success/%d", file.ID), http.StatusSeeOther)
 }

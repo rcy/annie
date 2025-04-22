@@ -465,7 +465,7 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			w.Write(b)
 		})
 
-		uploader := uploads.NewUploader(q, db.DB)
+		uploader := uploads.NewUploader(q, db.DB, b)
 		r.Get("/uploads/success/{id}", uploader.SuccessHandler)
 		r.Get("/uploads/{id}", uploader.FileHandler)
 		r.Get("/uploads", uploader.GetHandler)
