@@ -30,11 +30,74 @@ func (s *service) GetHandler(w http.ResponseWriter, r *http.Request) {
 	nick := r.Context().Value(auth.NickKey).(string)
 
 	HTML(
-		H1(Text("annie filebox")),
-		P(Textf("hello, %s", nick)),
-		Form(Method("POST"), Action("uploads"), EncType("multipart/form-data"),
-			Input(Type("file"), Name("thefile")),
-			Button(Text("Upload"))),
+		Body(
+			Div(ID("dropzone"), Style("height: 100vh;"),
+				H1(Text("annie file uploader")),
+				P(Textf("hello, %s", nick)),
+				Form(Method("POST"), Action("uploads"), EncType("multipart/form-data"),
+					Input(Type("file"), Name("thefile")),
+					Button(Text("Upload")),
+					P(Textf("Links to uploaded files will be sent to %s.  You can also drag and drop or paste a file to upload.", s.Bot.Channel)),
+				),
+			),
+			Script(Raw(`
+const dropzone = document.getElementById('dropzone');
+    // Handle drag events
+    ['dragenter', 'dragover'].forEach(event => {
+      dropzone.addEventListener(event, e => {
+        e.preventDefault();
+        dropzone.classList.add('hover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(event => {
+      dropzone.addEventListener(event, e => {
+        e.preventDefault();
+        dropzone.classList.remove('hover');
+      });
+    });
+
+    // Handle drop
+    dropzone.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        uploadFile(files[0]);
+      }
+    });
+
+ // Upload file using fetch
+    function uploadFile(file) {
+      const formData = new FormData();
+      formData.append('thefile', file);
+
+      fetch('/uploads', {
+        headers: { "Accept": "application/json" },
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.text())
+      .then(text => {
+        location.href = text;
+      })
+      .catch(err => {
+        alert('upload failed');
+        console.error(err);
+      });
+    }
+
+document.addEventListener('paste', (e) => {
+  const items = e.clipboardData.items;
+  for (const item of items) {
+    if (item.kind === 'file') {
+      const file = item.getAsFile();
+      if (file) {
+        uploadFile(file);
+      }
+    }
+  }
+});
+`)),
+		),
 	).Render(w)
 }
 
@@ -73,7 +136,9 @@ func (s *service) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	s.Bot.Conn.Privmsgf(s.Bot.Channel, "%s uploaded %s", nick, url)
 
-	http.Redirect(w, r, fmt.Sprintf("/uploads/success/%d", file.ID), http.StatusSeeOther)
+	redirectURL := fmt.Sprintf("/uploads/success/%d", file.ID)
+	w.Write([]byte(redirectURL))
+	http.Redirect(w, r, fmt.Sprintf(redirectURL, file.ID), http.StatusSeeOther)
 }
 
 func (s *service) FileHandler(w http.ResponseWriter, r *http.Request) {
