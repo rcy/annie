@@ -42,6 +42,11 @@ type Riding struct {
 	RegionNameEng        string      `json:"region_name_eng"`
 	RidingCode           int         `json:"riding_code"`
 	TgamKeyFlag          bool        `json:"tgam_key_flag"`
+	TgamKeyRiding        struct {
+		Label       string `json:"label"`
+		Description string `json:"description"`
+		Byline      string `json:"byline"`
+	} `json:"tgam_key_riding"`
 }
 
 func fetchRidings() ([]Riding, error) {
