@@ -6,7 +6,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"goirc/bot"
 	"goirc/fetch"
 	"html/template"
@@ -16,31 +15,33 @@ import (
 	"time"
 )
 
+type Candidate struct {
+	CandidateID   int    `json:"candidate_id"`
+	Firstname     string `json:"firstname"`
+	Lastname      string `json:"lastname"`
+	PartyShortEng string `json:"party_short_eng"`
+	PartyShortFr  string `json:"party_short_fr"`
+	Votes         int    `json:"votes"`
+	Margin        int    `json:"margin"`
+	Previous      int    `json:"previous"`
+	Prominent     string `json:"prominent"`
+}
+
 type Riding struct {
-	RidingID   int `json:"riding_id"`
-	Candidates []struct {
-		CandidateID   int    `json:"candidate_id"`
-		Firstname     string `json:"firstname"`
-		Lastname      string `json:"lastname"`
-		PartyShortEng string `json:"party_short_eng"`
-		PartyShortFr  string `json:"party_short_fr"`
-		Votes         int    `json:"votes"`
-		Margin        int    `json:"margin"`
-		Previous      int    `json:"previous"`
-		Prominent     string `json:"prominent"`
-	} `json:"candidates"`
-	ElectedCandidateID   int    `json:"elected_candidate_id"`
-	ElectedPartyShortEng string `json:"elected_party_short_eng"`
-	LastUpdated          string `json:"last_updated"`
-	LeadingParties       []any  `json:"leading_parties"`
-	PollsReporting       int    `json:"polls_reporting"`
-	RidingNameEng        string `json:"riding_name_eng"`
-	TotalPolls           int    `json:"total_polls"`
-	TotalVotes           int    `json:"total_votes"`
-	RegionID             int    `json:"region_id"`
-	RegionNameEng        string `json:"region_name_eng"`
-	RidingCode           int    `json:"riding_code"`
-	TgamKeyFlag          bool   `json:"tgam_key_flag"`
+	RidingID             int         `json:"riding_id"`
+	Candidates           []Candidate `json:"candidates"`
+	ElectedCandidateID   int         `json:"elected_candidate_id"`
+	ElectedPartyShortEng string      `json:"elected_party_short_eng"`
+	LastUpdated          string      `json:"last_updated"`
+	LeadingParties       []any       `json:"leading_parties"`
+	PollsReporting       int         `json:"polls_reporting"`
+	RidingNameEng        string      `json:"riding_name_eng"`
+	TotalPolls           int         `json:"total_polls"`
+	TotalVotes           int         `json:"total_votes"`
+	RegionID             int         `json:"region_id"`
+	RegionNameEng        string      `json:"region_name_eng"`
+	RidingCode           int         `json:"riding_code"`
+	TgamKeyFlag          bool        `json:"tgam_key_flag"`
 }
 
 func fetchRidings() ([]Riding, error) {
@@ -95,26 +96,25 @@ func findRidingsByName(text string) ([]Riding, error) {
 var ridingShortTemplateContent string
 var ridingShortTemplate = template.Must(template.New("").Parse(ridingShortTemplateContent))
 
-func findRidingsByNameSummaries(text string) ([]string, error) {
-	ridings, err := findRidingsByName(text)
-	if err != nil {
-		return nil, err
-	}
+// func findRidingsByNameSummaries(text string) ([]string, error) {
+// 	ridings, err := findRidingsByName(text)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	summaries := make([]string, 0, len(ridings))
+// 	summaries := make([]string, 0, len(ridings))
 
-	for _, riding := range ridings {
-		fmt.Println("riding", riding.RidingID)
-		var buf bytes.Buffer
-		err := ridingShortTemplate.Execute(&buf, riding)
-		if err != nil {
-			return nil, err
-		}
-		summaries = append(summaries, buf.String())
-	}
+// 	for _, riding := range ridings {
+// 		var buf bytes.Buffer
+// 		err := ridingShortTemplate.Execute(&buf, riding)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		summaries = append(summaries, buf.String())
+// 	}
 
-	return summaries, nil
-}
+// 	return summaries, nil
+// }
 
 func FindRidingsByNameHandler(params bot.HandlerParams) error {
 	text := params.Matches[1]

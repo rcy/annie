@@ -85,6 +85,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^v ([a-z].*)$`, fed25.FindRidingsByNameHandler)
 	// if it starts with a number, pull results from riding id
 	b.Handle(`^v ([0-9]+)$`, fed25.RidingHandler)
+	b.Handle(`^vc ([a-z]+)$`, fed25.FindCandidatesHandler)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
