@@ -109,8 +109,7 @@ func FindRidingsByNameHandler(params bot.HandlerParams) error {
 	}
 
 	if len(ridings) == 0 {
-		params.Privmsgf(params.Target, "%s", "no matching ridings")
-		return nil
+		return FindCandidatesHandler(params)
 	}
 
 	if len(ridings) == 1 {

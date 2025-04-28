@@ -26,8 +26,9 @@ func findCandidatesWithRidingByName(text string) ([]XCandidateWithRiding, error)
 
 	for _, riding := range ridings {
 		for _, candidate := range riding.Candidates {
-			if strings.Contains(strings.ToLower(candidate.Firstname), text) ||
-				strings.Contains(strings.ToLower(candidate.Lastname), text) {
+			if strings.HasPrefix(strings.ToLower(candidate.Firstname), text) ||
+				strings.HasPrefix(strings.ToLower(candidate.Lastname), text) ||
+				strings.HasPrefix(strings.ToLower(candidate.Firstname+" "+candidate.Lastname), text) {
 				matches = append(matches, XCandidateWithRiding{
 					Candidate: candidate,
 					Riding:    riding,
@@ -51,7 +52,7 @@ func FindCandidatesHandler(params bot.HandlerParams) error {
 	}
 
 	if len(candidates) == 0 {
-		params.Privmsgf(params.Target, "%s", "no matching candidates")
+		params.Privmsgf(params.Target, "%s", "no matches")
 		return nil
 	}
 
