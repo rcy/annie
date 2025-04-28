@@ -101,26 +101,6 @@ func findRidingsByName(text string) ([]Riding, error) {
 var ridingShortTemplateContent string
 var ridingShortTemplate = template.Must(template.New("").Parse(ridingShortTemplateContent))
 
-// func findRidingsByNameSummaries(text string) ([]string, error) {
-// 	ridings, err := findRidingsByName(text)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	summaries := make([]string, 0, len(ridings))
-
-// 	for _, riding := range ridings {
-// 		var buf bytes.Buffer
-// 		err := ridingShortTemplate.Execute(&buf, riding)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		summaries = append(summaries, buf.String())
-// 	}
-
-// 	return summaries, nil
-// }
-
 func FindRidingsByNameHandler(params bot.HandlerParams) error {
 	text := params.Matches[1]
 	ridings, err := findRidingsByName(text)
@@ -183,6 +163,10 @@ func findRidingByIDSummary(id int) (string, error) {
 	riding, err := findRidingByID(id)
 	if err != nil {
 		return "", err
+	}
+
+	if len(riding.Candidates) > 10 {
+		riding.Candidates = riding.Candidates[0:10]
 	}
 
 	var buf bytes.Buffer
