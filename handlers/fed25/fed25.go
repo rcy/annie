@@ -64,7 +64,11 @@ func formatSummary(results *FederalElectionSummary) (string, error) {
 	var buf bytes.Buffer
 
 	slices.SortStableFunc(results.OverviewPartyDetails, func(a OverviewPartyDetails, b OverviewPartyDetails) int {
-		return cmp.Compare(b.Elected+b.Leading, a.Elected+a.Leading)
+		res := cmp.Compare(b.Elected+b.Leading, a.Elected+a.Leading)
+		if res == 0 {
+			return cmp.Compare(b.PopularVotePercentage, a.PopularVotePercentage)
+		}
+		return res
 	})
 
 	err := summaryTemplate.Execute(&buf, results)
