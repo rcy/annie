@@ -42,12 +42,18 @@ func (h Handler) String() string {
 	return fmt.Sprintf("%-32s %s", h.pattern, strs[len(strs)-1])
 }
 
+type delivery struct {
+	target  string
+	message string
+}
+
 type Bot struct {
 	Conn               *irc.Connection
 	Channel            string
 	Handlers           []Handler
 	LastEvent          *irc.Event
 	idleResetFunctions []func()
+	queue              chan delivery
 }
 
 func (b *Bot) Handle(pattern string, action HandlerFunction) {
@@ -116,10 +122,11 @@ func (b *Bot) Loop() {
 func Connect(nick string, channel string, server string) (*Bot, error) {
 	initialized := make(chan bool)
 	var bot Bot
+
 	bot.Channel = channel
 	bot.Conn = irc.IRC(nick, "github.com/rcy/annie")
 	bot.Conn.VerboseCallbackHandler = false
-	bot.Conn.Debug = false
+	bot.Conn.Debug = true
 	bot.Conn.UseTLS = true
 	bot.Conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	bot.Conn.AddCallback("001", func(e *irc.Event) {
@@ -127,7 +134,7 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 		if err != nil {
 			panic(err)
 		}
-		if time.Now().In(location).Weekday() != 0 {
+		if time.Now().In(location).Weekday() != 1 {
 			bot.Conn.Join(channel)
 		} else {
 			initialized <- true
@@ -210,11 +217,48 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 			bot.Conn.SendRawf("NAMES %s", channel)
 		}
 	})
+
+	bot.setupDeliveryQueue()
+
 	err := bot.Conn.Connect(server)
 
 	<-initialized
 
 	return &bot, err
+}
+
+func (bot *Bot) setupDeliveryQueue() {
+	const (
+		queueSize       = 100
+		initialDelay    = 100 * time.Millisecond // starting delay
+		delayMultiplier = 1.5                    // how much the delay grows each time
+		maxDelay        = time.Second            // maximum delay
+		coolOffDuration = 10 * time.Second       // how long before we reset
+	)
+
+	bot.queue = make(chan delivery, queueSize)
+
+	go func() {
+		delay := initialDelay
+		lastSendTime := time.Now()
+		for d := range bot.queue {
+			if time.Now().Sub(lastSendTime) > coolOffDuration {
+				delay = initialDelay
+			}
+			bot.Conn.Privmsg(d.target, d.message)
+
+			lastSendTime = time.Now()
+
+			fmt.Println("delay", delay)
+
+			time.Sleep(delay)
+
+			delay = time.Duration(float64(delay) * delayMultiplier)
+			if delay > maxDelay {
+				delay = maxDelay
+			}
+		}
+	}()
 }
 
 func (bot *Bot) SendLaters(channel string, nick string) {
@@ -243,7 +287,7 @@ func (bot *Bot) MakePrivmsgf() func(string, string, ...interface{}) {
 		for _, line := range lines {
 			chunks := splitString(line, 420)
 			for _, chunk := range chunks {
-				bot.Conn.Privmsg(target, chunk)
+				bot.queue <- delivery{target: target, message: chunk}
 			}
 		}
 	}
