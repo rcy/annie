@@ -1,0 +1,5 @@
+[{{.RidingID}}] {{.RidingNameEng}}, {{.RegionNameEng}}, {{.TotalVotes}} votes, {{.PollsReporting}}/{{.TotalPolls}} polls reporting, {{.LastUpdated}}
+[{{.RidingID}}] {{.ElectedPartyShortEng}}
+{{range .Candidates}}
+[{{- $.RidingID}}] {{.PartyShortEng}} {{.Firstname}} {{.Lastname}}{{if .Previous}} [incumbent]{{end}} - {{.Votes}} votes, {{.Margin}} margin {{if .Prominent}}({{.Prominent}}){{end}}
+{{end -}}

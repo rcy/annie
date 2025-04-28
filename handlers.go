@@ -78,7 +78,13 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(fmt.Sprintf(`^%s:?(.+)$`, nick), annie.Handle)
 	b.Handle(fmt.Sprintf(`^(.+),? %s.?$`, nick), annie.Handle)
 	b.Handle(`^!bible (.+)$`, bible.Handle)
-	b.Handle(`vote`, fed25.Handler)
+
+	// show summary
+	b.Handle(`^v$`, fed25.Handler)
+	// if it starts with a letter, look up ridings
+	b.Handle(`^v ([a-z].*)$`, fed25.FindRidingsByNameHandler)
+	// if it starts with a number, pull results from riding id
+	b.Handle(`^v ([0-9]+)$`, fed25.RidingHandler)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)

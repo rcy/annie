@@ -1,5 +1,5 @@
-prty seat lead vote pop%
+{{.ElectionNameEng}}, Ridings: {{.RidingsCalled}}/{{.TotalRidings}}, Polls: {{.ReportedPolls}}/{{.TotalPolls}}
+{{.ElectedParty.PartyShortEng}} {{.ElectedParty.CallType}} {{.ElectedParty.EnglishCallStatement}}
 {{range .OverviewPartyDetails -}}
-  {{printf "%3s" .PartyShortEng}}: {{printf "%04d" .Elected}} {{printf "%04d" .Leading}} {{printf "%04d" .Votes}} {{printf "%02d" .PopularVotePercentage}}
+  {{.PartyShortEng}}: {{.Elected}} elected, {{.Leading}} leading, {{.Votes}} votes, {{.PopularVotePercentage}}% popular vote
 {{end -}}
-Ridings: {{.RidingsCalled}}/{{.TotalRidings}}, Polls: {{.ReportedPolls}}/{{.TotalPolls}}

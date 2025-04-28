@@ -3,17 +3,16 @@ package fed25
 import (
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestFetchSummary(t *testing.T) {
-	sum, err := fetchSummary()
+	_, err := fetchSummary()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	spew.Dump(sum)
+	//spew.Dump(sum)
 }
 
 func TestFormatSummary(t *testing.T) {
