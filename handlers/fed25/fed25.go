@@ -13,12 +13,12 @@ import (
 )
 
 type OverviewPartyDetails struct {
-	PartyShortEng         string `json:"party_short_eng"`
-	PartyNameEng          string `json:"party_name_eng"`
-	Votes                 int    `json:"votes"`
-	PopularVotePercentage int    `json:"popular_vote_percentage"`
-	Elected               int    `json:"elected"`
-	Leading               int    `json:"leading"`
+	PartyShortEng         string  `json:"party_short_eng"`
+	PartyNameEng          string  `json:"party_name_eng"`
+	Votes                 int     `json:"votes"`
+	PopularVotePercentage float32 `json:"popular_vote_percentage"`
+	Elected               int     `json:"elected"`
+	Leading               int     `json:"leading"`
 }
 
 type FederalElectionSummary struct {
