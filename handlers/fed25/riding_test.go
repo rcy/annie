@@ -41,6 +41,10 @@ func TestFindRidingsByName(t *testing.T) {
 			text: "quadra",
 			want: []int{337},
 		},
+		{
+			text: "Vancouver Quadra",
+			want: []int{337},
+		},
 	} {
 		t.Run(tc.text, func(t *testing.T) {
 			ridings, err := findRidingsByName(tc.text)
