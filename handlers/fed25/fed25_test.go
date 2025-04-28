@@ -35,22 +35,18 @@ func TestFormatSummary(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := `prty seat lead vote pop%
-LIB: 0000 0008 0000 00
-GRN: 0005 0002 0000 00
-CON: 0005 0001 0000 00
- BQ: 0000 0000 0000 00
-NDP: 0000 0000 0000 00
-PPC: 0000 0000 0000 00
-OTH: 0000 0000 0000 00
-Ridings: 0/343, Polls: 0/78953
+	want := `2025 Federal General Election, Ridings: 0/343, Polls: 0/75944
+  
+LIB: 0 elected, 8 leading, 0 votes, 0% popular vote
+GRN: 5 elected, 2 leading, 0 votes, 0% popular vote
+CON: 5 elected, 1 leading, 0 votes, 0% popular vote
+BQ: 0 elected, 0 leading, 0 votes, 0% popular vote
+NDP: 0 elected, 0 leading, 0 votes, 0% popular vote
+PPC: 0 elected, 0 leading, 0 votes, 0% popular vote
+OTH: 0 elected, 0 leading, 0 votes, 0% popular vote
 `
 
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("template output mismatch (-want +got):\n%s", diff)
 	}
-
-	// if got != want {
-	// 	t.Errorf("want: %s\ngot: %s", want, got)
-	// }
 }
