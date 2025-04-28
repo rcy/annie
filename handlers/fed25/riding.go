@@ -55,15 +55,15 @@ func fetchRidings() ([]Riding, error) {
 		return nil, err
 	}
 
-	summary := make(map[string]Riding)
+	ridingMap := make(map[string]Riding)
 
-	err = json.Unmarshal(data, &summary)
+	err = json.Unmarshal(data, &ridingMap)
 	if err != nil {
 		return nil, err
 	}
 
-	ridings := make([]Riding, 0, len(summary))
-	for _, riding := range summary {
+	ridings := make([]Riding, 0, len(ridingMap))
+	for _, riding := range ridingMap {
 		ridings = append(ridings, riding)
 	}
 
