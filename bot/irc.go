@@ -134,7 +134,7 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 		if err != nil {
 			panic(err)
 		}
-		if time.Now().In(location).Weekday() != 1 {
+		if time.Now().In(location).Weekday() != 0 {
 			bot.Conn.Join(channel)
 		} else {
 			initialized <- true
