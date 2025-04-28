@@ -238,10 +238,13 @@ func (bot *Bot) MakePrivmsgf() func(string, string, ...interface{}) {
 	return func(target, message string, a ...interface{}) {
 		str := fmt.Sprintf(message, a...)
 
-		chunks := splitString(str, 420)
+		lines := strings.Split(str, "\n")
 
-		for _, chunk := range chunks {
-			bot.Conn.Privmsg(target, chunk)
+		for _, line := range lines {
+			chunks := splitString(line, 420)
+			for _, chunk := range chunks {
+				bot.Conn.Privmsg(target, chunk)
+			}
 		}
 	}
 }

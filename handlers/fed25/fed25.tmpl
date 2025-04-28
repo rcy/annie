@@ -1,0 +1,5 @@
+prty seat lead vote pop%
+{{range .OverviewPartyDetails -}}
+  {{printf "%3s" .PartyShortEng}}: {{printf "%04d" .Elected}} {{printf "%04d" .Leading}} {{printf "%04d" .Votes}} {{printf "%02d" .PopularVotePercentage}}
+{{end -}}
+Ridings: {{.RidingsCalled}}/{{.TotalRidings}}, Polls: {{.ReportedPolls}}/{{.TotalPolls}}

@@ -15,6 +15,7 @@ import (
 	"goirc/handlers/day"
 	"goirc/handlers/election"
 	"goirc/handlers/epigram"
+	"goirc/handlers/fed25"
 	"goirc/handlers/gold"
 	"goirc/handlers/hn"
 	"goirc/handlers/kinfonet"
@@ -77,6 +78,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(fmt.Sprintf(`^%s:?(.+)$`, nick), annie.Handle)
 	b.Handle(fmt.Sprintf(`^(.+),? %s.?$`, nick), annie.Handle)
 	b.Handle(`^!bible (.+)$`, bible.Handle)
+	b.Handle(`vote`, fed25.Handler)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)

@@ -4,9 +4,11 @@ go 1.22.0
 
 require (
 	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335
+	github.com/davecgh/go-spew v1.1.1
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/gocolly/colly v1.2.0
 	github.com/gofrs/uuid/v5 v5.0.0
+	github.com/google/go-cmp v0.5.5
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/pariz/gountries v0.1.6
@@ -17,7 +19,9 @@ require (
 	github.com/sqids/sqids-go v0.4.1
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
 	github.com/xhit/go-str2duration/v2 v2.1.0
+	golang.org/x/net v0.9.0
 	golang.org/x/text v0.9.0
+	maragu.dev/gomponents v1.1.0
 	modernc.org/sqlite v1.17.3
 )
 
@@ -44,14 +48,12 @@ require (
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
 	github.com/temoto/robotstxt v1.1.2 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
-	maragu.dev/gomponents v1.1.0 // indirect
 	modernc.org/cc/v3 v3.36.0 // indirect
 	modernc.org/ccgo/v3 v3.16.6 // indirect
 	modernc.org/libc v1.16.7 // indirect
