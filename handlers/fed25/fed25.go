@@ -5,10 +5,13 @@ import (
 	"cmp"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"goirc/bot"
 	"goirc/fetch"
 	"html/template"
+	"reflect"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -54,6 +57,48 @@ func fetchSummary() (*FederalElectionSummary, error) {
 	}
 
 	return summary, nil
+}
+
+type partySeats struct {
+	party   string
+	elected int
+	leading int
+}
+
+var leaderboard = []partySeats{}
+
+func LeaderboardHandler(params bot.HandlerParams) error {
+	summary, err := fetchSummary()
+	if err != nil {
+		return err
+	}
+
+	var newLeaderboard []partySeats
+
+	for _, p := range summary.OverviewPartyDetails {
+		newLeaderboard = append(newLeaderboard, partySeats{party: p.PartyShortEng, elected: p.Elected, leading: p.Leading})
+	}
+
+	slices.SortStableFunc(newLeaderboard, func(a partySeats, b partySeats) int {
+		return cmp.Compare(b.elected+b.leading, a.elected+a.leading)
+	})
+
+	if !reflect.DeepEqual(leaderboard, newLeaderboard) {
+		leaderboard = newLeaderboard
+
+		display := []string{}
+		seats := 0
+		for _, i := range leaderboard {
+			if i.elected+i.leading > 0 {
+				seats += i.elected + i.leading
+				display = append(display, fmt.Sprintf("%s %d", i.party, i.elected+i.leading))
+			}
+		}
+
+		params.Privmsgf(params.Target, "%s (%d seats to come)", strings.Join(display, ", "), 343-seats)
+	}
+
+	return nil
 }
 
 //go:embed fed25.tmpl
