@@ -164,14 +164,9 @@ func findRidingByIDSummary(id int) (string, error) {
 		return "", err
 	}
 
-	// trim candidates after place 5 unless they have votes
-	candidates := []Candidate{}
-	for i, candidate := range riding.Candidates {
-		if i < 5 || candidate.Votes > 0 {
-			candidates = append(candidates, candidate)
-		}
+	if len(riding.Candidates) > 5 {
+		riding.Candidates = riding.Candidates[0:5]
 	}
-	riding.Candidates = candidates
 
 	var buf bytes.Buffer
 	err = ridingTemplate.Execute(&buf, riding)
