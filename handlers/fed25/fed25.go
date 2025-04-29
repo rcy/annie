@@ -60,8 +60,8 @@ func fetchSummary() (*FederalElectionSummary, error) {
 }
 
 type partySeats struct {
-	party string
-	seats int
+	party   string
+	elected int
 }
 
 var leaderboard = []partySeats{}
@@ -75,11 +75,11 @@ func LeaderboardHandler(params bot.HandlerParams) error {
 	var newLeaderboard []partySeats
 
 	for _, p := range summary.OverviewPartyDetails {
-		newLeaderboard = append(newLeaderboard, partySeats{party: p.PartyShortEng, seats: p.Elected + p.Leading})
+		newLeaderboard = append(newLeaderboard, partySeats{party: p.PartyShortEng, elected: p.Elected})
 	}
 
 	slices.SortStableFunc(newLeaderboard, func(a partySeats, b partySeats) int {
-		return cmp.Compare(b.seats, a.seats)
+		return cmp.Compare(b.elected, a.elected)
 	})
 
 	if !reflect.DeepEqual(leaderboard, newLeaderboard) {
@@ -88,13 +88,13 @@ func LeaderboardHandler(params bot.HandlerParams) error {
 		display := []string{}
 		seats := 0
 		for _, i := range leaderboard {
-			if i.seats > 0 {
-				seats += i.seats
-				display = append(display, fmt.Sprintf("%s %d", i.party, i.seats))
+			if i.elected > 0 {
+				seats += i.elected
+				display = append(display, fmt.Sprintf("%s %d", i.party, i.elected))
 			}
 		}
 
-		params.Privmsgf(params.Target, "%s (%d seats to come)", strings.Join(display, ", "), 343-seats)
+		params.Privmsgf(params.Target, "Elected: %s (%d seats remaining)", strings.Join(display, ", "), 343-seats)
 	}
 
 	return nil
