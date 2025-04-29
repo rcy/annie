@@ -60,9 +60,8 @@ func fetchSummary() (*FederalElectionSummary, error) {
 }
 
 type partySeats struct {
-	party   string
-	elected int
-	leading int
+	party string
+	seats int
 }
 
 var leaderboard = []partySeats{}
@@ -76,11 +75,11 @@ func LeaderboardHandler(params bot.HandlerParams) error {
 	var newLeaderboard []partySeats
 
 	for _, p := range summary.OverviewPartyDetails {
-		newLeaderboard = append(newLeaderboard, partySeats{party: p.PartyShortEng, elected: p.Elected, leading: p.Leading})
+		newLeaderboard = append(newLeaderboard, partySeats{party: p.PartyShortEng, seats: p.Elected + p.Leading})
 	}
 
 	slices.SortStableFunc(newLeaderboard, func(a partySeats, b partySeats) int {
-		return cmp.Compare(b.elected+b.leading, a.elected+a.leading)
+		return cmp.Compare(b.seats, a.seats)
 	})
 
 	if !reflect.DeepEqual(leaderboard, newLeaderboard) {
@@ -89,9 +88,8 @@ func LeaderboardHandler(params bot.HandlerParams) error {
 		display := []string{}
 		seats := 0
 		for _, i := range leaderboard {
-			if i.elected+i.leading > 0 {
-				seats += i.elected + i.leading
-				display = append(display, fmt.Sprintf("%s %d", i.party, i.elected+i.leading))
+			if i.seats > 0 {
+				display = append(display, fmt.Sprintf("%s %d", i.party, i.seats))
 			}
 		}
 
