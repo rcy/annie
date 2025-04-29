@@ -38,7 +38,7 @@ type FederalElectionSummary struct {
 		CallType             string `json:"call_type"`
 		EnglishCallStatement string `json:"english_call_statement"`
 	} `json:"elected_party"`
-	PercentagePolls      int                    `json:"percentage_polls"`
+	PercentagePolls      float32                `json:"percentage_polls"`
 	CurrentLeaderParties []any                  `json:"current_leader_parties"`
 	OverviewPartyDetails []OverviewPartyDetails `json:"overview_party_details"`
 }
