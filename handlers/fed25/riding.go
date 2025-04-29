@@ -164,9 +164,9 @@ func findRidingByIDSummary(id int) (string, error) {
 		return "", err
 	}
 
-	// if len(riding.Candidates) > 10 {
-	// 	riding.Candidates = riding.Candidates[0:10]
-	// }
+	if len(riding.Candidates) > 10 {
+		riding.Candidates = riding.Candidates[0:10]
+	}
 
 	var buf bytes.Buffer
 	err = ridingTemplate.Execute(&buf, riding)
