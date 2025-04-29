@@ -89,6 +89,7 @@ func LeaderboardHandler(params bot.HandlerParams) error {
 		seats := 0
 		for _, i := range leaderboard {
 			if i.seats > 0 {
+				seats += i.seats
 				display = append(display, fmt.Sprintf("%s %d", i.party, i.seats))
 			}
 		}
