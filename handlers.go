@@ -21,6 +21,7 @@ import (
 	"goirc/handlers/kinfonet"
 	"goirc/handlers/linkpool"
 	"goirc/handlers/mlb"
+	"goirc/handlers/tip"
 	"goirc/handlers/weather"
 	"goirc/internal/ai"
 	db "goirc/model"
@@ -78,6 +79,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(fmt.Sprintf(`^%s:?(.+)$`, nick), annie.Handle)
 	b.Handle(fmt.Sprintf(`^(.+),? %s.?$`, nick), annie.Handle)
 	b.Handle(`^!bible (.+)$`, bible.Handle)
+	b.Handle(`^tip$`, tip.Handle)
 
 	// show summary
 	b.Handle(`^v$`, fed25.Handler)
