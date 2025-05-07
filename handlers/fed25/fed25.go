@@ -83,8 +83,6 @@ func LeaderboardHandler(params bot.HandlerParams) error {
 	})
 
 	if !reflect.DeepEqual(leaderboard, newLeaderboard) {
-		leaderboard = newLeaderboard
-
 		display := []string{}
 		seats := 0
 		for _, i := range leaderboard {
@@ -94,7 +92,12 @@ func LeaderboardHandler(params bot.HandlerParams) error {
 			}
 		}
 
-		params.Privmsgf(params.Target, "Elected: %s (%d seats remaining)", strings.Join(display, ", "), 343-seats)
+		// don't print if this is the first time we are setting the leaderboard
+		if len(leaderboard) > 0 {
+			params.Privmsgf(params.Target, "Elected: %s (%d seats remaining)", strings.Join(display, ", "), 343-seats)
+		}
+
+		leaderboard = newLeaderboard
 	}
 
 	return nil
