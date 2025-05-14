@@ -1,10 +1,9 @@
 module goirc
 
-go 1.22.0
+go 1.24.3
 
 require (
 	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335
-	github.com/davecgh/go-spew v1.1.1
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/gocolly/colly v1.2.0
 	github.com/gofrs/uuid/v5 v5.0.0
