@@ -8,6 +8,8 @@ import (
 	"log"
 )
 
+//go:generate go tool github.com/sqlc-dev/sqlc/cmd/sqlc generate --file db/sqlc.yaml
+
 func main() {
 	b, err := bot.Connect(
 		util.Getenv("IRC_NICK"),
