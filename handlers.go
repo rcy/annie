@@ -21,6 +21,7 @@ import (
 	"goirc/handlers/linkpool"
 	"goirc/handlers/mlb"
 	"goirc/handlers/tip"
+	"goirc/handlers/tz"
 	"goirc/handlers/weather"
 	"goirc/internal/ai"
 	db "goirc/model"
@@ -79,6 +80,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!bible (.+)$`, bible.Handle)
 	b.Handle(`^tip$`, tip.Handle)
 	b.Handle(`^date$`, ddate.Handle)
+	b.Handle(`^tz`, tz.Handle)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
