@@ -14,5 +14,6 @@ with nixpkgs; mkShell {
     golangci-lint
     google-cloud-sdk
     pup
+    ddate
   ];
 }
