@@ -14,7 +14,6 @@ import (
 	"goirc/handlers/bible"
 	"goirc/handlers/day"
 	"goirc/handlers/ddate"
-	"goirc/handlers/election"
 	"goirc/handlers/epigram"
 	"goirc/handlers/gold"
 	"goirc/handlers/hn"
@@ -75,7 +74,6 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^!auth$`, web.HandleAuth)
 	b.Handle(`^!deauth$`, web.HandleDeauth)
 	b.Handle(`night`, bedtime.Handle)
-	b.Handle(`^!election`, election.Handle)
 	b.Handle(fmt.Sprintf(`^%s:?(.+)$`, nick), annie.Handle)
 	b.Handle(fmt.Sprintf(`^(.+),? %s.?$`, nick), annie.Handle)
 	b.Handle(`^!bible (.+)$`, bible.Handle)
