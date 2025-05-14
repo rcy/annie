@@ -15,7 +15,6 @@ import (
 	"goirc/handlers/day"
 	"goirc/handlers/election"
 	"goirc/handlers/epigram"
-	"goirc/handlers/fed25"
 	"goirc/handlers/gold"
 	"goirc/handlers/hn"
 	"goirc/handlers/kinfonet"
@@ -80,16 +79,6 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(fmt.Sprintf(`^(.+),? %s.?$`, nick), annie.Handle)
 	b.Handle(`^!bible (.+)$`, bible.Handle)
 	b.Handle(`^tip$`, tip.Handle)
-
-	// show summary
-	b.Handle(`^v$`, fed25.Handler)
-	// if it starts with a letter, look up ridings
-	b.Handle(`^v ([a-zA-Z].*)$`, fed25.FindRidingsByNameHandler)
-	// if it starts with a number, pull results from riding id
-	b.Handle(`^v ([0-9]+)$`, fed25.RidingHandler)
-	b.Handle(`^vc ([a-zA-Z]+)$`, fed25.FindCandidatesHandler)
-	b.Repeat(time.Minute, fed25.LeaderboardHandler)
-
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
 

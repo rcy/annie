@@ -1,5 +1,0 @@
-[{{.RidingID}}] {{.RidingNameEng}}, {{.RegionNameEng}}, {{.TotalVotes}} votes, {{.PollsReporting}}/{{.TotalPolls}} polls reporting, {{.LastUpdated}}
-{{range .Candidates}}
-[{{- $.RidingID}}] {{.PartyShortEng}}{{if eq .PartyShortEng $.ElectedPartyShortEng}} ELECTED{{end}} {{.Firstname}} {{.Lastname}}{{if .Previous}} [incumbent]{{end}} - {{.Votes}} votes, {{.Margin}} margin {{if .Prominent}}({{.Prominent}}){{end}}
-{{end -}}
-{{if .TgamKeyFlag}}[{{.RidingID}}] *{{.TgamKeyRiding.Label}}* {{.TgamKeyRiding.Description}}{{end}}
