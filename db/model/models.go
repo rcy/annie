@@ -76,6 +76,11 @@ type NickSession struct {
 	Session   string
 }
 
+type NickTimezone struct {
+	Nick string
+	Tz   string
+}
+
 type NickWeatherRequest struct {
 	ID        int64
 	CreatedAt time.Time

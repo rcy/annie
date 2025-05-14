@@ -26,10 +26,15 @@ func NewUploader(q *model.Queries, db *sql.DB, bot *bot.Bot) *service {
 	return &service{Queries: q, DB: db, Bot: bot}
 }
 
+var snarfTimezoneJS = `fetch("/snarf-timezone", {method: "POST", headers: {"X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone}})`
+
 func (s *service) GetHandler(w http.ResponseWriter, r *http.Request) {
 	nick := r.Context().Value(auth.NickKey).(string)
 
 	HTML(
+		Head(
+			Script(Raw(snarfTimezoneJS)),
+		),
 		Body(
 			Div(ID("dropzone"), Style("height: 100vh;"),
 				H1(Text("annie file uploader")),

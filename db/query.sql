@@ -115,3 +115,12 @@ insert into files(nick,content) values (@nick, @content) returning *;
 
 -- name: GetFile :one
 select * from files where id = @id;
+
+-- name: UpdateNickTimezone :exec
+update nick_timezones set tz = @tz where nick = @nick;
+
+-- name: InsertNickTimezone :exec
+insert into nick_timezones(tz, nick) values(@tz, @nick);
+
+-- name: GetNickTimezone :one
+select * from nick_timezones where nick = @nick;

@@ -27,7 +27,7 @@ func NewService(q *model.Queries) *service {
 func (s *service) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		key := r.Context().Value(SessionKey).(string)
+		key := ctx.Value(SessionKey).(string)
 		session, err := s.Queries.NickBySession(ctx, key)
 		if err != nil {
 			http.SetCookie(w, &http.Cookie{

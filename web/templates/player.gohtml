@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
-  <body style="height: 100vh; margin:0; paddng: 0">
+  <head>
+    <script>
+      fetch("/snarf-timezone", {method: "POST", headers: {"X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone}});
+    </script>
+  </head>
+    <body style="height: 100vh; margin:0; paddng: 0">
     <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
     <div id="player" style="height: 100%; margin:0; padding:0"></div>
 

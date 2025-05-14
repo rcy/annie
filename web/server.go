@@ -276,6 +276,40 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 	r.Group(func(r chi.Router) {
 		r.Use(auth.NewService(q).Middleware)
 
+		r.Post("/snarf-timezone", func(w http.ResponseWriter, r *http.Request) {
+			nick, ok := r.Context().Value(auth.NickKey).(string)
+			if ok {
+				clientTimezone := r.Header.Get("X-Timezone")
+
+				nickTimezone, err := q.GetNickTimezone(r.Context(), nick)
+				if errors.Is(err, sql.ErrNoRows) {
+					err = q.InsertNickTimezone(r.Context(), model.InsertNickTimezoneParams{
+						Tz:   clientTimezone,
+						Nick: nick,
+					})
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+				}
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				if nickTimezone.Tz != clientTimezone {
+					err = q.UpdateNickTimezone(r.Context(), model.UpdateNickTimezoneParams{
+						Tz:   clientTimezone,
+						Nick: nick,
+					})
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+				}
+			}
+		})
+
 		r.Get("/snapshot.db", func(w http.ResponseWriter, r *http.Request) {
 			os.Remove("/tmp/snapshot.db")
 			if _, err := db.Exec(`vacuum into '/tmp/snapshot.db'`); err != nil {

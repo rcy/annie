@@ -13,6 +13,9 @@
              text-decoration: none;
          }
         </style>
+        <script>
+          fetch("/snarf-timezone", {method: "POST", headers: {"X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone}});
+        </script>
     </head>
     <body>
       <div style="display:flex; flex-wrap: wrap; gap: 1em">

@@ -23,6 +23,9 @@
 
         <meta property="og:image" content="{{.absoluteImageURL}}" />
         <meta property="og:title" content="{{.image.Prompt}}" />
+        <script>
+          fetch("/snarf-timezone", {method: "POST", headers: {"X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone}});
+        </script>
     </head>
     <body>
         <img src="/images/{{.image.ID}}.png" alt="{{.image.Prompt}}">

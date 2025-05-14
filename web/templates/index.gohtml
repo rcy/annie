@@ -7,6 +7,9 @@
        white-space: nowrap;
      }
     </style>
+    <script>
+      fetch("/snarf-timezone", {method: "POST", headers: {"X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone}});
+    </script>
   </head>
   <body>
     <div>

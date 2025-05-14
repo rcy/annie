@@ -1,8 +1,11 @@
 <!doctype html>
 <html>
     <head>
-        <title>{{.note.ID}}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>{{.note.ID}}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <script>
+        fetch("/snarf-timezone", {method: "POST", headers: {"X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone}});
+      </script>
     </head>
 
     <body>

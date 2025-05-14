@@ -310,6 +310,17 @@ func (q *Queries) GetFile(ctx context.Context, id int64) (File, error) {
 	return i, err
 }
 
+const getNickTimezone = `-- name: GetNickTimezone :one
+select nick, tz from nick_timezones where nick = ?1
+`
+
+func (q *Queries) GetNickTimezone(ctx context.Context, nick string) (NickTimezone, error) {
+	row := q.db.QueryRowContext(ctx, getNickTimezone, nick)
+	var i NickTimezone
+	err := row.Scan(&i.Nick, &i.Tz)
+	return i, err
+}
+
 const insertFile = `-- name: InsertFile :one
 insert into files(nick,content) values (?1, ?2) returning id, created_at, nick, content
 `
@@ -329,6 +340,20 @@ func (q *Queries) InsertFile(ctx context.Context, arg InsertFileParams) (File, e
 		&i.Content,
 	)
 	return i, err
+}
+
+const insertNickTimezone = `-- name: InsertNickTimezone :exec
+insert into nick_timezones(tz, nick) values(?1, ?2)
+`
+
+type InsertNickTimezoneParams struct {
+	Tz   string
+	Nick string
+}
+
+func (q *Queries) InsertNickTimezone(ctx context.Context, arg InsertNickTimezoneParams) error {
+	_, err := q.db.ExecContext(ctx, insertNickTimezone, arg.Tz, arg.Nick)
+	return err
 }
 
 const insertNickWeatherRequest = `-- name: InsertNickWeatherRequest :exec
@@ -818,6 +843,20 @@ func (q *Queries) UnsentAnonymousNotes(ctx context.Context, arg UnsentAnonymousN
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateNickTimezone = `-- name: UpdateNickTimezone :exec
+update nick_timezones set tz = ?1 where nick = ?2
+`
+
+type UpdateNickTimezoneParams struct {
+	Tz   string
+	Nick string
+}
+
+func (q *Queries) UpdateNickTimezone(ctx context.Context, arg UpdateNickTimezoneParams) error {
+	_, err := q.db.ExecContext(ctx, updateNickTimezone, arg.Tz, arg.Nick)
+	return err
 }
 
 const updateNoteTextByID = `-- name: UpdateNoteTextByID :one

@@ -283,6 +283,16 @@ create table files(
 `)
 			return err
 		},
+		func(tx migration.LimitedTx) error {
+			log.Println("MIGRATE: add nick_timezones")
+			_, err := tx.Exec(`
+create table nick_timezones(
+  nick text not null primary key,
+  tz text not null
+);
+`)
+			return err
+		},
 	}
 
 	db, err := migration.Open("sqlite", dbfile, migrations)
