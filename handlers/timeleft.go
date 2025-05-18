@@ -24,7 +24,7 @@ func TimeLeft(params bot.HandlerParams) error {
 
 	str := p.Sprintf("%d years / %d months / %d weeks / %d days / %d hours / %d minutes / %d seconds\n", years, months, weeks, days, hours, minutes, seconds)
 
-	params.Privmsgf(params.Target, str)
+	params.Privmsgf(params.Target, "%s", str)
 
 	return nil
 }

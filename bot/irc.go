@@ -190,7 +190,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 					return
 				}
 				if url != "" {
-					bot.Conn.Privmsgf(channel, url)
+					bot.Conn.Privmsgf(channel, "%s", url)
 				}
 				initialized <- true
 			}()

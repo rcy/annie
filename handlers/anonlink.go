@@ -31,7 +31,7 @@ func AnonLink(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, text)
+	params.Privmsgf(params.Target, "%s", text)
 	return nil
 }
 

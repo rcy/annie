@@ -16,7 +16,7 @@ var (
 func Handle(params bot.HandlerParams) error {
 	ri := rand.Intn(len(epigrams))
 
-	params.Privmsgf(params.Target, epigrams[ri])
+	params.Privmsgf(params.Target, "%s", epigrams[ri])
 
 	return nil
 }

@@ -239,7 +239,7 @@ func XHandle(params bot.HandlerParams) error {
 	chunks := splitBytes(resp, 420)
 
 	for _, chunk := range chunks {
-		params.Privmsgf(params.Target, string(chunk))
+		params.Privmsgf(params.Target, "%s", string(chunk))
 	}
 
 	return nil
