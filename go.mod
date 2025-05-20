@@ -7,7 +7,6 @@ require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/gocolly/colly v1.2.0
 	github.com/gofrs/uuid/v5 v5.0.0
-	github.com/google/go-cmp v0.7.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/pariz/gountries v0.1.6
