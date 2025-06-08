@@ -1,7 +1,7 @@
 package ddate
 
 import (
-	"os"
+	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -9,17 +9,12 @@ import (
 )
 
 func NowInZone(tz string) (string, error) {
-	cmd := exec.Command("ddate")
-	cmd.Env = append(os.Environ(), "TZ="+tz)
-
-	var out strings.Builder
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		return "", err
+	location, err := time.LoadLocation(tz)
+	if err != nil {
+		return "", fmt.Errorf("LoadLocation: %w", err)
 	}
-
-	return strings.TrimSpace(out.String()), nil
+	now := time.Now().In(location)
+	return On(now)
 }
 
 func On(day time.Time) (string, error) {
