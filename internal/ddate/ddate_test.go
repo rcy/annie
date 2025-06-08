@@ -11,6 +11,10 @@ func TestOn(t *testing.T) {
 		want string
 	}{
 		{
+			when: "1970-01-01",
+			want: "Sweetmorn, Chaos 1, 3136 YOLD",
+		},
+		{
 			when: "2025-06-08",
 			want: "Prickle-Prickle, Confusion 13, 3191 YOLD",
 		},
@@ -31,8 +35,16 @@ func TestOn(t *testing.T) {
 			want: "Pungenday, Confusion 17, 3191 YOLD",
 		},
 		{
+			when: "2020-02-28",
+			want: "Prickle-Prickle, Chaos 59, 3186 YOLD",
+		},
+		{
 			when: "2020-02-29",
 			want: "St. Tib's Day, 3186 YOLD",
+		},
+		{
+			when: "2020-03-01",
+			want: "Setting Orange, Chaos 60, 3186 YOLD",
 		},
 		{
 			when: "2020-02-19",
