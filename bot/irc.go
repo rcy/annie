@@ -130,15 +130,15 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 	bot.Conn.UseTLS = true
 	bot.Conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	bot.Conn.AddCallback("001", func(e *irc.Event) {
-		location, err := time.LoadLocation("America/Los_Angeles")
-		if err != nil {
-			panic(err)
-		}
-		if time.Now().In(location).Weekday() != 0 {
-			bot.Conn.Join(channel)
-		} else {
-			initialized <- true
-		}
+		// location, err := time.LoadLocation("America/Los_Angeles")
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// if time.Now().In(location).Weekday() != 0 {
+		// 	bot.Conn.Join(channel)
+		// } else {
+		initialized <- true
+		// }
 	})
 	bot.Conn.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks

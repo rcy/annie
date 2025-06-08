@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/robfig/cron"
-	"github.com/sashabaranov/go-openai"
 )
 
 func addHandlers(b *bot.Bot) {
@@ -108,18 +107,18 @@ func addHandlers(b *bot.Bot) {
 	if err != nil {
 		panic(err)
 	}
-	err = c.AddFunc("0 0 0 * * 0", func() {
-		signoff, err := ai.Complete(context.TODO(), openai.GPT4o, "you are annie, and have been hanging out with friends in irc all week. now its time for you to rest for a day. respond with a short goodbye. use all lowercase, minimal punctuation, no emojis", "see you later, annie")
-		if err != nil {
-			b.Conn.Privmsg(b.Channel, err.Error())
-			return
-		}
-		b.Conn.Privmsg(b.Channel, signoff)
-		b.Conn.Part(b.Channel)
-	})
-	if err != nil {
-		panic(err)
-	}
+	// err = c.AddFunc("0 0 0 * * 0", func() {
+	// 	signoff, err := ai.Complete(context.TODO(), openai.GPT4o, "you are annie, and have been hanging out with friends in irc all week. now its time for you to rest for a day. respond with a short goodbye. use all lowercase, minimal punctuation, no emojis", "see you later, annie")
+	// 	if err != nil {
+	// 		b.Conn.Privmsg(b.Channel, err.Error())
+	// 		return
+	// 	}
+	// 	b.Conn.Privmsg(b.Channel, signoff)
+	// 	b.Conn.Part(b.Channel)
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	err = c.AddFunc("0 0 0 * * 1", func() {
 		b.Conn.Join(b.Channel)
