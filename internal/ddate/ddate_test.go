@@ -1,0 +1,56 @@
+package ddate
+
+import (
+	"testing"
+	"time"
+)
+
+func TestOn(t *testing.T) {
+	for _, tc := range []struct {
+		when string
+		want string
+	}{
+		{
+			when: "2025-06-08",
+			want: "Prickle-Prickle, Confusion 13, 3191 YOLD",
+		},
+		{
+			when: "2025-06-09",
+			want: "Setting Orange, Confusion 14, 3191 YOLD",
+		},
+		{
+			when: "2025-06-10",
+			want: "Sweetmorn, Confusion 15, 3191 YOLD",
+		},
+		{
+			when: "2025-06-11",
+			want: "Boomtime, Confusion 16, 3191 YOLD",
+		},
+		{
+			when: "2025-06-12",
+			want: "Pungenday, Confusion 17, 3191 YOLD",
+		},
+		{
+			when: "2020-02-29",
+			want: "St. Tib's Day, 3186 YOLD",
+		},
+		{
+			when: "2020-02-19",
+			want: "Setting Orange, Chaos 50, 3186 YOLD",
+		},
+	} {
+		t.Run(tc.when, func(t *testing.T) {
+			date, err := time.Parse(time.DateOnly, tc.when)
+			if err != nil {
+				t.Errorf("time.Parse: %s", err)
+			}
+			got, err := On(date)
+			if err != nil {
+				t.Errorf("On: %s", err)
+			}
+			if got != tc.want {
+				t.Errorf("want: %s, got: %s", tc.want, got)
+			}
+		})
+	}
+}

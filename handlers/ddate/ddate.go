@@ -7,10 +7,8 @@ import (
 	"fmt"
 	"goirc/bot"
 	"goirc/db/model"
+	"goirc/internal/ddate"
 	db "goirc/model"
-	"os"
-	"os/exec"
-	"strings"
 )
 
 func Handle(params bot.HandlerParams) error {
@@ -19,17 +17,10 @@ func Handle(params bot.HandlerParams) error {
 		return fmt.Errorf("getNickTimezone: %w", err)
 	}
 
-	cmd := exec.Command("ddate")
-	cmd.Env = append(os.Environ(), "TZ="+tz)
-
-	var out strings.Builder
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		return err
+	str, err := ddate.NowInZone(tz)
+	if err != nil {
+		return fmt.Errorf("ddate.InZone: %w", err)
 	}
-
-	str := out.String()
 
 	params.Privmsgf(params.Target, "%s", str)
 
