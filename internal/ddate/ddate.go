@@ -8,16 +8,76 @@ import (
 	"time"
 )
 
-func NowInZone(tz string) (string, error) {
-	location, err := time.LoadLocation(tz)
-	if err != nil {
-		return "", fmt.Errorf("LoadLocation: %w", err)
-	}
-	now := time.Now().In(location)
-	return On(now)
+type Date struct {
+	Year        int
+	Season      int
+	SeasonName  string
+	SeasonDay   int
+	WeekDay     int
+	WeekDayName string
+	Holyday     string
 }
 
-func On(day time.Time) (string, error) {
+const stTibsDay = "St. Tib's Day"
+
+func (d Date) Format(showHolydays bool) string {
+	str := fmt.Sprintf("%s, %s %d, %d YOLD", d.WeekDayName, d.SeasonName, d.SeasonDay, d.Year)
+	if d.Holyday != "" {
+		if d.Holyday == stTibsDay {
+			return fmt.Sprintf("%s, %d YOLD", stTibsDay, d.Year)
+		}
+		if showHolydays {
+			return fmt.Sprintf("%s (%s)", str, d.Holyday)
+		}
+	}
+	return str
+}
+
+// Return a Discordian Date object from the given time
+func FromTime(greg time.Time) Date {
+	dis := Date{}
+	dis.Year = greg.Year() + 1166
+
+	disYearDay := greg.YearDay() - 1 // [0-364]
+	if isLeapYear(greg.Year()) {
+		if greg.Month() == time.February && greg.Day() == 29 {
+			dis.Holyday = stTibsDay
+			return dis
+		}
+		if greg.Month() >= time.March {
+			disYearDay -= 1 // keep it [60-364]
+		}
+	}
+
+	// zero indexed season, [0-4]
+	dis.Season = disYearDay / 73
+
+	// one indexed day of the season, [1-73]
+	dis.SeasonDay = disYearDay%73 + 1
+
+	if dis.SeasonDay == 5 {
+		// apostle days
+		dis.Holyday = []string{"Mungday", "Mojoday", "Syaday", "Zaraday", "Maladay"}[dis.Season]
+	} else if dis.SeasonDay == 50 {
+		// flux days
+		dis.Holyday = []string{"Chaoflux", "Discoflux", "Confuflux", "Bureflux", "Afflux"}[dis.Season]
+	}
+
+	// zero indexed day of the week, [0-4]
+	dis.WeekDay = disYearDay % 5
+
+	dis.SeasonName = []string{"Chaos", "Discord", "Confusion", "Bureaucracy", "The Aftermath"}[dis.Season]
+	dis.WeekDayName = []string{"Sweetmorn", "Boomtime", "Pungenday", "Prickle-Prickle", "Setting Orange"}[dis.WeekDay]
+
+	return dis
+}
+
+func isLeapYear(year int) bool {
+	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
+}
+
+// Return the string from the classic ddate command line tool found in the path
+func ddateCmd(day time.Time) (string, error) {
 	cmd := exec.Command("ddate", strconv.Itoa(day.Day()), strconv.Itoa(int(day.Month())), strconv.Itoa(day.Year()))
 
 	var out strings.Builder

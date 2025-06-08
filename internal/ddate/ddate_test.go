@@ -15,6 +15,14 @@ func TestOn(t *testing.T) {
 			want: "Sweetmorn, Chaos 1, 3136 YOLD",
 		},
 		{
+			when: "1999-12-31",
+			want: "Setting Orange, The Aftermath 73, 3165 YOLD",
+		},
+		{
+			when: "2000-01-01",
+			want: "Sweetmorn, Chaos 1, 3166 YOLD",
+		},
+		{
 			when: "2025-06-08",
 			want: "Prickle-Prickle, Confusion 13, 3191 YOLD",
 		},
@@ -48,7 +56,16 @@ func TestOn(t *testing.T) {
 		},
 		{
 			when: "2020-02-19",
+			//want: "Setting Orange, Chaos 50, 3186 YOLD (Chaoflux)",
 			want: "Setting Orange, Chaos 50, 3186 YOLD",
+		},
+		{
+			when: "2020-06-11",
+			want: "Boomtime, Confusion 16, 3186 YOLD",
+		},
+		{
+			when: "2020-12-31",
+			want: "Setting Orange, The Aftermath 73, 3186 YOLD",
 		},
 	} {
 		t.Run(tc.when, func(t *testing.T) {
@@ -56,12 +73,20 @@ func TestOn(t *testing.T) {
 			if err != nil {
 				t.Errorf("time.Parse: %s", err)
 			}
-			got, err := On(date)
+
+			// verify with classic ddate command
+			got, err := ddateCmd(date)
 			if err != nil {
 				t.Errorf("On: %s", err)
 			}
 			if got != tc.want {
-				t.Errorf("want: %s, got: %s", tc.want, got)
+				t.Errorf("(classic) want: %s, got: %s", tc.want, got)
+			}
+
+			// verify go version
+			got = FromTime(date).Format(false)
+			if got != tc.want {
+				t.Errorf("(go) want: %s, got: %s", tc.want, got)
 			}
 		})
 	}
