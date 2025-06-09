@@ -2,6 +2,9 @@ package ddate
 
 import (
 	"math/rand"
+	"os/exec"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -73,6 +76,20 @@ func randomTime() time.Time {
 	span := max.Sub(min)
 	randDur := time.Duration(rand.Int63n(span.Nanoseconds()))
 	return min.Add(randDur)
+}
+
+// Return the string from the classic ddate command line tool found in the path
+func ddateCmd(day time.Time) (string, error) {
+	cmd := exec.Command("ddate", strconv.Itoa(day.Day()), strconv.Itoa(int(day.Month())), strconv.Itoa(day.Year()))
+
+	var out strings.Builder
+	cmd.Stdout = &out
+
+	if err := cmd.Run(); err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(out.String()), nil
 }
 
 func TestCompareDDateCmd(t *testing.T) {

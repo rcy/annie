@@ -2,9 +2,6 @@ package ddate
 
 import (
 	"fmt"
-	"os/exec"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -116,18 +113,4 @@ func Now() Date {
 
 func isLeapYear(year int) bool {
 	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
-}
-
-// Return the string from the classic ddate command line tool found in the path
-func ddateCmd(day time.Time) (string, error) {
-	cmd := exec.Command("ddate", strconv.Itoa(day.Day()), strconv.Itoa(int(day.Month())), strconv.Itoa(day.Year()))
-
-	var out strings.Builder
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(out.String()), nil
 }
