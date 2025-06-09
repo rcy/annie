@@ -57,19 +57,6 @@ type Date struct {
 	HolyDay   HolyDay
 }
 
-func (d Date) Format(showHolydays bool) string {
-	str := fmt.Sprintf("%s, %s %d, %d YOLD", d.WeekDay, d.Season, d.SeasonDay, d.Year)
-	if d.HolyDay != "" {
-		if d.HolyDay == StTibsDay {
-			return fmt.Sprintf("%s, %d YOLD", StTibsDay, d.Year)
-		}
-		if showHolydays {
-			return fmt.Sprintf("%s (%s)", str, d.HolyDay)
-		}
-	}
-	return str
-}
-
 // Return a Discordian Date object from the given time
 func FromTime(greg time.Time) Date {
 	dis := Date{}
@@ -111,6 +98,21 @@ func Now() Date {
 	return FromTime(time.Now())
 }
 
+// Format Date as a string
+func (d Date) Format(showHolydays bool) string {
+	str := fmt.Sprintf("%s, %s %d, %d YOLD", d.WeekDay, d.Season, d.SeasonDay, d.Year)
+	if d.HolyDay != "" {
+		if d.HolyDay == StTibsDay {
+			return fmt.Sprintf("%s, %d YOLD", StTibsDay, d.Year)
+		}
+		if showHolydays {
+			return fmt.Sprintf("%s (%s)", str, d.HolyDay)
+		}
+	}
+	return str
+}
+
+// Return true if year is a leap year
 func isLeapYear(year int) bool {
 	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
 }
