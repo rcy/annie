@@ -118,10 +118,12 @@ func addHandlers(b *bot.Bot) {
 				b.Conn.Part(b.Channel)
 			}
 		} else {
-			if today == disco.PricklePrickle {
+			if today != disco.SettingOrange {
 				b.Conn.Join(b.Channel)
 				time.Sleep(5 * time.Second)
-				b.Conn.Privmsgf(b.Channel, "HAIL ERIS! GODDESS OF THE DAYS! LICK ME ON THIS SWEETMORN DAY! BE SURE I TASTE ALL NICE AND TASTY AND STUFF LIKE HOT FUDGE ON TOAST! SLURP!")
+				if today == disco.Sweetmorn {
+					b.Conn.Privmsgf(b.Channel, "HAIL ERIS! GODDESS OF THE DAYS! LICK ME ON THIS SWEETMORN DAY! BE SURE I TASTE ALL NICE AND TASTY AND STUFF LIKE HOT FUDGE ON TOAST! SLURP!")
+				}
 			}
 		}
 	})
