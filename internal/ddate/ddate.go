@@ -36,24 +36,38 @@ func (s Season) String() string {
 	return []string{"Chaos", "Discord", "Confusion", "Bureaucracy", "The Aftermath"}[s]
 }
 
+type HolyDay string
+
+const (
+	StTibsDay HolyDay = "St. Tib's Day"
+	Mungday   HolyDay = "Mungday"
+	Mojoday   HolyDay = "Mojoday"
+	Syaday    HolyDay = "Syaday"
+	Zaraday   HolyDay = "Zaraday"
+	Maladay   HolyDay = "Maladay"
+	Chaoflux  HolyDay = "Chaoflux"
+	Discoflux HolyDay = "Discoflux"
+	Confuflux HolyDay = "Confuflux"
+	Bureflux  HolyDay = "Bureflux"
+	Afflux    HolyDay = "Afflux"
+)
+
 type Date struct {
 	Year      int
 	Season    Season
 	SeasonDay int
 	WeekDay   WeekDay
-	Holyday   string
+	HolyDay   HolyDay
 }
-
-const stTibsDay = "St. Tib's Day"
 
 func (d Date) Format(showHolydays bool) string {
 	str := fmt.Sprintf("%s, %s %d, %d YOLD", d.WeekDay, d.Season, d.SeasonDay, d.Year)
-	if d.Holyday != "" {
-		if d.Holyday == stTibsDay {
-			return fmt.Sprintf("%s, %d YOLD", stTibsDay, d.Year)
+	if d.HolyDay != "" {
+		if d.HolyDay == StTibsDay {
+			return fmt.Sprintf("%s, %d YOLD", StTibsDay, d.Year)
 		}
 		if showHolydays {
-			return fmt.Sprintf("%s (%s)", str, d.Holyday)
+			return fmt.Sprintf("%s (%s)", str, d.HolyDay)
 		}
 	}
 	return str
@@ -67,7 +81,7 @@ func FromTime(greg time.Time) Date {
 	disYearDay := greg.YearDay() - 1 // [0-364]
 	if isLeapYear(greg.Year()) {
 		if greg.Month() == time.February && greg.Day() == 29 {
-			dis.Holyday = stTibsDay
+			dis.HolyDay = StTibsDay
 			return dis
 		}
 		if greg.Month() >= time.March {
@@ -83,16 +97,21 @@ func FromTime(greg time.Time) Date {
 
 	if dis.SeasonDay == 5 {
 		// apostle days
-		dis.Holyday = []string{"Mungday", "Mojoday", "Syaday", "Zaraday", "Maladay"}[dis.Season]
+		dis.HolyDay = []HolyDay{Mungday, Mojoday, Syaday, Zaraday, Maladay}[dis.Season]
 	} else if dis.SeasonDay == 50 {
 		// flux days
-		dis.Holyday = []string{"Chaoflux", "Discoflux", "Confuflux", "Bureflux", "Afflux"}[dis.Season]
+		dis.HolyDay = []HolyDay{Chaoflux, Discoflux, Confuflux, Bureflux, Afflux}[dis.Season]
 	}
 
 	// zero indexed day of the week, [0-4]
 	dis.WeekDay = WeekDay(disYearDay % 5)
 
 	return dis
+}
+
+// Return a discordian Date object corresponding to the current time
+func Now() Date {
+	return FromTime(time.Now())
 }
 
 func isLeapYear(year int) bool {

@@ -18,7 +18,7 @@ func TestFromTime(t *testing.T) {
 				Season:    3,
 				SeasonDay: 45,
 				WeekDay:   3,
-				Holyday:   "",
+				HolyDay:   "",
 			},
 		},
 		{
@@ -28,7 +28,7 @@ func TestFromTime(t *testing.T) {
 				Season:    4,
 				SeasonDay: 5,
 				WeekDay:   1,
-				Holyday:   "Maladay",
+				HolyDay:   "Maladay",
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func TestFromTime(t *testing.T) {
 				Season:    0,
 				SeasonDay: 0,
 				WeekDay:   0,
-				Holyday:   "St. Tib's Day",
+				HolyDay:   "St. Tib's Day",
 			},
 		},
 		{
@@ -48,7 +48,7 @@ func TestFromTime(t *testing.T) {
 				Season:    0,
 				SeasonDay: 18,
 				WeekDay:   2,
-				Holyday:   "",
+				HolyDay:   "",
 			},
 		},
 	} {
