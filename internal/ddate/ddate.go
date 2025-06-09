@@ -93,9 +93,9 @@ func FromTime(greg time.Time) Date {
 	return dis
 }
 
-// Return a discordian Date object corresponding to the current time
-func Now() Date {
-	return FromTime(time.Now())
+// Return a discordian Date object corresponding to the current time in location
+func NowIn(location *time.Location) Date {
+	return FromTime(time.Now().In(location))
 }
 
 // Format Date as a string

@@ -9,6 +9,7 @@ import (
 	"goirc/bot/idle"
 	"goirc/commit"
 	"goirc/db/model"
+	"goirc/internal/ddate"
 	db "goirc/model"
 	"goirc/model/laters"
 	"goirc/util"
@@ -52,6 +53,7 @@ type Bot struct {
 	Channel            string
 	Handlers           []Handler
 	LastEvent          *irc.Event
+	IsJoined           bool
 	idleResetFunctions []func()
 	queue              chan delivery
 }
@@ -130,15 +132,15 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 	bot.Conn.UseTLS = true
 	bot.Conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	bot.Conn.AddCallback("001", func(e *irc.Event) {
-		// location, err := time.LoadLocation("America/Los_Angeles")
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// if time.Now().In(location).Weekday() != 0 {
-		bot.Conn.Join(channel)
-		// } else {
-		//initialized <- true
-		// }
+		location, err := time.LoadLocation("America/Los_Angeles")
+		if err != nil {
+			log.Fatalf("LoadLocation: %s", err)
+		}
+		if ddate.NowIn(location).WeekDay != ddate.SettingOrange {
+			bot.Conn.Join(channel)
+		} else {
+			initialized <- true
+		}
 	})
 	bot.Conn.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
@@ -183,6 +185,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 			}()
 		} else {
 			go func() {
+				bot.IsJoined = true
 				time.Sleep(1 * time.Second)
 				url, err := commit.URL()
 				if err != nil {
@@ -203,12 +206,16 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 		if e.Nick != nick {
 			// trigger NAMES to update the list of joined nicks
 			bot.Conn.SendRawf("NAMES %s", channel)
+		} else {
+			bot.IsJoined = false
 		}
 	})
 	bot.Conn.AddCallback("QUIT", func(e *irc.Event) {
 		if e.Nick != nick {
 			// trigger NAMES to update the list of joined nicks
 			bot.Conn.SendRawf("NAMES %s", channel)
+		} else {
+			bot.IsJoined = false
 		}
 	})
 	bot.Conn.AddCallback("NICK", func(e *irc.Event) {

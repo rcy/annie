@@ -24,8 +24,10 @@ import (
 	"goirc/handlers/tz"
 	"goirc/handlers/weather"
 	"goirc/internal/ai"
+	disco "goirc/internal/ddate"
 	db "goirc/model"
 	"goirc/web"
+	"log"
 	"regexp"
 	"time"
 
@@ -107,24 +109,24 @@ func addHandlers(b *bot.Bot) {
 	if err != nil {
 		panic(err)
 	}
-	// err = c.AddFunc("0 0 0 * * 0", func() {
-	// 	signoff, err := ai.Complete(context.TODO(), openai.GPT4o, "you are annie, and have been hanging out with friends in irc all week. now its time for you to rest for a day. respond with a short goodbye. use all lowercase, minimal punctuation, no emojis", "see you later, annie")
-	// 	if err != nil {
-	// 		b.Conn.Privmsg(b.Channel, err.Error())
-	// 		return
-	// 	}
-	// 	b.Conn.Privmsg(b.Channel, signoff)
-	// 	b.Conn.Part(b.Channel)
-	// })
-	// if err != nil {
-	// 	panic(err)
-	// }
 
-	err = c.AddFunc("0 0 0 * * 1", func() {
-		b.Conn.Join(b.Channel)
+	err = c.AddFunc("0 * * * * *", func() {
+		today := disco.NowIn(location).WeekDay
+		if b.IsJoined {
+			if today == disco.SettingOrange {
+				b.Conn.Privmsgf(b.Channel, "Hail Eris! Goddess of the Days! Look upon me as I look upon you on this Setting Orange day! I've had enough of this week, see you Sweetmorn! Good night!")
+				b.Conn.Part(b.Channel)
+			}
+		} else {
+			if today == disco.PricklePrickle {
+				b.Conn.Join(b.Channel)
+				time.Sleep(5 * time.Second)
+				b.Conn.Privmsgf(b.Channel, "HAIL ERIS! GODDESS OF THE DAYS! LICK ME ON THIS SWEETMORN DAY! BE SURE I TASTE ALL NICE AND TASTY AND STUFF LIKE HOT FUDGE ON TOAST! SLURP!")
+			}
+		}
 	})
 	if err != nil {
-		panic(err)
+		log.Fatalf("c.AddFunc(discordia): %s", err)
 	}
 
 	err = c.AddFunc("57 * * * * *", func() {
