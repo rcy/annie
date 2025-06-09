@@ -22,19 +22,32 @@ func (w WeekDay) String() string {
 	return []string{"Sweetmorn", "Boomtime", "Pungenday", "Prickle-Prickle", "Setting Orange"}[w]
 }
 
+type Season int
+
+const (
+	Chaos Season = iota
+	Discord
+	Confusion
+	Bureaucracy
+	TheAftermath
+)
+
+func (s Season) String() string {
+	return []string{"Chaos", "Discord", "Confusion", "Bureaucracy", "The Aftermath"}[s]
+}
+
 type Date struct {
-	Year       int
-	Season     int
-	SeasonName string
-	SeasonDay  int
-	WeekDay    WeekDay
-	Holyday    string
+	Year      int
+	Season    Season
+	SeasonDay int
+	WeekDay   WeekDay
+	Holyday   string
 }
 
 const stTibsDay = "St. Tib's Day"
 
 func (d Date) Format(showHolydays bool) string {
-	str := fmt.Sprintf("%s, %s %d, %d YOLD", d.WeekDay.String(), d.SeasonName, d.SeasonDay, d.Year)
+	str := fmt.Sprintf("%s, %s %d, %d YOLD", d.WeekDay, d.Season, d.SeasonDay, d.Year)
 	if d.Holyday != "" {
 		if d.Holyday == stTibsDay {
 			return fmt.Sprintf("%s, %d YOLD", stTibsDay, d.Year)
@@ -63,7 +76,7 @@ func FromTime(greg time.Time) Date {
 	}
 
 	// zero indexed season, [0-4]
-	dis.Season = disYearDay / 73
+	dis.Season = Season(disYearDay / 73)
 
 	// one indexed day of the season, [1-73]
 	dis.SeasonDay = disYearDay%73 + 1
@@ -78,8 +91,6 @@ func FromTime(greg time.Time) Date {
 
 	// zero indexed day of the week, [0-4]
 	dis.WeekDay = WeekDay(disYearDay % 5)
-
-	dis.SeasonName = []string{"Chaos", "Discord", "Confusion", "Bureaucracy", "The Aftermath"}[dis.Season]
 
 	return dis
 }
