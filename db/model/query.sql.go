@@ -97,6 +97,15 @@ func (q *Queries) CacheLoad(ctx context.Context, key string) (Cache, error) {
 	return i, err
 }
 
+const cacheRemove = `-- name: CacheRemove :exec
+delete from cache where key = ?1
+`
+
+func (q *Queries) CacheRemove(ctx context.Context, key string) error {
+	_, err := q.db.ExecContext(ctx, cacheRemove, key)
+	return err
+}
+
 const cacheStore = `-- name: CacheStore :one
 insert into cache(key, value) values(?1, ?2) returning id, created_at, "key", value
 `

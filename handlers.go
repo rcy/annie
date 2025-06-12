@@ -24,10 +24,13 @@ import (
 	"goirc/handlers/tz"
 	"goirc/handlers/weather"
 	"goirc/internal/ai"
+	"goirc/internal/cache"
 	disco "goirc/internal/ddate"
+	"goirc/internal/sun"
 	db "goirc/model"
 	"goirc/web"
 	"log"
+	"log/slog"
 	"regexp"
 	"time"
 
@@ -131,6 +134,60 @@ func addHandlers(b *bot.Bot) {
 		log.Fatalf("c.AddFunc(discordia): %s", err)
 	}
 
+	err = c.AddFunc("37 * * * * *", func() {
+		ctx := context.TODO()
+		zone := "America/Toronto"
+		toronto, err := time.LoadLocation(zone)
+		if err != nil {
+			b.Conn.Privmsgf(b.Channel, "error: LoadLocation America/Toronto: %s", err)
+			return
+		}
+
+		today := time.Now().In(toronto)
+		todayValue := today.Format(time.DateOnly)
+
+		rise, set, err := sun.SunriseSunset(today, zone, 43.64487, -79.38429)
+		if err != nil {
+			b.Conn.Privmsgf(b.Channel, "error: SunriseSunset: %s", err)
+			return
+		}
+		slog.Debug("SunriseSunset", "rise", rise, "set", set, "tuset", time.Until(set))
+
+		// any time in the last hour or in the next minute
+		if time.Until(rise) >= -time.Hour && time.Until(rise) < time.Minute {
+			value, err := cache.Get(ctx, "sunrise")
+			if err != nil {
+				b.Conn.Privmsgf(b.Channel, "error: cache.Get: %s", err)
+				return
+			}
+
+			if value != todayValue {
+				err := cache.Put(ctx, "sunrise", todayValue)
+				if err != nil {
+					b.Conn.Privmsgf(b.Channel, "error: cache.Put: %s", err)
+				}
+				events.Publish("sunrise", rise)
+			}
+		}
+
+		// any time in the last hour or in the next minute
+		if time.Until(set) >= -time.Hour && time.Until(set) < time.Minute {
+			value, err := cache.Get(ctx, "sunset")
+			if err != nil {
+				b.Conn.Privmsgf(b.Channel, "error: cache.Get: %s", err)
+				return
+			}
+
+			if value != todayValue {
+				err := cache.Put(ctx, "sunset", todayValue)
+				if err != nil {
+					b.Conn.Privmsgf(b.Channel, "error: cache.Put: %s", err)
+				}
+				events.Publish("sunset", set)
+			}
+		}
+	})
+
 	err = c.AddFunc("57 * * * * *", func() {
 		ctx := context.TODO()
 		msg, err := q.ReadyFutureMessage(ctx, handlers.FutureMessageInterval)
@@ -219,6 +276,14 @@ func addHandlers(b *bot.Bot) {
 				b.Conn.Privmsg(b.Channel, "error: "+err.Error())
 			}
 		}()
+	})
+
+	events.Subscribe("sunset", func(when any) {
+		b.Conn.Privmsg(b.Channel, "sunset")
+	})
+
+	events.Subscribe("sunrise", func(when any) {
+		b.Conn.Privmsg(b.Channel, "sunrise")
 	})
 
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {

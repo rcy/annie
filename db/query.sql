@@ -110,6 +110,9 @@ select * from cache where key = @key;
 -- name: CacheStore :one
 insert into cache(key, value) values(@key, @value) returning *;
 
+-- name: CacheRemove :exec
+delete from cache where key = @key;
+
 -- name: InsertFile :one
 insert into files(nick,content) values (@nick, @content) returning *;
 
