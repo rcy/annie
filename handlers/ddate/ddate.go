@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"goirc/bot"
 	"goirc/db/model"
-	"goirc/internal/ddate"
 	db "goirc/model"
 	"time"
+
+	"github.com/rcy/ddate"
 )
 
 func Handle(params bot.HandlerParams) error {

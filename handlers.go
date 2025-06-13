@@ -25,7 +25,6 @@ import (
 	"goirc/handlers/weather"
 	"goirc/internal/ai"
 	"goirc/internal/cache"
-	disco "goirc/internal/ddate"
 	"goirc/internal/sun"
 	db "goirc/model"
 	"goirc/web"
@@ -33,6 +32,7 @@ import (
 	"regexp"
 	"time"
 
+	disco "github.com/rcy/ddate"
 	"github.com/robfig/cron"
 )
 

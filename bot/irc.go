@@ -9,7 +9,6 @@ import (
 	"goirc/bot/idle"
 	"goirc/commit"
 	"goirc/db/model"
-	"goirc/internal/ddate"
 	db "goirc/model"
 	"goirc/model/laters"
 	"goirc/util"
@@ -20,6 +19,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/rcy/ddate"
 
 	irc "github.com/thoj/go-ircevent"
 )
