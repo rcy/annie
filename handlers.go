@@ -29,7 +29,6 @@ import (
 	"goirc/internal/sun"
 	db "goirc/model"
 	"goirc/web"
-	"log"
 	"log/slog"
 	"regexp"
 	"time"
@@ -89,14 +88,19 @@ func addHandlers(b *bot.Bot) {
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)
 
-	location, err := time.LoadLocation("America/Los_Angeles")
+	vancouver, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		panic(err)
+	}
+
+	toronto, err := time.LoadLocation("America/Toronto")
 	if err != nil {
 		panic(err)
 	}
 
 	q := model.New(db.DB.DB)
 
-	c := cron.NewWithLocation(location)
+	c := cron.NewWithLocation(vancouver)
 	err = c.AddFunc("16 14 15 * * 1,2,3,4,5,6", func() {
 		note, err := q.RandomHistoricalTodayNote(context.TODO())
 		if err != nil {
@@ -113,36 +117,30 @@ func addHandlers(b *bot.Bot) {
 		panic(err)
 	}
 
-	err = c.AddFunc("0 * * * * *", func() {
-		today := disco.NowIn(location).WeekDay
-		if b.IsJoined {
-			if today == disco.SettingOrange {
-				b.Conn.Privmsgf(b.Channel, "Hail Eris! Goddess of the Days! Look upon me as I look upon you on this Setting Orange day! I've had enough of this week, see you Sweetmorn! Good night!")
-				b.Conn.Part(b.Channel)
-			}
-		} else {
-			if today != disco.SettingOrange {
-				b.Conn.Join(b.Channel)
-				time.Sleep(5 * time.Second)
-				if today == disco.Sweetmorn {
-					b.Conn.Privmsgf(b.Channel, "HAIL ERIS! GODDESS OF THE DAYS! LICK ME ON THIS SWEETMORN DAY! BE SURE I TASTE ALL NICE AND TASTY AND STUFF LIKE HOT FUDGE ON TOAST! SLURP!")
-				}
-			}
-		}
-	})
-	if err != nil {
-		log.Fatalf("c.AddFunc(discordia): %s", err)
-	}
+	// err = c.AddFunc("0 * * * * *", func() {
+	// 	today := disco.NowIn(vancouver).WeekDay
+	// 	if b.IsJoined {
+	// 		if today == disco.SettingOrange {
+
+	// 			b.Conn.Part(b.Channel)
+	// 		}
+	// 	} else {
+	// 		if today != disco.SettingOrange {
+	// 			b.Conn.Join(b.Channel)
+	// 			time.Sleep(5 * time.Second)
+	// 			if today == disco.Sweetmorn {
+	// 				b.Conn.Privmsgf(b.Channel, "HAIL ERIS! GODDESS OF THE DAYS! LICK ME ON THIS SWEETMORN DAY! BE SURE I TASTE ALL NICE AND TASTY AND STUFF LIKE HOT FUDGE ON TOAST! SLURP!")
+	// 			}
+	// 		}
+	// 	}
+	// })
+	// if err != nil {
+	// 	log.Fatalf("c.AddFunc(discordia): %s", err)
+	// }
 
 	err = c.AddFunc("37 * * * * *", func() {
 		ctx := context.TODO()
 		zone := "America/Toronto"
-		toronto, err := time.LoadLocation(zone)
-		if err != nil {
-			b.Conn.Privmsgf(b.Channel, "error: LoadLocation America/Toronto: %s", err)
-			return
-		}
-
 		today := time.Now().In(toronto)
 		todayValue := today.Format(time.DateOnly)
 
@@ -278,12 +276,19 @@ func addHandlers(b *bot.Bot) {
 		}()
 	})
 
-	events.Subscribe("sunset", func(when any) {
-		b.Conn.Privmsg(b.Channel, "sunset")
+	events.Subscribe("sunset", func(any) {
+		if disco.FromTime(time.Now().In(toronto)).WeekDay == disco.SettingOrange {
+			b.Conn.Privmsgf(b.Channel, "Hail Eris! Goddess of the Days! Look upon me as I look upon you on this Setting Orange day! I've had enough of this week, see you Sweetmorn! Good night!")
+			b.Conn.Part(b.Channel)
+		}
 	})
 
-	events.Subscribe("sunrise", func(when any) {
-		b.Conn.Privmsg(b.Channel, "sunrise")
+	events.Subscribe("sunrise", func(any) {
+		if disco.FromTime(time.Now().In(toronto)).WeekDay == disco.Sweetmorn {
+			b.Conn.Join(b.Channel)
+			time.Sleep(10 * time.Second)
+			b.Conn.Privmsgf(b.Channel, "HAIL ERIS! GODDESS OF THE DAYS! LICK ME ON THIS SWEETMORN DAY! BE SURE I TASTE ALL NICE AND TASTY AND STUFF LIKE HOT FUDGE ON TOAST! SLURP!")
+		}
 	})
 
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
