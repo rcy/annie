@@ -277,17 +277,15 @@ func addHandlers(b *bot.Bot) {
 	})
 
 	events.Subscribe("sunset", func(any) {
-		if disco.FromTime(time.Now().In(toronto)).WeekDay == disco.SettingOrange {
-			b.Conn.Privmsgf(b.Channel, "Hail Eris! Goddess of the Days! Look upon me as I look upon you on this Setting Orange day! I've had enough of this week, see you Sweetmorn! Good night!")
+		if disco.NowIn(toronto).WeekDay == disco.SettingOrange {
+			b.Conn.Privmsgf(b.Channel, "see you sweetmorn")
 			b.Conn.Part(b.Channel)
 		}
 	})
 
 	events.Subscribe("sunrise", func(any) {
-		if disco.FromTime(time.Now().In(toronto)).WeekDay == disco.Sweetmorn {
+		if disco.NowIn(toronto).WeekDay == disco.Sweetmorn {
 			b.Conn.Join(b.Channel)
-			time.Sleep(10 * time.Second)
-			b.Conn.Privmsgf(b.Channel, "HAIL ERIS! GODDESS OF THE DAYS! LICK ME ON THIS SWEETMORN DAY! BE SURE I TASTE ALL NICE AND TASTY AND STUFF LIKE HOT FUDGE ON TOAST! SLURP!")
 		}
 	})
 
