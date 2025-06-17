@@ -16,7 +16,7 @@ func POM(params bot.HandlerParams) error {
 		return err
 	}
 
-	str := out.String()
+	str := strings.TrimSpace(out.String())
 	if strings.Contains(str, "69") {
 		str = str + " (nice)"
 	}
