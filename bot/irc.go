@@ -137,7 +137,7 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 		if err != nil {
 			log.Fatalf("LoadLocation: %s", err)
 		}
-		if ddate.NowIn(location).WeekDay != ddate.SettingOrange {
+		if true || ddate.NowIn(location).WeekDay != ddate.SettingOrange {
 			bot.Conn.Join(channel)
 		} else {
 			initialized <- true
