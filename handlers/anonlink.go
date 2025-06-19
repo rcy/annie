@@ -42,7 +42,7 @@ func AnonQuote(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s %s", note.Text.String)
+	params.Privmsgf(params.Target, "%s", note.Text.String)
 
 	return nil
 }
