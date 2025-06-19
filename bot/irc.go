@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"goirc/bot/idle"
+	"goirc/bot/timeoff"
 	"goirc/commit"
 	"goirc/db/model"
 	db "goirc/model"
@@ -19,8 +20,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/rcy/ddate"
 
 	irc "github.com/thoj/go-ircevent"
 )
@@ -133,11 +132,8 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 	bot.Conn.UseTLS = true
 	bot.Conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	bot.Conn.AddCallback("001", func(e *irc.Event) {
-		location, err := time.LoadLocation("America/Los_Angeles")
-		if err != nil {
-			log.Fatalf("LoadLocation: %s", err)
-		}
-		if true || ddate.NowIn(location).WeekDay != ddate.SettingOrange {
+		off, _ := timeoff.IsTimeoff(time.Now(), "America/Toronto", 43.64487, -79.38429)
+		if !off {
 			bot.Conn.Join(channel)
 		} else {
 			initialized <- true

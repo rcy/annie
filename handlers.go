@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"goirc/bot"
+	"goirc/bot/timeoff"
 	"goirc/db/model"
 	"goirc/events"
 	"goirc/handlers"
@@ -24,15 +25,12 @@ import (
 	"goirc/handlers/tz"
 	"goirc/handlers/weather"
 	"goirc/internal/ai"
-	"goirc/internal/cache"
-	"goirc/internal/sun"
 	db "goirc/model"
 	"goirc/web"
 	"log/slog"
 	"regexp"
 	"time"
 
-	disco "github.com/rcy/ddate"
 	"github.com/robfig/cron"
 )
 
@@ -93,11 +91,6 @@ func addHandlers(b *bot.Bot) {
 		panic(err)
 	}
 
-	toronto, err := time.LoadLocation("America/Toronto")
-	if err != nil {
-		panic(err)
-	}
-
 	q := model.New(db.DB.DB)
 
 	c := cron.NewWithLocation(vancouver)
@@ -117,71 +110,20 @@ func addHandlers(b *bot.Bot) {
 		panic(err)
 	}
 
-	// err = c.AddFunc("0 * * * * *", func() {
-	// 	today := disco.NowIn(vancouver).WeekDay
-	// 	if b.IsJoined {
-	// 		if today == disco.SettingOrange {
-
-	// 			b.Conn.Part(b.Channel)
-	// 		}
-	// 	} else {
-	// 		if today != disco.SettingOrange {
-	// 			b.Conn.Join(b.Channel)
-	// 			time.Sleep(5 * time.Second)
-	// 			if today == disco.Sweetmorn {
-	// 				b.Conn.Privmsgf(b.Channel, "HAIL ERIS! GODDESS OF THE DAYS! LICK ME ON THIS SWEETMORN DAY! BE SURE I TASTE ALL NICE AND TASTY AND STUFF LIKE HOT FUDGE ON TOAST! SLURP!")
-	// 			}
-	// 		}
-	// 	}
-	// })
-	// if err != nil {
-	// 	log.Fatalf("c.AddFunc(discordia): %s", err)
-	// }
-
 	err = c.AddFunc("37 * * * * *", func() {
-		ctx := context.TODO()
-		zone := "America/Toronto"
-		today := time.Now().In(toronto)
-		todayValue := today.Format(time.DateOnly)
-
-		rise, set, err := sun.SunriseSunset(today, zone, 43.64487, -79.38429)
+		off, err := timeoff.IsTimeoff(time.Now(), "America/Toronto", 43.64487, -79.38429)
 		if err != nil {
-			b.Conn.Privmsgf(b.Channel, "error: SunriseSunset: %s", err)
+			slog.Error("IsTimeoff", "error", err)
 			return
 		}
-		slog.Debug("SunriseSunset", "rise", rise, "set", set, "tuset", time.Until(set))
-
-		// any time in the last hour or in the next minute
-		if time.Until(rise) >= -time.Hour && time.Until(rise) < time.Minute {
-			value, err := cache.Get(ctx, "sunrise")
-			if err != nil {
-				b.Conn.Privmsgf(b.Channel, "error: cache.Get: %s", err)
-				return
+		if off {
+			if b.IsJoined {
+				b.Conn.Privmsgf(b.Channel, "see you sweetmorn")
+				b.Conn.Part(b.Channel)
 			}
-
-			if value != todayValue {
-				err := cache.Put(ctx, "sunrise", todayValue)
-				if err != nil {
-					b.Conn.Privmsgf(b.Channel, "error: cache.Put: %s", err)
-				}
-				events.Publish("sunrise", rise)
-			}
-		}
-
-		// any time in the last hour or in the next minute
-		if time.Until(set) >= -time.Hour && time.Until(set) < time.Minute {
-			value, err := cache.Get(ctx, "sunset")
-			if err != nil {
-				b.Conn.Privmsgf(b.Channel, "error: cache.Get: %s", err)
-				return
-			}
-
-			if value != todayValue {
-				err := cache.Put(ctx, "sunset", todayValue)
-				if err != nil {
-					b.Conn.Privmsgf(b.Channel, "error: cache.Put: %s", err)
-				}
-				events.Publish("sunset", set)
+		} else {
+			if !b.IsJoined {
+				b.Conn.Join(b.Channel)
 			}
 		}
 	})
@@ -274,19 +216,6 @@ func addHandlers(b *bot.Bot) {
 				b.Conn.Privmsg(b.Channel, "error: "+err.Error())
 			}
 		}()
-	})
-
-	events.Subscribe("sunset", func(any) {
-		if disco.NowIn(toronto).WeekDay == disco.SettingOrange {
-			b.Conn.Privmsgf(b.Channel, "see you sweetmorn")
-			b.Conn.Part(b.Channel)
-		}
-	})
-
-	events.Subscribe("sunrise", func(any) {
-		if disco.NowIn(toronto).WeekDay == disco.Sweetmorn {
-			b.Conn.Join(b.Channel)
-		}
 	})
 
 	b.Handle(`^!help`, func(params bot.HandlerParams) error {
