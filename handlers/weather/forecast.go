@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pariz/gountries"
+	"github.com/rcy/ddate"
 )
 
 type forecast struct {
@@ -140,7 +141,7 @@ func HandleForecast(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
-	str, err := forecast.Format()
+	str, err := forecast.Format(options{Disco: true})
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,11 @@ func HandleWeatherForecast(params bot.HandlerParams) error {
 	return HandleForecast(params)
 }
 
-func (f *forecast) Format() (string, error) {
+type options struct {
+	Disco bool
+}
+
+func (f *forecast) Format(options options) (string, error) {
 	type report struct {
 		Temp float64
 		Time time.Time
@@ -221,8 +226,22 @@ func (f *forecast) Format() (string, error) {
 	}
 
 	arr := []string{}
-	for _, v := range dhlsa {
-		arr = append(arr, fmt.Sprintf("%s %0.0f %0.0f", v.Day.In(location).Format("Mon"), v.Low, v.High))
+	if options.Disco {
+		for _, v := range dhlsa[:5] {
+			arr = append(arr, fmt.Sprintf("%s %0.0f/%0.0f", discoFormat("Swe", v.Day.In(location)), v.High, v.Low))
+		}
+	} else {
+		for _, v := range dhlsa {
+			arr = append(arr, fmt.Sprintf("%s %0.0f/%0.0f", v.Day.In(location).Format("Mon"), v.High, v.Low))
+		}
 	}
 	return strings.Join(arr, ", "), nil
+}
+
+func discoFormat(format string, t time.Time) string {
+	if format == "Swe" {
+		return []string{"Swe", "Boo", "Pun", "Pri", "Set"}[ddate.FromTime(t).WeekDay]
+	} else {
+		return "???"
+	}
 }

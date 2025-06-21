@@ -46,7 +46,7 @@ func TestFetchForecast(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	str, err := forecast.Format()
+	str, err := forecast.Format(options{Disco: false})
 	if err != nil {
 		t.Fatal(err)
 	}
