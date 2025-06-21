@@ -11,7 +11,7 @@ require (
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/nathan-osman/go-sunrise v1.1.0
 	github.com/pariz/gountries v0.1.6
-	github.com/rcy/ddate v0.1.0
+	github.com/rcy/disco v0.2.2
 	github.com/rcy/durfmt v0.0.0-20240102082646-83cc8efdab91
 	github.com/robfig/cron v1.2.0
 	github.com/sashabaranov/go-openai v1.38.1

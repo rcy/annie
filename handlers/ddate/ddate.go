@@ -10,7 +10,7 @@ import (
 	db "goirc/model"
 	"time"
 
-	"github.com/rcy/ddate"
+	"github.com/rcy/disco"
 )
 
 func Handle(params bot.HandlerParams) error {
@@ -19,7 +19,7 @@ func Handle(params bot.HandlerParams) error {
 		return fmt.Errorf("getNickLocation: %w", err)
 	}
 	now := time.Now().In(location)
-	str := ddate.FromTime(now).Format(true)
+	str := disco.FromTime(now).Format(true)
 
 	params.Privmsgf(params.Target, "%s", str)
 

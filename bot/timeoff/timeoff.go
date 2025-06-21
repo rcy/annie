@@ -4,7 +4,7 @@ import (
 	"goirc/internal/sun"
 	"time"
 
-	"github.com/rcy/ddate"
+	"github.com/rcy/disco"
 )
 
 func IsTimeoff(when time.Time, zone string, lat float64, long float64) (bool, error) {
@@ -19,8 +19,8 @@ func IsTimeoff(when time.Time, zone string, lat float64, long float64) (bool, er
 		return false, err
 	}
 
-	weekday := ddate.FromTime(when).WeekDay
+	weekday := disco.FromTime(when).WeekDay
 
-	return (weekday == ddate.SettingOrange && when.After(sunset)) ||
-		(weekday == ddate.Sweetmorn && when.Before(sunrise)), nil
+	return (weekday == disco.SettingOrange && when.After(sunset)) ||
+		(weekday == disco.Sweetmorn && when.Before(sunrise)), nil
 }

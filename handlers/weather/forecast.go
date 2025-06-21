@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/pariz/gountries"
-	"github.com/rcy/ddate"
+	"github.com/rcy/disco"
 )
 
 type forecast struct {
@@ -240,7 +240,7 @@ func (f *forecast) Format(options options) (string, error) {
 
 func discoFormat(format string, t time.Time) string {
 	if format == "Swe" {
-		return []string{"Swe", "Boo", "Pun", "Pri", "Set"}[ddate.FromTime(t).WeekDay]
+		return []string{"Swe", "Boo", "Pun", "Pri", "Set"}[disco.FromTime(t).WeekDay]
 	} else {
 		return "???"
 	}
