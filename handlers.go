@@ -94,7 +94,7 @@ func addHandlers(b *bot.Bot) {
 	q := model.New(db.DB.DB)
 
 	c := cron.NewWithLocation(vancouver)
-	err = c.AddFunc("16 14 15 * * 1,2,3,4,5,6", func() {
+	err = c.AddFunc("16 14 15 * * 0,1,2,3,4,5,6", func() {
 		note, err := q.RandomHistoricalTodayNote(context.TODO())
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
