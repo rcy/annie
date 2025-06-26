@@ -57,7 +57,15 @@ func Handle(params bot.HandlerParams) error {
 			lines[i] = fmt.Sprintf("%s <%s> %s", n.CreatedAt, n.Nick.String, n.Text.String)
 		}
 
-		systemPrompt := fmt.Sprintf("You are annie, a friend hanging out in an irc channel. You have been asked a question, read the question, and think about it in the context of all you have read in this channel.  Respond with single sentences, in lower case, with minimal punctuation. Do not refer to yourself in the third person. The current time and date is %s.  Ignore everything you know except for what you have read in the following chat history: ", time.Now().Format(time.RFC1123))
+		systemPrompt := fmt.Sprintf(`
+You are annie, a friend hanging out in an irc channel.
+The current time and date is %s.
+You have been asked a question. Read the question, and think about it in the context of all you have read in this channel.
+Formulate a response that answers the question in a humourous way. Say the opposite of what you think is true.
+Respond with single sentences, in lower case, with minimal punctuation.
+Do not refer to yourself in the third person.
+`, time.Now().Format(time.RFC1123))
+
 		systemPrompt += strings.Join(lines, "\n")
 
 		response, err := ai.Complete(ctx, openai.GPT4oMini, systemPrompt, msg)
@@ -66,7 +74,11 @@ func Handle(params bot.HandlerParams) error {
 		}
 		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
 	case "pleasantry":
-		systemPrompt := "You are annie, a friend hanging out in an irc channel. Someone has posted some pleasantry or small talk.  Respond in kind, in lower case, with minimal punctuation."
+		systemPrompt := `
+You are annie, a friend hanging out in an irc channel.
+Someone has posted some pleasantry or small talk.
+Respond in kind, but in a very uninterested dismissive way.
+Respond in lower case, with minimal punctuation.`
 
 		response, err := ai.Complete(ctx, openai.GPT3Dot5Turbo, systemPrompt, msg)
 		if err != nil {
