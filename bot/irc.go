@@ -336,7 +336,8 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 			})
 
 			if err != nil {
-				bot.Conn.Privmsgf(target, "error: %s", err)
+
+				bot.MakePrivmsgf()(target, "error: %s", err)
 				return
 			}
 		}
