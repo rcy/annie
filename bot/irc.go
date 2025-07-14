@@ -336,7 +336,10 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 			})
 
 			if err != nil {
-				msg := err.Error()[:1024] // prevent spamming the channel
+				msg := err.Error()
+				if len(msg) > 1024 {
+					msg = msg[:1024] // prevent spamming the channel
+				}
 				bot.MakePrivmsgf()(target, "error: %s", msg)
 				return
 			}
