@@ -1,189 +1,75 @@
 package day
 
 import (
-	"context"
 	"fmt"
 	"goirc/bot"
-	"goirc/image"
 	"goirc/shell"
 	"strings"
+	"time"
 )
 
-var url = "https://www.daysoftheyear.com/today/"
+type stack struct {
+	items []string
+}
 
-var dayCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E '\bDay\b'`
-var weekCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E '\bWeek\b'`
-var monthCmd = `curl -s https://www.daysoftheyear.com/today/ | pup 'body img json{}' | jq -r .[].alt | grep -E '\bMonth\b'`
+func (s *stack) Pop() (string, bool) {
+	if len(s.items) == 0 {
+		return "", false
+	}
+	item := s.items[0]
+	s.items = s.items[1:]
+	return item, true
+}
 
-var dayCache = NewCache(dayCmd)
-var weekCache = NewCache(weekCmd)
-var monthCache = NewCache(monthCmd)
+var dayDays = make(map[string]*stack)
 
 func NationalDay(params bot.HandlerParams) error {
-	str, err := dayCache.Pop()
+	location, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
 		return err
 	}
+	today := strings.ToLower(time.Now().In(location).Format("Jan/02"))
 
-	str = strings.ReplaceAll(str, "&amp;", "&")
-
-	if str == "EOF" {
-		img, err := dayImage(dayCmd)
-		if err != nil {
-			return err
-		}
-		params.Privmsgf(params.Target, "Today's image: %s", img.URL())
-	} else {
-		params.Privmsgf(params.Target, "%s", str)
-	}
-
-	return nil
-}
-
-func NationalWeek(params bot.HandlerParams) error {
-	str, err := weekCache.Pop()
+	event, err := getEvent(today)
 	if err != nil {
 		return err
 	}
+	if event == "" {
+		params.Privmsgf(params.Target, "thats it")
+		return nil
+	}
 
-	str = strings.ReplaceAll(str, "&amp;", "&")
+	params.Privmsgf(params.Target, "%s", event)
+	return nil
+}
 
-	if str == "EOF" {
-		img, err := dayImage(weekCmd)
+func getEvent(day string) (string, error) {
+	var err error
+	stack, ok := dayDays[day]
+	if !ok {
+		stack, err = fetchDayEvents(day)
 		if err != nil {
-			return err
+			return "", err
 		}
-		params.Privmsgf(params.Target, "This week's image: %s", img.URL())
-	} else {
-		params.Privmsgf(params.Target, "%s", str)
+		dayDays[day] = stack
 	}
 
-	return nil
+	event, ok := stack.Pop()
+	if !ok {
+		return "", nil
+	}
+	return event, nil
 }
 
-func NationalMonth(params bot.HandlerParams) error {
-	str, err := monthCache.Pop()
-	if err != nil {
-		return err
-	}
-
-	str = strings.ReplaceAll(str, "&amp;", "&")
-
-	if str == "EOF" {
-		img, err := dayImage(monthCmd)
-		if err != nil {
-			return err
-		}
-		params.Privmsgf(params.Target, "This month's image: %s", img.URL())
-	} else {
-		params.Privmsgf(params.Target, "%s", str)
-	}
-
-	return nil
-}
-
-func NationalRefs(params bot.HandlerParams) error {
-	params.Privmsgf(params.Target, "%s", url)
-
-	return nil
-}
-
-func stripPhrases(days []string) []string {
-	removes := []string{
-		"and",
-		"day",
-		"for",
-		"international",
-		"month",
-		"national",
-		"the",
-		"week",
-		"weekend",
-		"world",
-		"year",
-	}
-	result := make([]string, len(days))
-
-	var kept []string
-
-	for d, day := range days {
-		day = strings.ToLower(day)
-
-		kept = []string{}
-
-		for _, word := range strings.Fields(day) {
-			keep := true
-
-			for _, remove := range removes {
-				if word == remove {
-					keep = false
-					break
-				}
-			}
-
-			if keep {
-				kept = append(kept, word)
-			}
-		}
-		result[d] = strings.Join(kept, " ")
-	}
-	return result
-}
-
-func dayImage(cmd string) (*image.GeneratedImage, error) {
+func fetchDayEvents(day string) (*stack, error) {
+	url := fmt.Sprintf("https://www.daysoftheyear.com/days/%s", day)
+	cmd := fmt.Sprintf(`curl --location -s %s | pup 'body img json{}' | jq -r .[].alt | grep -E '\bDay\b'`, url)
 	r, err := shell.Command(cmd)
 	if err != nil {
 		return nil, err
 	}
+	r = strings.TrimSpace(r)
+	events := strings.Split(r, "\n")
 
-	r = strings.ReplaceAll(r, "&amp;", "&")
-
-	days := strings.Split(strings.TrimSpace(r), "\n")
-	days = stripPhrases(days)
-	prompt := "create a single scene with representations of " + strings.Join(days, ", ")
-	gi, err := image.GenerateDALLE(context.Background(), prompt)
-	if err != nil {
-		return nil, fmt.Errorf("prompt: %s: %w", prompt, err)
-	}
-
-	return gi, nil
-}
-
-func Dayi(params bot.HandlerParams) error {
-	img, err := dayImage(dayCmd)
-	if err != nil {
-		return err
-	}
-	params.Privmsgf(params.Target, "Today's image: %s", img.URL())
-	return nil
-}
-
-func Weeki(params bot.HandlerParams) error {
-	img, err := dayImage(weekCmd)
-	if err != nil {
-		return err
-	}
-	params.Privmsgf(params.Target, "This week's image: %s", img.URL())
-	return nil
-}
-
-func Monthi(params bot.HandlerParams) error {
-	img, err := dayImage(monthCmd)
-	if err != nil {
-		return err
-	}
-	params.Privmsgf(params.Target, "This month's image: %s", img.URL())
-	return nil
-}
-
-func Image(params bot.HandlerParams) error {
-	prompt := params.Matches[1]
-	gi, err := image.GenerateDALLE(context.Background(), prompt)
-	if err != nil {
-		return err
-	}
-
-	params.Privmsgf(params.Target, "%s", gi.URL())
-
-	return nil
+	return &stack{items: events}, nil
 }
