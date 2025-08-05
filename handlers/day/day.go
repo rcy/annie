@@ -1,8 +1,10 @@
 package day
 
 import (
+	"context"
 	"fmt"
 	"goirc/bot"
+	"goirc/image"
 	"goirc/shell"
 	"strings"
 	"time"
@@ -72,4 +74,17 @@ func fetchDayEvents(day string) (*stack, error) {
 	events := strings.Split(r, "\n")
 
 	return &stack{items: events}, nil
+}
+
+// TODO: this shouldn't be here
+func Image(params bot.HandlerParams) error {
+	prompt := params.Matches[1]
+	gi, err := image.GenerateDALLE(context.Background(), prompt)
+	if err != nil {
+		return err
+	}
+
+	params.Privmsgf(params.Target, "%s", gi.URL())
+
+	return nil
 }
