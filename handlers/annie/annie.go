@@ -104,7 +104,7 @@ Someone has posted some pleasantry or small talk.
 Respond in kind, but in a very uninterested dismissive way.
 Respond in lower case, with minimal punctuation.`
 
-		response, err := ai.Complete(ctx, openai.GPT3Dot5Turbo, systemPrompt, msg)
+		response, err := ai.Complete(ctx, openai.GPT4oMini, systemPrompt, msg)
 		if err != nil {
 			return err
 		}
