@@ -113,6 +113,7 @@ func addHandlers(b *bot.Bot) {
 		if off {
 			if b.IsJoined {
 				b.Conn.Privmsgf(b.Channel, "see you sweetmorn")
+				time.Sleep(10 * time.Second)
 				b.Conn.Part(b.Channel)
 			}
 		} else {
