@@ -22,7 +22,7 @@ func NewHandlerParams(target string, privmsgf func(string, string, ...interface{
 }
 
 func (hp HandlerParams) Privmsgf(target string, format string, a ...interface{}) {
-	hp.privmsgf(target, format, a)
+	hp.privmsgf(target, format, a...)
 }
 
 func (hp HandlerParams) Target() string {
