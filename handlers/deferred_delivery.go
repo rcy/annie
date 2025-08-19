@@ -20,12 +20,12 @@ func DeferredDelivery(params responder.Responder) error {
 	}
 
 	if model.PrefixMatchesKnownNick(model.DB, params.Target(), prefix) {
-		_, err := model.DB.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, params.Nick, prefix, message, false)
+		_, err := model.DB.Exec(`insert into laters values(datetime('now'), ?, ?, ?, ?)`, params.Nick(), prefix, message, false)
 		if err != nil {
 			return err
 		}
 
-		params.Privmsgf(params.Target(), "%s: will send to %s* later", params.Nick, prefix)
+		params.Privmsgf(params.Target(), "%s: will send to %s* later", params.Nick(), prefix)
 	}
 	return nil
 }

@@ -46,7 +46,7 @@ func Handle(params responder.Responder) error {
 			return err
 		}
 
-		params.Privmsgf(params.Target(), "%s: %s", params.Nick, response)
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick(), response)
 	case "question":
 		notes, err := q.NonAnonNotes(ctx)
 		if err != nil {
@@ -71,7 +71,7 @@ Do not refer to yourself in the third person.
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target(), "%s: %s", params.Nick, response)
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick(), response)
 	case "request":
 		notes, err := q.NonAnonNotes(ctx)
 		if err != nil {
@@ -96,7 +96,7 @@ Do not refer to yourself in the third person.
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target(), "%s: %s", params.Nick, response)
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick(), response)
 	case "pleasantry":
 		systemPrompt := `
 You are annie, a friend hanging out in an irc channel.
@@ -108,9 +108,9 @@ Respond in lower case, with minimal punctuation.`
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target(), "%s: %s", params.Nick, response)
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick(), response)
 	default:
-		params.Privmsgf(params.Target(), "%s: [interpreted '%s' as a unknown type: %s]", params.Nick, msg, response)
+		params.Privmsgf(params.Target(), "%s: [interpreted '%s' as a unknown type: %s]", params.Nick(), msg, response)
 	}
 
 	return nil
