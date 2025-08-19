@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"goirc/bot"
 	db "goirc/db/model"
+	"goirc/internal/responder"
 	"goirc/model"
 	"net/http"
 	"os"
@@ -123,16 +123,16 @@ func fetchForecastByCoords(lat, lon float64) (*forecast, error) {
 	return &f, nil
 }
 
-func HandleForecast(params bot.HandlerParams) error {
+func HandleForecast(params responder.Responder) error {
 	ctx := context.TODO()
 	queries := db.New(model.DB)
 
 	var q string
-	if len(params.Matches) > 1 {
-		q = params.Matches[1]
+	if len(params.Matches()) > 1 {
+		q = params.Match(1)
 	}
 
-	q, err := weatherQueryByNick(ctx, q, params.Nick)
+	q, err := weatherQueryByNick(ctx, q, params.Nick())
 	if err != nil {
 		return err
 	}
@@ -154,10 +154,10 @@ func HandleForecast(params bot.HandlerParams) error {
 		countryStr = country.Name.Common
 	}
 
-	params.Privmsgf(params.Target, "%s, %s forecast: %s", forecast.City.Name, countryStr, str)
+	params.Privmsgf(params.Target(), "%s, %s forecast: %s", forecast.City.Name, countryStr, str)
 
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
-		Nick:    params.Nick,
+		Nick:    params.Nick(),
 		Query:   q,
 		City:    forecast.City.Name,
 		Country: forecast.City.Country,
@@ -169,7 +169,7 @@ func HandleForecast(params bot.HandlerParams) error {
 	return nil
 }
 
-func HandleWeatherForecast(params bot.HandlerParams) error {
+func HandleWeatherForecast(params responder.Responder) error {
 	err := Handle(params)
 	if err != nil {
 		return err

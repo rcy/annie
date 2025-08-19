@@ -3,8 +3,8 @@ package day
 import (
 	"context"
 	"fmt"
-	"goirc/bot"
 	"goirc/image"
+	"goirc/internal/responder"
 	"goirc/shell"
 	"strings"
 	"time"
@@ -25,7 +25,7 @@ func (s *stack) Pop() (string, bool) {
 
 var dayDays = make(map[string]*stack)
 
-func NationalDay(params bot.HandlerParams) error {
+func NationalDay(params responder.Responder) error {
 	location, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
 		return err
@@ -37,11 +37,11 @@ func NationalDay(params bot.HandlerParams) error {
 		return err
 	}
 	if event == "" {
-		params.Privmsgf(params.Target, "thats it")
+		params.Privmsgf(params.Target(), "thats it")
 		return nil
 	}
 
-	params.Privmsgf(params.Target, "%s", event)
+	params.Privmsgf(params.Target(), "%s", event)
 	return nil
 }
 
@@ -77,14 +77,14 @@ func fetchDayEvents(day string) (*stack, error) {
 }
 
 // TODO: this shouldn't be here
-func Image(params bot.HandlerParams) error {
-	prompt := params.Matches[1]
+func Image(params responder.Responder) error {
+	prompt := params.Match(1)
 	gi, err := image.GenerateDALLE(context.Background(), prompt)
 	if err != nil {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", gi.URL())
+	params.Privmsgf(params.Target(), "%s", gi.URL())
 
 	return nil
 }

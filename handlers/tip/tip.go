@@ -1,11 +1,9 @@
 package tip
 
-import (
-	"goirc/bot"
-)
+import "goirc/internal/responder"
 
-func Handle(params bot.HandlerParams) error {
-	params.Privmsgf(params.Target, "%s: https://rcy.sh/tip", params.Nick)
+func Handle(params responder.Responder) error {
+	params.Privmsgf(params.Target(), "%s: https://rcy.sh/tip", params.Nick)
 
 	return nil
 }

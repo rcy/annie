@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"goirc/bot"
+	"goirc/internal/responder"
 	"math"
 	"time"
 
@@ -9,7 +9,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func TimeLeft(params bot.HandlerParams) error {
+func TimeLeft(params responder.Responder) error {
 	left := time.Until(time.Unix(2<<30, 0))
 
 	years := int(math.Round(left.Hours() / 24 / 365))
@@ -24,7 +24,7 @@ func TimeLeft(params bot.HandlerParams) error {
 
 	str := p.Sprintf("%d years / %d months / %d weeks / %d days / %d hours / %d minutes / %d seconds\n", years, months, weeks, days, hours, minutes, seconds)
 
-	params.Privmsgf(params.Target, "%s", str)
+	params.Privmsgf(params.Target(), "%s", str)
 
 	return nil
 }

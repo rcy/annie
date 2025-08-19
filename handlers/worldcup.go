@@ -1,17 +1,17 @@
 package handlers
 
 import (
-	"goirc/bot"
+	"goirc/internal/responder"
 	"goirc/util"
 	"time"
 )
 
-func Worldcup(params bot.HandlerParams) error {
+func Worldcup(params responder.Responder) error {
 	then, err := time.Parse(time.RFC3339, "2026-06-01T15:00:00Z")
 	if err != nil {
 		return err
 	}
 	until := util.Ago(time.Until(then))
-	params.Privmsgf(params.Target, "the world cup will start in %s", until)
+	params.Privmsgf(params.Target(), "the world cup will start in %s", until)
 	return nil
 }

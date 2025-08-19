@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"goirc/bot"
 	db "goirc/db/model"
+	"goirc/internal/responder"
 	"goirc/model"
 	"io"
 	"net/http"
@@ -186,16 +186,16 @@ func fetchXWeather(city string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func Handle(params bot.HandlerParams) error {
+func Handle(params responder.Responder) error {
 	ctx := context.TODO()
 	queries := db.New(model.DB)
 
 	var q string
-	if len(params.Matches) > 1 {
-		q = params.Matches[1]
+	if len(params.Matches()) > 1 {
+		q = params.Match(1)
 	}
 
-	q, err := weatherQueryByNick(ctx, q, params.Nick)
+	q, err := weatherQueryByNick(ctx, q, params.Nick())
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func Handle(params bot.HandlerParams) error {
 	}
 
 	err = queries.InsertNickWeatherRequest(ctx, db.InsertNickWeatherRequestParams{
-		Nick:    params.Nick,
+		Nick:    params.Nick(),
 		Query:   q,
 		City:    weath.Name,
 		Country: weath.Sys.Country,
@@ -223,13 +223,13 @@ func Handle(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s, %s today: %s", weath.Name, countryStr, weath.String())
+	params.Privmsgf(params.Target(), "%s, %s today: %s", weath.Name, countryStr, weath.String())
 
 	return nil
 }
 
-func XHandle(params bot.HandlerParams) error {
-	q := params.Matches[1]
+func XHandle(params responder.Responder) error {
+	q := params.Match(1)
 
 	resp, err := fetchXWeather(q)
 	if err != nil {
@@ -239,7 +239,7 @@ func XHandle(params bot.HandlerParams) error {
 	chunks := splitBytes(resp, 420)
 
 	for _, chunk := range chunks {
-		params.Privmsgf(params.Target, "%s", string(chunk))
+		params.Privmsgf(params.Target(), "%s", string(chunk))
 	}
 
 	return nil

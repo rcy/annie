@@ -5,23 +5,23 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"goirc/bot"
 	"goirc/db/model"
+	"goirc/internal/responder"
 	db "goirc/model"
 	"time"
 
 	"github.com/rcy/disco"
 )
 
-func Handle(params bot.HandlerParams) error {
-	location, err := getNickLocation(context.TODO(), params.Nick)
+func Handle(params responder.Responder) error {
+	location, err := getNickLocation(context.TODO(), params.Nick())
 	if err != nil {
 		return fmt.Errorf("getNickLocation: %w", err)
 	}
 	now := time.Now().In(location)
 	str := disco.FromTime(now).Format(true)
 
-	params.Privmsgf(params.Target, "%s", str)
+	params.Privmsgf(params.Target(), "%s", str)
 
 	return nil
 }

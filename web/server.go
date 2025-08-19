@@ -12,6 +12,7 @@ import (
 	"goirc/db/model"
 	"goirc/image"
 	"goirc/internal/idstr"
+	"goirc/internal/responder"
 	"goirc/internal/summary"
 	"goirc/internal/uploads"
 	db "goirc/model"
@@ -77,25 +78,25 @@ type oneTimeCode struct {
 
 var codes = make(map[code]oneTimeCode)
 
-func HandleAuth(params bot.HandlerParams) error {
-	if params.Nick == params.Target {
-		params.Privmsgf(params.Nick, "cannot !auth privately, do it in channel")
+func HandleAuth(params responder.Responder) error {
+	if params.Nick() == params.Target() {
+		params.Privmsgf(params.Nick(), "cannot !auth privately, do it in channel")
 		return nil
 	}
 	var c = code(strings.Split(uuid.Must(uuid.NewV4()).String(), "-")[0])
-	codes[c] = oneTimeCode{nick: params.Nick}
-	params.Privmsgf(params.Nick, "hi %s, login with this link: %s/login/code/%s", params.Nick, os.Getenv("ROOT_URL"), c)
+	codes[c] = oneTimeCode{nick: params.Nick()}
+	params.Privmsgf(params.Nick(), "hi %s, login with this link: %s/login/code/%s", params.Nick, os.Getenv("ROOT_URL"), c)
 	return nil
 }
 
-func HandleDeauth(params bot.HandlerParams) error {
+func HandleDeauth(params responder.Responder) error {
 	q := model.New(db.DB.DB)
 
-	err := q.DeleteNickSessions(context.Background(), params.Nick)
+	err := q.DeleteNickSessions(context.Background(), params.Nick())
 	if err != nil {
 		return err
 	}
-	params.Privmsgf(params.Nick, "%s: all your sessions have been destroyed on %s", params.Nick, os.Getenv("ROOT_URL"))
+	params.Privmsgf(params.Nick(), "%s: all your sessions have been destroyed on %s", params.Nick, os.Getenv("ROOT_URL"))
 	return nil
 }
 

@@ -3,20 +3,20 @@ package tz
 import (
 	"context"
 	"fmt"
-	"goirc/bot"
 	"goirc/db/model"
+	"goirc/internal/responder"
 	db "goirc/model"
 	"os"
 )
 
-func Handle(params bot.HandlerParams) error {
-	tz, err := getNickTimezone(context.TODO(), params.Nick)
+func Handle(params responder.Responder) error {
+	tz, err := getNickTimezone(context.TODO(), params.Nick())
 	if err != nil {
-		params.Privmsgf(params.Target, "%s: I don't know your timezone. Visit %s to set it", params.Nick, os.Getenv("ROOT_URL"))
+		params.Privmsgf(params.Target(), "%s: I don't know your timezone. Visit %s to set it", params.Nick, os.Getenv("ROOT_URL"))
 		return nil
 	}
 
-	params.Privmsgf(params.Target, "%s: your timezone is %s", params.Nick, tz)
+	params.Privmsgf(params.Target(), "%s: your timezone is %s", params.Nick, tz)
 
 	return nil
 }

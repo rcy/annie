@@ -1,12 +1,12 @@
 package bible
 
 import (
-	"goirc/bot"
 	"goirc/internal/bible"
+	"goirc/internal/responder"
 )
 
-func Handle(params bot.HandlerParams) error {
-	ref := params.Matches[1]
+func Handle(params responder.Responder) error {
+	ref := params.Match(1)
 
 	b := bible.New()
 
@@ -20,7 +20,7 @@ func Handle(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", text)
+	params.Privmsgf(params.Target(), "%s", text)
 
 	return nil
 }

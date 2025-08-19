@@ -3,22 +3,22 @@ package handlers
 import (
 	"context"
 	"database/sql"
-	"goirc/bot"
 	"goirc/db/model"
+	"goirc/internal/responder"
 	db "goirc/model"
 )
 
-func Link(params bot.HandlerParams) error {
+func Link(params responder.Responder) error {
 	q := model.New(db.DB)
 
-	url := params.Matches[1]
+	url := params.Match(1)
 
 	// posted in a private message?
-	isAnonymous := params.Target == params.Nick
+	isAnonymous := params.Target() == params.Nick()
 
 	_, err := q.InsertNote(context.TODO(), model.InsertNoteParams{
-		Target: params.Target,
-		Nick:   sql.NullString{String: params.Nick, Valid: true},
+		Target: params.Target(),
+		Nick:   sql.NullString{String: params.Nick(), Valid: true},
 		Kind:   "link",
 		Text:   sql.NullString{String: url, Valid: true},
 		Anon:   isAnonymous,
@@ -33,7 +33,7 @@ func Link(params bot.HandlerParams) error {
 			return err
 		}
 
-		params.Privmsgf(params.Target, "thanks for the link")
+		params.Privmsgf(params.Target(), "thanks for the link")
 
 		return nil
 	}

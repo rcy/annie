@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"context"
-	"goirc/bot"
 	"goirc/db/model"
 	"goirc/handlers/linkpool"
+	"goirc/internal/responder"
 	db "goirc/model"
 	"time"
 )
@@ -17,10 +17,10 @@ const (
 	FutureMessageInterval = "+1 hour"
 )
 
-func AnonLink(params bot.HandlerParams) error {
+func AnonLink(params responder.Responder) error {
 	q := model.New(db.DB)
 	pool := linkpool.New(q, minAge)
-	note, err := pool.PopRandomNote(context.Background(), params.Target, "link")
+	note, err := pool.PopRandomNote(context.Background(), params.Target(), "link")
 	if err != nil {
 		return err
 	}
@@ -30,24 +30,24 @@ func AnonLink(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", text)
+	params.Privmsgf(params.Target(), "%s", text)
 	return nil
 }
 
-func AnonQuote(params bot.HandlerParams) error {
+func AnonQuote(params responder.Responder) error {
 	q := model.New(db.DB)
 	pool := linkpool.New(q, minAge)
-	note, err := pool.PopRandomNote(context.Background(), params.Target, "quote")
+	note, err := pool.PopRandomNote(context.Background(), params.Target(), "quote")
 	if err != nil {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", note.Text.String)
+	params.Privmsgf(params.Target(), "%s", note.Text.String)
 
 	return nil
 }
 
-func AnonStatus(params bot.HandlerParams) error {
+func AnonStatus(params responder.Responder) error {
 	ctx := context.TODO()
 	q := model.New(db.DB)
 	allPool := linkpool.New(q, 0)
@@ -70,7 +70,7 @@ func AnonStatus(params bot.HandlerParams) error {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "links=%d+%d quotes=%d+%d",
+	params.Privmsgf(params.Target(), "links=%d+%d quotes=%d+%d",
 		len(dayLinks), len(allLinks)-len(dayLinks),
 		len(dayQuotes), len(allQuotes)-len(dayQuotes),
 	)

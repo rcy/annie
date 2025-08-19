@@ -1,19 +1,19 @@
 package kinfonet
 
 import (
-	"goirc/bot"
+	"goirc/internal/responder"
 	"time"
 
 	"github.com/gocolly/colly"
 )
 
-func TodaysQuoteHandler(params bot.HandlerParams) error {
+func TodaysQuoteHandler(params responder.Responder) error {
 	quote, err := todaysQuote()
 	if err != nil {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "%s", quote.url)
+	params.Privmsgf(params.Target(), "%s", quote.url)
 
 	return nil
 }

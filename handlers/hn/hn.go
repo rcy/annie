@@ -3,12 +3,12 @@ package hn
 import (
 	"encoding/json"
 	"fmt"
-	"goirc/bot"
+	"goirc/internal/responder"
 	"math/rand"
 	"net/http"
 )
 
-func Handle(params bot.HandlerParams) error {
+func Handle(params responder.Responder) error {
 	resp, err := http.Get("https://hacker-news.firebaseio.com/v0/beststories.json")
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func Handle(params bot.HandlerParams) error {
 	if err != nil {
 		return err
 	}
-	params.Privmsgf(params.Target, "%s", item.Title)
+	params.Privmsgf(params.Target(), "%s", item.Title)
 
 	return nil
 }

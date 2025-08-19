@@ -2,7 +2,7 @@ package mlb
 
 import (
 	"encoding/json"
-	"goirc/bot"
+	"goirc/internal/responder"
 	"net/http"
 	"time"
 )
@@ -62,7 +62,7 @@ type Game struct {
 	IsLiveData bool `json:"isLiveData"`
 }
 
-func GameOdds(params bot.HandlerParams) error {
+func GameOdds(params responder.Responder) error {
 	g, err := fetchGameOdds()
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func GameOdds(params bot.HandlerParams) error {
 		bases += "."
 	}
 
-	params.Privmsgf(params.Target, "%s %d [%.0f%%], %s %d [%.0f%%], %d out %s %d %s",
+	params.Privmsgf(params.Target(), "%s %d [%.0f%%], %s %d [%.0f%%], %d out %s %d %s",
 		g[0].Schedule.AwayTeamName,
 		g[0].Scores.AwayScore,
 		g[0].Scores.LiveWEAway*100,

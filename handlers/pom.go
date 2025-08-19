@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"goirc/bot"
+	"goirc/internal/responder"
 	"os/exec"
 	"strings"
 )
 
-func POM(params bot.HandlerParams) error {
+func POM(params responder.Responder) error {
 	cmd := exec.Command("/usr/games/pom")
 
 	var out strings.Builder
@@ -21,7 +21,7 @@ func POM(params bot.HandlerParams) error {
 		str = str + " (nice)"
 	}
 
-	params.Privmsgf(params.Target, "%s", str)
+	params.Privmsgf(params.Target(), "%s", str)
 
 	return nil
 }

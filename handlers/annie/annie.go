@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"goirc/bot"
 	"goirc/db/model"
 	"goirc/internal/ai"
+	"goirc/internal/responder"
 	db "goirc/model"
 	"strings"
 	"time"
@@ -14,14 +14,14 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-func Handle(params bot.HandlerParams) error {
+func Handle(params responder.Responder) error {
 	ctx := context.TODO()
 
 	var msg string
-	if len(params.Matches) < 2 {
+	if len(params.Matches()) < 2 {
 		return nil
 	}
-	msg = strings.TrimSpace(params.Matches[1])
+	msg = strings.TrimSpace(params.Matches()[1])
 
 	q := model.New(db.DB.DB)
 
@@ -37,8 +37,8 @@ func Handle(params bot.HandlerParams) error {
 			return err
 		}
 		_, err = q.InsertNote(context.TODO(), model.InsertNoteParams{
-			Target: params.Target,
-			Nick:   sql.NullString{String: params.Nick, Valid: true},
+			Target: params.Target(),
+			Nick:   sql.NullString{String: params.Nick(), Valid: true},
 			Kind:   "note",
 			Text:   sql.NullString{String: msg, Valid: true},
 		})
@@ -46,7 +46,7 @@ func Handle(params bot.HandlerParams) error {
 			return err
 		}
 
-		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick, response)
 	case "question":
 		notes, err := q.NonAnonNotes(ctx)
 		if err != nil {
@@ -71,7 +71,7 @@ Do not refer to yourself in the third person.
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick, response)
 	case "request":
 		notes, err := q.NonAnonNotes(ctx)
 		if err != nil {
@@ -96,7 +96,7 @@ Do not refer to yourself in the third person.
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick, response)
 	case "pleasantry":
 		systemPrompt := `
 You are annie, a friend hanging out in an irc channel.
@@ -108,9 +108,9 @@ Respond in lower case, with minimal punctuation.`
 		if err != nil {
 			return err
 		}
-		params.Privmsgf(params.Target, "%s: %s", params.Nick, response)
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick, response)
 	default:
-		params.Privmsgf(params.Target, "%s: [interpreted '%s' as a unknown type: %s]", params.Nick, msg, response)
+		params.Privmsgf(params.Target(), "%s: [interpreted '%s' as a unknown type: %s]", params.Nick, msg, response)
 	}
 
 	return nil

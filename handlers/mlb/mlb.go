@@ -3,8 +3,8 @@ package mlb
 import (
 	"encoding/json"
 	"fmt"
-	"goirc/bot"
 	"goirc/fetch"
+	"goirc/internal/responder"
 	"sort"
 	"strings"
 	"time"
@@ -92,7 +92,7 @@ func fetchLeagueTeams(league string) (TeamList, error) {
 	return lt, nil
 }
 
-func PlayoffOdds(params bot.HandlerParams) error {
+func PlayoffOdds(params responder.Responder) error {
 	teams, err := fetchLeagueTeams("AL")
 	if err != nil {
 		return err
@@ -105,8 +105,8 @@ func PlayoffOdds(params bot.HandlerParams) error {
 	}
 	nl := fmt.Sprintf("NL: %s", teams.String())
 
-	params.Privmsgf(params.Target, "%s", al)
-	params.Privmsgf(params.Target, "%s", nl)
+	params.Privmsgf(params.Target(), "%s", al)
+	params.Privmsgf(params.Target(), "%s", nl)
 
 	return nil
 }

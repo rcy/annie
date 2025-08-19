@@ -3,7 +3,7 @@ package gold
 import (
 	"encoding/json"
 	"fmt"
-	"goirc/bot"
+	"goirc/internal/responder"
 	"net/http"
 	"os"
 )
@@ -60,13 +60,13 @@ func getGoldPrice(token string) (float64, error) {
 	return obj.Price, nil
 }
 
-func Handle(params bot.HandlerParams) error {
+func Handle(params responder.Responder) error {
 	price, err := getGoldPrice(os.Getenv("GOLD_API_TOKEN"))
 	if err != nil {
 		return err
 	}
 
-	params.Privmsgf(params.Target, "gold is $%.2f / oz t.", price)
+	params.Privmsgf(params.Target(), "gold is $%.2f / oz t.", price)
 
 	return nil
 }

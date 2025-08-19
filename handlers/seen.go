@@ -3,13 +3,13 @@ package handlers
 import (
 	"database/sql"
 	"errors"
-	"goirc/bot"
+	"goirc/internal/responder"
 	"goirc/model"
 	"goirc/util"
 )
 
-func Seen(params bot.HandlerParams) error {
-	nick := params.Matches[1]
+func Seen(params responder.Responder) error {
+	nick := params.Match(1)
 
 	var channelNick model.ChannelNick
 
@@ -23,12 +23,12 @@ func Seen(params bot.HandlerParams) error {
 
 	if channelNick.Nick != "" {
 		if channelNick.Present {
-			params.Privmsgf(params.Target, "%s joined %s ago", channelNick.Nick, util.Since(channelNick.UpdatedAt))
+			params.Privmsgf(params.Target(), "%s joined %s ago", channelNick.Nick, util.Since(channelNick.UpdatedAt))
 		} else {
-			params.Privmsgf(params.Target, "%s left %s ago", channelNick.Nick, util.Since(channelNick.UpdatedAt))
+			params.Privmsgf(params.Target(), "%s left %s ago", channelNick.Nick, util.Since(channelNick.UpdatedAt))
 		}
 	} else {
-		params.Privmsgf(params.Target, "Never seen %s", nick)
+		params.Privmsgf(params.Target(), "Never seen %s", nick)
 	}
 	return nil
 }

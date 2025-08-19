@@ -25,6 +25,7 @@ import (
 	"goirc/handlers/tz"
 	"goirc/handlers/weather"
 	"goirc/internal/ai"
+	"goirc/internal/responder"
 	db "goirc/model"
 	"goirc/web"
 	"log/slog"
@@ -142,15 +143,9 @@ func addHandlers(b *bot.Bot) {
 		// send anonymous note
 		switch msg.Kind {
 		case "link":
-			err = handlers.AnonLink(bot.HandlerParams{
-				Target:   b.Channel,
-				Privmsgf: b.MakePrivmsgf(),
-			})
+			err = handlers.AnonLink(bot.NewHandlerParams(b.Channel, b.MakePrivmsgf()))
 		case "quote":
-			err = handlers.AnonQuote(bot.HandlerParams{
-				Target:   b.Channel,
-				Privmsgf: b.MakePrivmsgf(),
-			})
+			err = handlers.AnonQuote(bot.NewHandlerParams(b.Channel, b.MakePrivmsgf()))
 		default:
 			b.Conn.Privmsgf(b.Channel, "unhandled msg.Kind: %s", msg.Kind)
 		}
@@ -179,10 +174,7 @@ func addHandlers(b *bot.Bot) {
 
 	events.Subscribe("anonnoteposted", func(note any) {
 		go func() {
-			err := handlers.AnonLink(bot.HandlerParams{
-				Target:   b.Channel,
-				Privmsgf: b.MakePrivmsgf(),
-			})
+			err := handlers.AnonLink(bot.NewHandlerParams(b.Channel, b.MakePrivmsgf()))
 			if err != nil {
 				if errors.Is(err, ai.ErrBilling) {
 					return
@@ -197,10 +189,7 @@ func addHandlers(b *bot.Bot) {
 
 	events.Subscribe("anonquoteposted", func(note any) {
 		go func() {
-			err := handlers.AnonQuote(bot.HandlerParams{
-				Target:   b.Channel,
-				Privmsgf: b.MakePrivmsgf(),
-			})
+			err := handlers.AnonQuote(bot.NewHandlerParams(b.Channel, b.MakePrivmsgf()))
 			if err != nil {
 				if errors.Is(err, ai.ErrBilling) {
 					return
@@ -213,8 +202,8 @@ func addHandlers(b *bot.Bot) {
 		}()
 	})
 
-	b.Handle(`^!help`, func(params bot.HandlerParams) error {
-		params.Privmsgf(params.Target, "%s: %s", params.Nick, "https://github.com/rcy/annie/blob/main/handlers.go")
+	b.Handle(`^!help`, func(params responder.Responder) error {
+		params.Privmsgf(params.Target(), "%s: %s", params.Nick, "https://github.com/rcy/annie/blob/main/handlers.go")
 		return nil
 	})
 }

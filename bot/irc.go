@@ -73,8 +73,8 @@ func (b *Bot) Repeat(timeout time.Duration, action HandlerFunction) {
 		for {
 			time.Sleep(timeout)
 			err := action(HandlerParams{
-				Privmsgf: b.MakePrivmsgf(),
-				Target:   b.Channel,
+				privmsgf: b.MakePrivmsgf(),
+				target:   b.Channel,
 			})
 			if err != nil {
 				slog.Warn("Repeat", "err", err)
@@ -86,8 +86,8 @@ func (b *Bot) Repeat(timeout time.Duration, action HandlerFunction) {
 func (b *Bot) IdleRepeat(timeout time.Duration, action HandlerFunction) {
 	reset := idle.Repeat(timeout, func() {
 		err := action(HandlerParams{
-			Privmsgf: b.MakePrivmsgf(),
-			Target:   b.Channel,
+			privmsgf: b.MakePrivmsgf(),
+			target:   b.Channel,
 		})
 		if err != nil {
 			slog.Warn("IdleRepeat", "err", err)
@@ -100,8 +100,8 @@ func (b *Bot) IdleRepeat(timeout time.Duration, action HandlerFunction) {
 func (b *Bot) IdleRepeatAfterReset(timeout time.Duration, action HandlerFunction) {
 	reset := idle.RepeatAfterReset(timeout, func() {
 		err := action(HandlerParams{
-			Privmsgf: b.MakePrivmsgf(),
-			Target:   b.Channel,
+			privmsgf: b.MakePrivmsgf(),
+			target:   b.Channel,
 		})
 		if err != nil {
 			slog.Warn("IdleRepeatAfterReset", "err", err)
@@ -327,11 +327,11 @@ func (bot *Bot) RunHandlers(e *irc.Event) {
 		matches := handler.regexp.FindStringSubmatch(msg)
 		if len(matches) > 0 {
 			err := handler.action(HandlerParams{
-				Privmsgf:  bot.MakePrivmsgf(),
-				Msg:       msg,
-				Nick:      nick,
-				Target:    target,
-				Matches:   matches,
+				privmsgf:  bot.MakePrivmsgf(),
+				msg:       msg,
+				nick:      nick,
+				target:    target,
+				matches:   matches,
 				LastEvent: bot.LastEvent,
 			})
 
