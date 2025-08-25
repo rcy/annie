@@ -25,7 +25,7 @@ func RemindMe(params responder.Responder) error {
 	}
 	localFormat := when.In(loc).Format(time.RFC1123)
 
-	params.Privmsgf(params.Target(), "%s: reminder set for %s\n", params.Nick, localFormat)
+	params.Privmsgf(params.Target(), "%s: reminder set for %s\n", params.Nick(), localFormat)
 
 	return err
 }
