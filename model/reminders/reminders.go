@@ -1,6 +1,7 @@
 package reminders
 
 import (
+	"database/sql"
 	"goirc/model"
 	"time"
 )
@@ -13,9 +14,8 @@ type Reminder struct {
 	What      string
 }
 
-func Create(nick string, at time.Time, what string) error {
-	_, err := model.DB.Exec(`insert into reminders(nick, remind_at, what) values(?, ?, ?)`, nick, at.UTC().Format(time.DateTime), what)
-	return err
+func Create(nick string, at time.Time, what string) (sql.Result, error) {
+	return model.DB.Exec(`insert into reminders(nick, remind_at, what) values(?, ?, ?)`, nick, at.UTC().Format(time.DateTime), what)
 }
 
 func All() (rows []Reminder, err error) {

@@ -5,16 +5,22 @@ import (
 	"goirc/internal/responder"
 	"goirc/model/reminders"
 	"goirc/util"
+	"strings"
 	"time"
 
-	"github.com/xhit/go-str2duration/v2"
+	"github.com/olebedev/when"
+	"github.com/olebedev/when/rules/en"
 )
 
 func RemindMe(params responder.Responder) error {
-	duration := params.Match(1)
-	what := params.Match(2)
+	input := params.Match(1)
 
-	when, err := remind(params.Nick(), duration, what)
+	at, what, err := parseTimeAndTask(input)
+	if err != nil {
+		return err
+	}
+
+	result, err := reminders.Create(params.Nick(), at, what)
 	if err != nil {
 		return err
 	}
@@ -23,27 +29,12 @@ func RemindMe(params responder.Responder) error {
 	if err != nil {
 		return err
 	}
-	localFormat := when.In(loc).Format(time.RFC1123)
+	localFormat := at.In(loc).Format(time.RFC1123)
 
-	params.Privmsgf(params.Target(), "%s: reminder set for %s\n", params.Nick(), localFormat)
+	id, _ := result.LastInsertId()
+	params.Privmsgf(params.Target(), "%s: '%s' reminder set for %s [%d]\n", params.Nick(), what, localFormat, id)
 
 	return err
-}
-
-func remind(nick string, dur string, what string) (*time.Time, error) {
-	d, err := str2duration.ParseDuration(dur)
-	if err != nil {
-		return nil, err
-	}
-
-	at := time.Now().Add(d)
-
-	err = reminders.Create(nick, at, what)
-	if err != nil {
-		return nil, err
-	}
-
-	return &at, nil
 }
 
 func DoRemind(params responder.Responder) error {
@@ -56,7 +47,7 @@ func DoRemind(params responder.Responder) error {
 	}
 
 	ago := util.Ago(time.Since(row.CreatedAt).Round(time.Second))
-	params.Privmsgf(params.Target(), `%s: reminder (%s ago) "%s"`, row.Nick, ago, row.What)
+	params.Privmsgf(params.Target(), `%s: reminder (set %s ago) "%s"`, row.Nick, ago, row.What)
 
 	err = reminders.Delete(row.ID)
 	if err != nil {
@@ -64,4 +55,22 @@ func DoRemind(params responder.Responder) error {
 	}
 
 	return nil
+}
+
+func parseTimeAndTask(input string) (time.Time, string, error) {
+	w := when.New(nil)
+	w.Add(en.All...)
+
+	now := time.Now()
+	result, err := w.Parse(input, now)
+	if err != nil {
+		return time.Time{}, "", err
+	}
+	if result == nil {
+		return time.Time{}, input, nil
+	}
+
+	remaining := strings.TrimSpace(strings.Replace(input, result.Text, "", 1))
+
+	return result.Time, remaining, nil
 }

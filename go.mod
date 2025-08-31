@@ -10,6 +10,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/nathan-osman/go-sunrise v1.1.0
+	github.com/olebedev/when v1.1.0
 	github.com/pariz/gountries v0.1.6
 	github.com/rcy/disco v0.2.2
 	github.com/rcy/durfmt v0.0.0-20240102082646-83cc8efdab91
@@ -28,6 +29,7 @@ require (
 require (
 	cel.dev/expr v0.19.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/AlekSi/pointer v1.0.0 // indirect
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/antchfx/htmlquery v1.3.1 // indirect
