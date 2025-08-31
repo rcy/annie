@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"goirc/db/model"
 	"goirc/internal/responder"
 	db "goirc/model"
@@ -78,7 +79,7 @@ func parseTimeAndTask(input string, loc *time.Location) (time.Time, string, erro
 		return time.Time{}, "", err
 	}
 	if result == nil {
-		return time.Time{}, input, nil
+		return time.Time{}, "", fmt.Errorf("no time matches")
 	}
 
 	remaining := strings.TrimSpace(strings.Replace(input, result.Text, "", 1))
