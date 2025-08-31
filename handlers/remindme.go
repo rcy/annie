@@ -1,10 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
+	"goirc/db/model"
 	"goirc/internal/responder"
+	db "goirc/model"
 	"goirc/model/reminders"
 	"goirc/util"
+	"os"
 	"strings"
 	"time"
 
@@ -15,7 +19,18 @@ import (
 func RemindMe(params responder.Responder) error {
 	input := params.Match(1)
 
-	at, what, err := parseTimeAndTask(input)
+	q := model.New(db.DB)
+	nickTimezone, err := q.GetNickTimezone(context.TODO(), params.Nick())
+	if err != nil {
+		params.Privmsgf(params.Target(), "%s: I don't know your timezone. Visit %s to set it", params.Nick(), os.Getenv("ROOT_URL"))
+		return nil
+	}
+	loc, err := time.LoadLocation(nickTimezone.Tz)
+	if err != nil {
+		return err
+	}
+
+	at, what, err := parseTimeAndTask(input, loc)
 	if err != nil {
 		return err
 	}
@@ -25,10 +40,6 @@ func RemindMe(params responder.Responder) error {
 		return err
 	}
 
-	loc, err := time.LoadLocation("America/Los_Angeles")
-	if err != nil {
-		return err
-	}
 	localFormat := at.In(loc).Format(time.RFC1123)
 
 	id, _ := result.LastInsertId()
@@ -57,11 +68,11 @@ func DoRemind(params responder.Responder) error {
 	return nil
 }
 
-func parseTimeAndTask(input string) (time.Time, string, error) {
+func parseTimeAndTask(input string, loc *time.Location) (time.Time, string, error) {
 	w := when.New(nil)
 	w.Add(en.All...)
 
-	now := time.Now()
+	now := time.Now().In(loc)
 	result, err := w.Parse(input, now)
 	if err != nil {
 		return time.Time{}, "", err
