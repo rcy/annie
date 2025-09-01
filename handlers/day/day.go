@@ -64,6 +64,11 @@ func getEvent(day string) (string, error) {
 }
 
 func fetchDayEvents(day string) (*stack, error) {
+	// daysoftheyear website uses 3 day months, except for september:
+	// jan,feb,mar,apr,may,jun,jul,aug,sept(!),oct,nov,dec
+	// the format of day argument is mmm/dd, so handle sep/sept special case here
+	day = strings.Replace(day, "sep/", "sept/", 1)
+
 	url := fmt.Sprintf("https://www.daysoftheyear.com/days/%s", day)
 	cmd := fmt.Sprintf(`curl --location -s %s | pup 'body img json{}' | jq -r .[].alt | grep -E '\bDay\b'`, url)
 	r, err := shell.Command(cmd)
