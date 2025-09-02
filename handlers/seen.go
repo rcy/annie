@@ -13,7 +13,7 @@ func Seen(params responder.Responder) error {
 
 	var channelNick model.ChannelNick
 
-	err := model.DB.Get(&channelNick, "select * from channel_nicks where nick = ? and channel = ?", nick, params.Target)
+	err := model.DB.Get(&channelNick, "select * from channel_nicks where nick = ? and channel = ?", nick, params.Target())
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
