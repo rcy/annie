@@ -1,17 +1,34 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"goirc/bot"
-	db "goirc/model"
+	"goirc/events"
 	"goirc/util"
-	"goirc/web"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/rcy/evoke"
 )
 
 //go:generate go tool github.com/sqlc-dev/sqlc/cmd/sqlc generate --file db/sqlc.yaml
 
 func main() {
+	evokeFile, ok := os.LookupEnv("EVOKE_DB")
+	if !ok {
+		log.Fatal("EVOKE_DB not defined")
+	}
+	es, err := evoke.NewStore(evoke.Config{DBFile: evokeFile})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer es.Close()
+
 	b, err := bot.Connect(
+		es,
 		util.Getenv("IRC_NICK"),
 		util.Getenv("IRC_CHANNEL"),
 		util.Getenv("IRC_SERVER"))
@@ -19,9 +36,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go web.Serve(db.DB, b)
-
 	addHandlers(b)
 
-	b.Loop()
+	go b.Loop()
+
+	ctx, stop := signal.NotifyContext(context.Background(),
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
+	<-ctx.Done()
+	es.MustInsert(b.Channel, events.BotQuit{Nick: b.Conn.GetNick()})
+
+	fmt.Println("Clean shutdown.")
 }

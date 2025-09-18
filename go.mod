@@ -7,23 +7,23 @@ require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/gocolly/colly v1.2.0
 	github.com/gofrs/uuid/v5 v5.0.0
-	github.com/jmoiron/sqlx v1.3.5
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/kkdai/youtube/v2 v2.8.1
 	github.com/nathan-osman/go-sunrise v1.1.0
 	github.com/olebedev/when v1.1.0
 	github.com/pariz/gountries v0.1.6
 	github.com/rcy/disco v0.2.2
 	github.com/rcy/durfmt v0.0.0-20240102082646-83cc8efdab91
+	github.com/rcy/evoke v0.0.4
 	github.com/robfig/cron v1.2.0
 	github.com/sashabaranov/go-openai v1.38.1
 	github.com/solafide-dev/gobible v1.1.1
 	github.com/sqids/sqids-go v0.4.1
 	github.com/thoj/go-ircevent v0.0.0-20210723090443-73e444401d64
-	github.com/xhit/go-str2duration/v2 v2.1.0
 	golang.org/x/net v0.38.0
 	golang.org/x/text v0.23.0
 	maragu.dev/gomponents v1.1.0
-	modernc.org/sqlite v1.37.0
+	modernc.org/sqlite v1.38.2
 )
 
 require (
@@ -81,9 +81,9 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
+	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250106144421-5f5ef82da422 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250115164207-1a7da9e5054f // indirect
@@ -92,9 +92,11 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.62.1 // indirect
+	modernc.org/libc v1.66.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.9.1 // indirect
+	modernc.org/memory v1.11.0 // indirect
 )
 
 tool github.com/sqlc-dev/sqlc/cmd/sqlc
+
+replace github.com/rcy/evoke => ../evoke

@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"goirc/bot/idle"
-	"goirc/bot/timeoff"
 	"goirc/commit"
 	"goirc/db/model"
+	"goirc/events"
 	db "goirc/model"
 	"goirc/model/laters"
 	"goirc/util"
@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rcy/evoke"
 	irc "github.com/thoj/go-ircevent"
 )
 
@@ -121,7 +122,7 @@ func (b *Bot) Loop() {
 	b.Conn.Loop()
 }
 
-func Connect(nick string, channel string, server string) (*Bot, error) {
+func Connect(es *evoke.Service, nick string, channel string, server string) (*Bot, error) {
 	initialized := make(chan bool)
 	var bot Bot
 
@@ -132,12 +133,12 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 	bot.Conn.UseTLS = true
 	bot.Conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	bot.Conn.AddCallback("001", func(e *irc.Event) {
-		off, _ := timeoff.IsTimeoff(time.Now(), "America/Toronto", 43.64487, -79.38429)
-		if !off {
-			bot.Conn.Join(channel)
-		} else {
-			initialized <- true
-		}
+		// off, _ := timeoff.IsTimeoff(time.Now(), "America/Toronto", 43.64487, -79.38429)
+		// if !off {
+		bot.Conn.Join(channel)
+		// } else {
+		// 	initialized <- true
+		// }
 	})
 	bot.Conn.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks
@@ -149,8 +150,12 @@ func Connect(nick string, channel string, server string) (*Bot, error) {
 		// remove @ op markers from nick argument
 		nickStr := strings.ReplaceAll(e.Arguments[len(e.Arguments)-1], "@", "")
 
+		nicks := strings.Split(nickStr, " ")
+
+		es.MustInsert(bot.Channel, events.NamesListed{Nicks: nicks})
+
 		// mark nicks as present and record timestamp which can be intepreted as 'last seen', or 'online since'
-		for _, nick := range strings.Split(nickStr, " ") {
+		for _, nick := range nicks {
 			_, err = db.DB.Exec(`
 insert into channel_nicks(updated_at, channel, nick, present) values(current_timestamp, ?, ?, ?)
 on conflict(channel, nick) do update set updated_at = current_timestamp, present=excluded.present`,
@@ -162,13 +167,19 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	})
 	bot.Conn.AddCallback("366", func(e *irc.Event) {})
 	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
-		if e.Arguments[0] == channel {
+		if e.Arguments[0] == bot.Channel {
+			es.MustInsert(bot.Channel, events.PublicMessageReceived{Nick: e.Nick, Content: e.Arguments[1]})
 			bot.resetIdle()
+		} else {
+			es.MustInsert(e.Nick, events.PrivateMessageReceived{Content: e.Arguments[1]})
 		}
 		go bot.RunHandlers(e)
 	})
 	bot.Conn.AddCallback("JOIN", func(e *irc.Event) {
+		fmt.Println("JOIN", e.Nick)
 		if e.Nick != bot.Conn.GetNick() {
+			es.MustInsert(bot.Channel, events.NickJoined{Nick: e.Nick})
+
 			go func() {
 				time.Sleep(10 * time.Second)
 				bot.SendLaters(channel, e.Nick)
@@ -180,7 +191,12 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 					panic(err)
 				}
 			}()
+
+			// trigger NAMES to update the list of joined nicks
+			bot.Conn.SendRawf("NAMES %s", channel)
 		} else {
+			es.MustInsert(bot.Channel, events.BotJoined{Nick: e.Nick})
+
 			go func() {
 				bot.IsJoined = true
 				time.Sleep(1 * time.Second)
@@ -195,23 +211,26 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 				initialized <- true
 			}()
 		}
-
-		// trigger NAMES to update the list of joined nicks
-		bot.Conn.SendRawf("NAMES %s", channel)
 	})
 	bot.Conn.AddCallback("PART", func(e *irc.Event) {
 		if e.Nick != nick {
+			es.MustInsert(bot.Channel, events.NickParted{Nick: e.Nick})
+
 			// trigger NAMES to update the list of joined nicks
 			bot.Conn.SendRawf("NAMES %s", channel)
 		} else {
+			es.MustInsert(bot.Channel, events.BotParted{Nick: e.Nick})
 			bot.IsJoined = false
 		}
 	})
 	bot.Conn.AddCallback("QUIT", func(e *irc.Event) {
 		if e.Nick != nick {
+			es.MustInsert(bot.Channel, events.NickQuit{Nick: e.Nick})
+
 			// trigger NAMES to update the list of joined nicks
 			bot.Conn.SendRawf("NAMES %s", channel)
 		} else {
+			es.MustInsert(bot.Channel, events.BotQuit{Nick: e.Nick})
 			bot.IsJoined = false
 		}
 	})

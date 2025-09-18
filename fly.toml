@@ -18,6 +18,7 @@ kill_timeout = "5s"
   PORT = "8080"
   ROOT_URL = "https://annie.fly.dev"
   SQLITE_DB = "/data/annie.db"
+  EVOKE_DB = "/data/evoke.db"
   IMAGE_FILE_BASE = "/data/images"
 
 [[mounts]]
