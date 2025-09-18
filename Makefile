@@ -3,6 +3,9 @@ export BUILDKIT_PROGRESS=plain
 watch:
 	. ./.env && air
 
+build:
+	go build -o tmp/main .
+
 fmt:
 	go fmt main.go
 
@@ -15,7 +18,7 @@ sql:
 test:
 	set -a && . ./.env.test && go test ./...
 
-build:
+dbuild:
 	docker build -t annie .
 
 run:
