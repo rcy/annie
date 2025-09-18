@@ -8,7 +8,6 @@ import (
 	"goirc/bot"
 	"goirc/bot/timeoff"
 	"goirc/db/model"
-	"goirc/events"
 	"goirc/handlers"
 	"goirc/handlers/annie"
 	"goirc/handlers/bedtime"
@@ -27,6 +26,7 @@ import (
 	"goirc/internal/ai"
 	"goirc/internal/responder"
 	db "goirc/model"
+	"goirc/pubsub"
 	"goirc/web"
 	"log/slog"
 	"regexp"
@@ -172,7 +172,7 @@ func addHandlers(b *bot.Bot) {
 
 	c.Start()
 
-	events.Subscribe("anonnoteposted", func(note any) {
+	pubsub.Subscribe("anonnoteposted", func(note any) {
 		go func() {
 			err := handlers.AnonLink(bot.NewHandlerParams(b.Channel, b.MakePrivmsgf()))
 			if err != nil {
@@ -187,7 +187,7 @@ func addHandlers(b *bot.Bot) {
 		}()
 	})
 
-	events.Subscribe("anonquoteposted", func(note any) {
+	pubsub.Subscribe("anonquoteposted", func(note any) {
 		go func() {
 			err := handlers.AnonQuote(bot.NewHandlerParams(b.Channel, b.MakePrivmsgf()))
 			if err != nil {

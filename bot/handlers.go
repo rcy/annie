@@ -1,8 +1,8 @@
 package bot
 
 import (
-	"goirc/events"
 	"goirc/internal/responder"
+	"goirc/pubsub"
 	"strings"
 
 	irc "github.com/thoj/go-ircevent"
@@ -46,7 +46,7 @@ func (hp HandlerParams) Msg() string {
 }
 
 func (hp *HandlerParams) Publish(eventName string, payload any) {
-	events.Publish(eventName, payload)
+	pubsub.Publish(eventName, payload)
 }
 
 type HandlerFunction func(responder.Responder) error

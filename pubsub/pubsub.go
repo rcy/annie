@@ -1,4 +1,4 @@
-package events
+package pubsub
 
 type subscription struct {
 	name    string
