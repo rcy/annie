@@ -1,65 +1,55 @@
 package events
 
+type channelEvent struct{}
+
+func (channelEvent) Aggregate() string { return "channel" }
+
 type BotJoined struct {
+	channelEvent
 	Nick string
 }
-
-func (BotJoined) EventType() string { return "BotJoined" }
-func (BotJoined) Aggregate() string { return "channel" }
 
 type BotParted struct {
+	channelEvent
 	Nick string
 }
-
-func (BotParted) EventType() string { return "BotParted" }
-func (BotParted) Aggregate() string { return "channel" }
 
 type BotQuit struct {
+	channelEvent
 	Nick string
 }
-
-func (BotQuit) EventType() string { return "BotQuit" }
-func (BotQuit) Aggregate() string { return "channel" }
 
 type NickJoined struct {
+	channelEvent
 	Nick string
 }
-
-func (NickJoined) EventType() string { return "NickJoined" }
-func (NickJoined) Aggregate() string { return "channel" }
 
 type NickParted struct {
+	channelEvent
 	Nick string
 }
-
-func (NickParted) EventType() string { return "NickParted" }
-func (NickParted) Aggregate() string { return "channel" }
 
 type NickQuit struct {
+	channelEvent
 	Nick string
 }
 
-func (NickQuit) EventType() string { return "NickQuit" }
-func (NickQuit) Aggregate() string { return "channel" }
-
 type NamesListed struct {
+	channelEvent
 	Nicks []string
 }
 
-func (NamesListed) EventType() string { return "NamesListed" }
-func (NamesListed) Aggregate() string { return "channel" }
-
 type PublicMessageReceived struct {
+	channelEvent
 	Nick    string
 	Content string
 }
 
-func (PublicMessageReceived) EventType() string { return "PublicMessageReceived" }
-func (PublicMessageReceived) Aggregate() string { return "channel" }
+type nickEvent struct{}
+
+func (nickEvent) Aggregate() string { return "nick" }
 
 type PrivateMessageReceived struct {
+	nickEvent
 	Content string
 }
-
-func (PrivateMessageReceived) EventType() string { return "PrivateMessageReceived" }
-func (PrivateMessageReceived) Aggregate() string { return "nick" }
