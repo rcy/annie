@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"goirc/bot"
 	"goirc/events"
+	db "goirc/model"
 	"goirc/util"
+	"goirc/web"
 	"log"
 	"os"
 	"os/signal"
@@ -39,6 +41,7 @@ func main() {
 	addHandlers(b)
 
 	go b.Loop()
+	go web.Serve(db.DB, b)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT,
