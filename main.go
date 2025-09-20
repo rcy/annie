@@ -41,7 +41,7 @@ func main() {
 	addHandlers(b)
 
 	go b.Loop()
-	go web.Serve(db.DB, b)
+	go web.Serve(db.DB, b, es)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGINT,

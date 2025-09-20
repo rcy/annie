@@ -10,6 +10,7 @@ import (
 	"goirc/bot"
 	"goirc/bot/timeoff"
 	"goirc/db/model"
+	"goirc/events"
 	"goirc/image"
 	"goirc/internal/idstr"
 	"goirc/internal/responder"
@@ -30,9 +31,13 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/kkdai/youtube/v2"
+	"github.com/rcy/evoke"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
+	. "maragu.dev/gomponents"
+	. "maragu.dev/gomponents/html"
 )
 
 //go:embed "templates/index.gohtml"
@@ -100,7 +105,7 @@ func HandleDeauth(params responder.Responder) error {
 	return nil
 }
 
-func Serve(db *sqlx.DB, b *bot.Bot) {
+func Serve(db *sqlx.DB, b *bot.Bot, es *evoke.Service) {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
@@ -335,6 +340,27 @@ func Serve(db *sqlx.DB, b *bot.Bot) {
 			}
 
 			http.ServeFile(w, r, "/tmp/snapshot.db")
+		})
+
+		r.Get("/events", func(w http.ResponseWriter, r *http.Request) {
+			eventList, err := es.LoadAllEvents(true)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			Table(TBody(
+				Map(eventList, func(event evoke.Event) Node {
+					if event.EventType == evoke.EventTypeOf(events.PrivateMessageReceived{}) {
+						return nil
+					}
+
+					return Tr(
+						Td(Text(event.CreatedAt.Local().Format(time.DateTime))),
+						Td(Text(event.EventType)),
+						Td(Text(event.AggregateType)),
+						Td(Text(event.AggregateID)),
+						Td(Text(string(event.EventData))))
+				}))).Render(w)
 		})
 
 		funcMap := template.FuncMap{
