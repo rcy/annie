@@ -356,7 +356,8 @@ func Serve(db *sqlx.DB, b *bot.Bot, es *evoke.Service) {
 					}
 
 					return Tr(
-						Td(Text(event.CreatedAt.Local().Format(time.DateTime))),
+						Td(Text(event.CreatedAt.Local().Format(time.DateOnly))),
+						Td(Text(event.CreatedAt.Local().Format(time.TimeOnly))),
 						Td(Text(event.EventType)),
 						Td(Text(event.AggregateType)),
 						Td(Text(event.AggregateID)),
