@@ -170,7 +170,7 @@ on conflict(channel, nick) do update set updated_at = current_timestamp, present
 	bot.Conn.AddCallback("366", func(e *irc.Event) {})
 	bot.Conn.AddCallback("PRIVMSG", func(e *irc.Event) {
 		if e.Arguments[0] == bot.Channel {
-			es.MustInsert(bot.Channel, events.PublicMessageReceived{Nick: e.Nick, Content: e.Arguments[1]})
+			es.MustInsert(bot.Channel, events.MessageReceived{Nick: e.Nick, Content: e.Arguments[1]})
 			bot.resetIdle()
 		} else {
 			es.MustInsert(e.Nick, events.PrivateMessageReceived{Content: e.Arguments[1]})
