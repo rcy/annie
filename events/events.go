@@ -39,9 +39,14 @@ type NamesListed struct {
 	Nicks []string
 }
 
-type PublicMessageReceived struct {
+type MessageReceived struct {
 	channelEvent
 	Nick    string
+	Content string
+}
+
+type MessageSent struct {
+	channelEvent
 	Content string
 }
 
@@ -50,6 +55,11 @@ type nickEvent struct{}
 func (nickEvent) Aggregate() string { return "nick" }
 
 type PrivateMessageReceived struct {
+	nickEvent
+	Content string
+}
+
+type PrivateMessageSent struct {
 	nickEvent
 	Content string
 }

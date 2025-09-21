@@ -350,7 +350,8 @@ func Serve(db *sqlx.DB, b *bot.Bot, es *evoke.Service) {
 			}
 			Table(TBody(
 				Map(eventList, func(event evoke.Event) Node {
-					if event.EventType == evoke.EventTypeOf(events.PrivateMessageReceived{}) {
+					if event.EventType == evoke.EventTypeOf(events.PrivateMessageReceived{}) ||
+						event.EventType == evoke.EventTypeOf(events.PrivateMessageSent{}) {
 						return nil
 					}
 

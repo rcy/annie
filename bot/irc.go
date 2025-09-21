@@ -57,6 +57,7 @@ type Bot struct {
 	IsJoined           bool
 	idleResetFunctions []func()
 	queue              chan delivery
+	Events             evoke.Inserter
 }
 
 func (b *Bot) Handle(pattern string, action HandlerFunction) {
@@ -126,6 +127,7 @@ func Connect(es *evoke.Service, nick string, channel string, server string) (*Bo
 	initialized := make(chan bool)
 	var bot Bot
 
+	bot.Events = es
 	bot.Channel = channel
 	bot.Conn = irc.IRC(nick, "github.com/rcy/annie")
 	bot.Conn.VerboseCallbackHandler = false
@@ -269,10 +271,14 @@ func (bot *Bot) setupDeliveryQueue() {
 				delay = initialDelay
 			}
 			bot.Conn.Privmsg(d.target, d.message)
-
 			lastSendTime = time.Now()
 
-			fmt.Println("delay", delay)
+			// log sent event
+			if d.target == bot.Channel {
+				_ = bot.Events.Insert(d.target, events.MessageSent{Content: d.message})
+			} else {
+				_ = bot.Events.Insert(d.target, events.PrivateMessageSent{Content: d.message})
+			}
 
 			time.Sleep(delay)
 
