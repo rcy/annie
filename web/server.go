@@ -355,7 +355,7 @@ func Serve(db *sqlx.DB, b *bot.Bot, es *evoke.Service) {
 						return nil
 					}
 
-					return Tr(
+					return Tr(Style("white-space: nowrap"),
 						Td(Text(event.CreatedAt.Local().Format(time.DateOnly))),
 						Td(Text(event.CreatedAt.Local().Format(time.TimeOnly))),
 						Td(Text(event.EventType)),
