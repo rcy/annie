@@ -50,6 +50,12 @@ type MessageSent struct {
 	Content string
 }
 
+type FileUploaded struct {
+	nickEvent
+	Nick   string
+	FileID int64
+}
+
 type nickEvent struct{}
 
 func (nickEvent) Aggregate() string { return "nick" }

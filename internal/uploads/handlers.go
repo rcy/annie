@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"goirc/bot"
 	"goirc/db/model"
+	"goirc/events"
 	"goirc/web/auth"
 	"io"
 	"net/http"
@@ -134,6 +135,12 @@ func (s *service) PostHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		http.Error(w, "Failed to save file to DB", http.StatusInternalServerError)
+		return
+	}
+
+	err = s.Bot.Events.Insert(s.Bot.Channel, events.FileUploaded{Nick: nick, FileID: file.ID})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Events.Insert: %s", err), http.StatusInternalServerError)
 		return
 	}
 
