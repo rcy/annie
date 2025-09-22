@@ -4,6 +4,7 @@ go 1.24.3
 
 require (
 	github.com/BurntSushi/migration v0.0.0-20140125045755-c45b897f1335
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/gocolly/colly v1.2.0
 	github.com/gofrs/uuid/v5 v5.0.0
@@ -15,7 +16,6 @@ require (
 	github.com/rcy/disco v0.2.2
 	github.com/rcy/durfmt v0.0.0-20240102082646-83cc8efdab91
 	github.com/rcy/evoke v0.1.1
-	github.com/rcy/whatever v0.5.5
 	github.com/robfig/cron v1.2.0
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/solafide-dev/gobible v1.1.1
@@ -31,7 +31,6 @@ require (
 	cel.dev/expr v0.19.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/AlekSi/pointer v1.0.0 // indirect
-	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/antchfx/htmlquery v1.3.1 // indirect
 	github.com/antchfx/xmlquery v1.4.0 // indirect
@@ -99,5 +98,3 @@ require (
 )
 
 tool github.com/sqlc-dev/sqlc/cmd/sqlc
-
-replace github.com/rcy/evoke => ../evoke
