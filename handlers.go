@@ -19,6 +19,7 @@ import (
 	"goirc/handlers/kinfonet"
 	"goirc/handlers/linkpool"
 	"goirc/handlers/mlb"
+	"goirc/handlers/news"
 	"goirc/handlers/tip"
 	"goirc/handlers/tz"
 	"goirc/handlers/weather"
@@ -75,6 +76,7 @@ func addHandlers(b *bot.Bot) {
 	b.Handle(`^tip$`, tip.Handle)
 	b.Handle(`^date$`, ddate.Handle)
 	b.Handle(`^tz`, tz.Handle)
+	b.Handle(`^!cnn\b(.+)?`, news.Handle)
 
 	b.Repeat(10*time.Second, handlers.DoRemind)
 	b.IdleRepeatAfterReset(8*time.Hour, handlers.POM)

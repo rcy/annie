@@ -1,7 +1,7 @@
 export BUILDKIT_PROGRESS=plain
 
 watch:
-	. ./.env && air
+	. ./.env && . ./.env.local && air
 
 build:
 	go build -o tmp/main .
