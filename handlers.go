@@ -105,25 +105,6 @@ func addHandlers(b *bot.Bot) {
 		panic(err)
 	}
 
-	// err = c.AddFunc("37 * * * * *", func() {
-	// 	off, err := timeoff.IsTimeoff(time.Now(), "America/Toronto", 43.64487, -79.38429)
-	// 	if err != nil {
-	// 		slog.Error("IsTimeoff", "error", err)
-	// 		return
-	// 	}
-	// 	if off {
-	// 		if b.IsJoined {
-	// 			b.Conn.Privmsgf(b.Channel, "see you sweetmorn")
-	// 			time.Sleep(10 * time.Second)
-	// 			b.Conn.Part(b.Channel)
-	// 		}
-	// 	} else {
-	// 		if !b.IsJoined {
-	// 			b.Conn.Join(b.Channel)
-	// 		}
-	// 	}
-	// })
-
 	err = c.AddFunc("57 * * * * *", func() {
 		ctx := context.TODO()
 		msg, err := q.ReadyFutureMessage(ctx, handlers.FutureMessageInterval)

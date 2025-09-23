@@ -135,12 +135,7 @@ func Connect(es *evoke.Service, nick string, channel string, server string) (*Bo
 	bot.Conn.UseTLS = true
 	bot.Conn.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	bot.Conn.AddCallback("001", func(e *irc.Event) {
-		// off, _ := timeoff.IsTimeoff(time.Now(), "America/Toronto", 43.64487, -79.38429)
-		// if !off {
 		bot.Conn.Join(channel)
-		// } else {
-		// 	initialized <- true
-		// }
 	})
 	bot.Conn.AddCallback("353", func(e *irc.Event) {
 		// clear the presence of all channel nicks

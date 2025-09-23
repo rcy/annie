@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"goirc/bot"
-	"goirc/bot/timeoff"
 	"goirc/db/model"
 	"goirc/events"
 	"goirc/image"
@@ -132,21 +131,6 @@ func Serve(db *sqlx.DB, b *bot.Bot, es *evoke.Service) {
 			ctx := context.WithValue(r.Context(), auth.SessionKey, value)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	})
-
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			off, err := timeoff.IsTimeoff(time.Now(), "America/Toronto", 43.64487, -79.38429)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			if off {
-				http.Error(w, "annie is sleeping", http.StatusServiceUnavailable)
-				return
-			}
-			next.ServeHTTP(w, r)
 		})
 	})
 
