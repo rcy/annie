@@ -76,6 +76,12 @@ const dropzone = document.getElementById('dropzone');
       const formData = new FormData();
       formData.append('thefile', file);
 
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > maxSize) {
+	alert('File is too large (max 10MB)');
+	return;
+      }
+
       fetch('/uploads', {
         headers: { "Accept": "application/json" },
         method: 'POST',
